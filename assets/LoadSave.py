@@ -1,3 +1,4 @@
+from email.utils import collapse_rfc2231_value
 from pathlib import Path
 import string
 import copy
@@ -10,7 +11,8 @@ from tkinter import filedialog
 import pandas
 import numpy as np
 from modules.CTkMessagebox.ctkmessagebox import CTkMessagebox
-from assets.DataClasses import createFromElexsys, createFromEMX, createFromShimadzuSPC, createFromMagnettech, createFromAdaniDat
+from assets.DataClasses import createFromElexsys, createFromEMX, createFromShimadzuSPC, createFromMagnettech, \
+    createFromAdaniDat, createFrombk3a, BaseDataModel
 from assets.Error import Error
 from subprogs.ascii_file_preview.ascii_file_preview import AsciFilePreview
 from subprogs.table.table import CreateFromTable
@@ -312,50 +314,48 @@ class Load:
         error = CTkMessagebox(title='Error',
                               message=f"Cannot load data from {list}.", icon="cancel")
 
+    def loadbiokine(self):
+        path = self.eleana.paths['last_import_dir']
+        filetypes = (
+                    ('3D Data', '*.bk3a'),
+                    ('Slice', '*.bka'),
+                    ('All files' '*.*')
+                )
+        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+        if len(filenames) == 0:
+            return
+        elif len(filenames) > 1:
+            response = CTkMessagebox(title="Import Biokine", message="Biokine 3D files can be very large. Loading multiple files at once is not recommended. Continue?",
+                        icon="question", option_1="Yes", option_2="No")
+            if response == 'No':
+                return
+
+
+        error_list = []
+        for filename in filenames:
+            type = Path(filename).suffix
+            if type == '.bk3a':
+                data = createFrombk3a(filename)
+            elif type == '.bka':
+                data = createFrombka(filename)
+            try:
+                self.eleana.dataset.append(data)
+                last_import_dir = Path(filename).parent
+                self.eleana.paths['last_import_dir'] = last_import_dir
+            except:
+                error_list.append(Path(filename).parrent.name)
+
+        if len(error_list) == 0:
+            return
+        list = ', '.join(error_list)
+        error = CTkMessagebox(title='Error',
+                              message=f"Cannot load data from {list}.", icon="cancel")
+
+
+
 class Save:
     def __init__(self, eleana):
         self.eleana = eleana
-
-    @classmethod
-    # def save_preferences(cls, eleana, app, grapher):
-    #     ''' Save graph preferences in .EleanaPy/preferences.pic '''
-    #     try:
-    #         # Create object to store preferences
-    #         preferences = Preferences(app, grapher)
-    #         # Save current settings:
-    #         filename = Path(eleana.paths['home_dir'], '.EleanaPy', 'preferences.pic')
-    #         with open(filename, 'wb') as file:
-    #             pickle.dump(preferences, file)
-    #         return True
-    #     except Exception as e:
-    #         print(e)
-    #         return None
-
-    # @classmethod
-    # def save_settings_paths(cls, eleana):
-    #     ''' Save settings in .EleanaPy/paths.pic '''
-    #     try:
-    #         # Save current settings:
-    #         filename = Path(eleana.paths['home_dir'], '.EleanaPy', 'paths.pic')
-    #         content = eleana.paths
-    #         with open(filename, 'wb') as file:
-    #             pickle.dump(content, file)
-    #         return True
-    #     except Exception as e:
-    #         Error.show(info="Cannot save settings", details=e)
-    #         return None
-    #
-    #
-    # def save_eleana_paths(self, show_error=False):
-    #     '''Save self.eleana.paths to .EleanaPy user folder'''
-    #     try:
-    #         filename = Path(self.eleana.paths['home_dir'], '.EleanaPy', 'paths.pic')
-    #         content = self.eleana.paths
-    #         with open(filename, 'wb') as file:
-    #             pickle.dump(content, file)
-    #     except Exception as e:
-    #         if show_error:
-    #             Error.show(info = "Cannot save config paths.pic file", details = e)
 
     def save_project(self, save_current=False):
         ''' Save project to a file '''

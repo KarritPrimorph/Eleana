@@ -1314,9 +1314,16 @@ class Application():
         self.first_selected(added_item)
 
     #@check_busy
-    def replace_first(self):
+    def replace_first(self, ask = True):
         if self.eleana.selections['result'] < 0:
             return
+        if ask:
+            msg = CTkMessagebox(title="Replace First", message="Do you want to replace First with Result data?",
+                        icon="question", option_1="No", option_2="Yes")
+            response = msg.get()
+            if response == 'No':
+                return
+
         index = self.eleana.selections['result']
         index_first = self.eleana.selections['first']
         result = copy.deepcopy(self.eleana.results_dataset[index])
@@ -1778,6 +1785,20 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Magnettech file.", info=e)
 
+    def import_biokine(self):
+        self.mainwindow.config(cursor = "watch")
+        try:
+            self.load.loadbiokine()
+            self.update.dataset_list()
+            self.update.all_lists()
+            self.eleana.save_paths()
+            last_in_list = self.sel_first._values
+            self.first_selected(last_in_list[-1])
+            self.mainwindow.config(cursor="arrow")
+        except Exception as e:
+            self.mainwindow.config(cursor="arrow")
+            Error.show(title="Error loading Biokine file.", info=e)
+
     def import_adani_dat(self):
         try:
             self.load.loadAdaniDat()
@@ -1928,6 +1949,7 @@ class Application():
         self.update.all_lists()
         self.grapher.plot_graph()
 
+
     def notes(self):
         notepad = Notepad(master=self.mainwindow, title="Edit notes", text=self.eleana.notes)
         response = notepad.get()
@@ -1935,6 +1957,105 @@ class Application():
             return
         else:
             self.eleana.notes = response
+
+    def transpose_stack(self):
+        ''' Transpose the stack 2D data'''
+        selected = self.eleana.selections['first']
+        if selected < 0:
+            selected = self.eleana.selections['second']
+        if selected < 0:
+            return
+
+        data = self.eleana.dataset[selected]
+        if data.type != 'stack 2D':
+            Error.show(title = 'Transpose stack', info='The selected data is not a stack.' )
+            return
+
+        self.mainwindow.config(cursor="watch")
+        # Transpose y and change axes
+        y_axis = data.y.T
+        x_axis = data.z
+        z_axis = data.x
+
+        # Swap names and units
+        name_x = data.parameters.get('name_z', '')
+        name_z = data.parameters.get('name_x', '')
+        unit_x = data.parameters.get('unit_z', '')
+        unit_z = data.parameters.get('unit_z', '')
+
+        stk_names = []
+        for i in z_axis:
+            name = name_z + ' ' + str(i) + ' ' + unit_z
+            stk_names.append(name)
+
+        data.x = x_axis
+        data.y = y_axis
+        data.z = z_axis
+        data.parameters['name_x'] = name_x
+        data.parameters['name_z'] = name_z
+        data.parameters['unit_x'] = unit_x
+        data.parameters['unit_z'] = unit_z
+        data.stk_names = stk_names
+
+        self.update.dataset_list()
+        self.update.group_list()
+        self.update.all_lists()
+        self.grapher.plot_graph()
+        self.mainwindow.config(cursor="arrow")
+
+
+    def average_stack(self):
+        selected = self.eleana.selections['first']
+        if selected < 0:
+            selected = self.eleana.selections['second']
+        if selected < 0:
+            return
+
+        data = copy.deepcopy(self.eleana.dataset[selected])
+        if data.type != 'stack 2D':
+            Error.show(title='Average stack', info='The selected data is not a stack.')
+            return
+
+        self.mainwindow.config(cursor="watch")
+        # Transpose y and change axes
+        data.y = np.mean(data.y, axis=0)
+        data.z = None
+
+        # Swap names and units
+        data.parameters.pop('name_z', None)
+        data.parameters.pop('unit_z', None)
+
+        data.type = 'single 2D'
+        data.stk_names = []
+
+        data.name = data.name + ':AVG'
+        self.eleana.results_dataset.append(data)
+
+        self.update.dataset_list()
+        self.update.group_list()
+        self.update.all_lists()
+        positions = self.sel_result._values
+        self.result_selected(positions[-1])
+        self.sel_result.set(positions[-1])
+        self.mainwindow.config(cursor="arrow")
+
+    def extract_from_stack(self, which = None):
+        if which is None:
+            index = self.eleana.selections['first']
+            if index < 0:
+                index = self.eleana.selections['second']
+                if index < 0:
+                    return
+
+        data = self.eleana.dataset[index]
+        if data.type != "stack 2D":
+            return
+
+        av_data = data.stk_names
+        select_data = SelectItems(master=self.mainwindow, title='Select data',
+                                 items=av_data)
+        response = select_data.get()
+        print(response)
 
     def create_new_group(self):
         raise Exception("Application.py: create_new_group - needs ")
@@ -2114,16 +2235,20 @@ class Application():
     ***********************************************'''
 
     def stack_to_group(self, which):
-        index = self.eleana.selections[which]
+        if which == 'any':
+            index = self.eleana.selections['first']
+            if index < 0:
+                index = self.eleana.selections['second']
+                if index < 0:
+                    return
+        else:
+            index = self.eleana.selections[which]
         if index < 0:
             return
         data = copy.deepcopy(self.eleana.dataset[index])
         if not data.type == 'stack 2D':
             CTkMessagebox(master = self.mainwindow, title="Conversion to group", message="The data you selected is not a 2D stack")
         else:
-            #self.convert_stack_to_group = StackToGroup(app, which)
-            #response = self.convert_stack_to_group.get()
-
             convert_stack_to_group = StackToGroup(master = self.mainwindow, eleana = self.eleana, which = which)
             response = convert_stack_to_group.get()
             if response == None:

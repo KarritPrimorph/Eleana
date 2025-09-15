@@ -10,6 +10,7 @@ def main_menubar_callbacks(inst):
              "import_magnettech2": inst.import_magnettech2,
              "import_adani_dat": inst.import_adani_dat,
              "import_shimadzu_spc": inst.import_shimadzu_spc,
+             "import_biokine": inst.import_biokine,
              "import_ascii": inst.import_ascii,
              "import_excel": inst.import_excel,
              "export_first": inst.export_first,
@@ -28,6 +29,11 @@ def main_menubar_callbacks(inst):
              "first_to_group": inst.first_to_group,
              "second_to_group": inst.second_to_group,
              "preferences": inst.preferences,
+             "transpose_stack": inst.transpose_stack,
+             "average_stack": inst.average_stack,
+             "stack_to_group": inst.stack_to_group,
+             "extract_from_stack": inst.extract_from_stack,
+
              # ANALYSIS
              "xy_distance": inst.xy_distance,
              "integrate_region": inst.integrate_region,

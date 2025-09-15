@@ -4,6 +4,7 @@ from modules.ShimadzuSPC.shimadzu_spc import load_shimadzu_spc
 from modules.Magnettech.magnettech import load_magnettech
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
+from Error import Error
 
 # how bruker Elexsys parameters are mapped to eleana parameters
 # If you want eleana to extract more parameters from dsc
@@ -467,6 +468,105 @@ def createFromElexsys(filename: str):
     
     return SpectrumEPR.from_elexsys(filepath.stem, dta, dsc, ygf)
 
+def createFrombk3a(filename):
+    try:
+        with open(filename, 'r', encoding='ascii', errors='ignore') as file:
+            bk3a = file.read()
+    except Exception as e:
+        return
+    bk3a_splited = bk3a.split('"_DATA"')
+    header_text = bk3a_splited[0]
+    data = bk3a_splited[1].strip()
+    data = data.replace(',', '.')
+
+    # Parse Header Lines:
+    parsed_header = parse_biokine_header(header = header_text)
+    data_type = parsed_header['_FORMAT'][0]
+
+    if data_type == 'MATRIX':
+        Error.show(title = 'Import BioKine', info='MATRIX format is not supported. Use Kinetics or Wavelengths.')
+        return
+
+    # Parse Data
+    data_numeric = np.array([
+        list(map(float, line.split()))
+        for line in data.strip().splitlines()
+         ])
+
+    col_1 = data_numeric[:,0]
+    col_1 = np.unique(col_1)
+
+    col_2 = data_numeric[:,1]
+    val0 = col_2[0]
+    repeats_at = np.where(col_2 == val0)[0]
+    idx = repeats_at[1]
+    col_2 = col_2[0:idx]
+
+    col_3 = data_numeric[:,2]
+    col_3 = col_3.reshape(np.size(col_1), np.size(col_2))
+
+    # Parameters:
+    if data_type == "WTV":
+        eleana_parameters = {
+            'name_x' : 'Time',
+            'name_y' : "Absorbance",
+            'name_z' : "Wavelength",
+            'unit_x' : 's',
+            'unit_y' : 'OD',
+            'unit_z' : 'nm'
+            }
+        x_axis = col_2
+        y_axis = col_3
+        z_axis = col_1
+    elif data_type == "TWV":
+        eleana_parameters = {
+            'name_x': 'Wavelength',
+            'name_y': "Absorbance",
+            'name_z': "Time",
+            'unit_x': 'nm',
+            'unit_y': 'OD',
+            'unit_z': 's'
+            }
+        x_axis = col_2
+        y_axis = col_3
+        z_axis = col_1
+
+    # Build comments
+    comment_list = parsed_header.get('_COMMENT', None)
+    if comment_list:
+        comment = "\n".join(comment_list)
+
+    stk_names = []
+    for i in z_axis:
+        stk_name = eleana_parameters['name_z'] + ' ' + str(i) + ' ' + eleana_parameters['unit_z']
+        stk_names.append(stk_name)
+
+    biokine_data = BaseDataModel(
+                            x = x_axis,
+                            y = y_axis,
+                            z = z_axis,
+                            parameters = eleana_parameters,
+                            name=Path(filename).stem,
+                            complex = False,
+                            comment = comment,
+                            type = 'stack 2D',
+                            groups = ['All', 'Biokine'],
+                            stk_names = stk_names
+                        )
+    return biokine_data
+
+def parse_biokine_header(header):
+    header_lines = header.splitlines()
+    parsed_header = {}
+    for line in header_lines:
+        if line.startswith('"'):
+            parts = line.split('"')
+            key = parts[1]
+            value = parts[3] if len(parts) > 3 else ""
+            parsed_header.setdefault(key, []).append(value)
+    return parsed_header
+
+
 def createFromEMX(filename: str) -> object:
     filepath = Path(filename)
     emx_SPC = filepath.with_suffix('.spc')
@@ -508,11 +608,6 @@ def createFromEMX(filename: str) -> object:
 
         key = splitted[0]
         value = splitted[1].strip() if len(splitted) > 1 else ''
-
-        # try:
-        #     value = float(value)
-        # except ValueError:
-        #     pass
         dsc[key]=value# store back as a string
 
     # if the format is esp

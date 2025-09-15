@@ -66,6 +66,12 @@ class MainMenu:
         self.icon_fftfilter = self.prepare_icon('fftfilter.png')
         self.icon_fft = self.prepare_icon('fft.png')
         self.icon_spectrasubtract = self.prepare_icon('subtract.png')
+        self.icon_biologic = self.prepare_icon('biologic.png')
+        self.icon_stack = self.prepare_icon('stack.png')
+        self.icon_transpose = self.prepare_icon('transpose.png')
+        self.icon_average_stack = self.prepare_icon("average_stack.png")
+        self.icon_convert_to_group = self.prepare_icon('convert_to_group.png')
+        self.icon_extract_from_stack = self.prepare_icon('extract_from_stack.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -107,6 +113,13 @@ class MainMenu:
         self.menu_import.add_command(label="Magnettech newer (spe)", command=self.callbacks.get("import_magnettech2"),
                                      image=self.icon_epr,
                                      compound="left")
+        # ------------ Separator
+        self.menu_import.add_separator()
+
+        # ------------ Biokine
+        self.menu_import.add_command(label="BioLogic BioKine", command=self.callbacks.get("import_biokine"),
+                                     image=self.icon_biologic, compound="left")
+
         # ------------ Separator
         self.menu_import.add_separator()
 
@@ -165,11 +178,36 @@ class MainMenu:
         # - SEPARATOR -
         self.menu_edit.add_separator()
 
+        # - Stack 2D
+        self.menu_stack2D = tk.Menu(self.menu_edit, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
+                                    activebackground=self.activebg, activeforeground=self.activefg,
+                                    borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
+
+        self.menu_edit.add_cascade(label="Stack 2D ", menu=self.menu_stack2D, image = self.icon_stack, compound = 'left')
+
+
+        # --- Transpose
+        self.menu_stack2D.add_command(label="Transpose stack", command = self.callbacks.get('transpose_stack'), image=self.icon_transpose, compound="left")
+        # --- Average
+        self.menu_stack2D.add_command(label="Create averaged stack", command=self.callbacks.get('average_stack'),
+                                      image=self.icon_average_stack, compound="left")
+        # --- Convert stack to group
+        self.menu_stack2D.add_command(label="Convert stack to group", command = lambda: self.callbacks.get('stack_to_group')('any'),
+                                      image=self.icon_convert_to_group, compound="left")
+        # --- Extract from stack
+        self.menu_stack2D.add_command(label="Extract selected data",
+                                      command=self.callbacks.get('extract_from_stack'),
+                                      image=self.icon_extract_from_stack, compound="left")
+
+        # - SEPARATOR -
+        self.menu_edit.add_separator()
+
         # - Copy to clipboard
         self.menu_edit.add_command(label="Copy", command=self.callbacks.get('quick_copy'), image=self.icon_clipboard, compound="left", accelerator='Ctrl+C')
 
         # - Create from clipboard
         self.menu_edit.add_command(label="Paste", command=self.callbacks.get('quick_paste'),  image=self.icon_fromclipboard, compound="left", accelerator='Ctrl+V')
+
 
         # - SEPARATOR -
         self.menu_edit.add_separator()
@@ -179,6 +217,7 @@ class MainMenu:
 
         # - Notes
         self.menu_edit.add_command(label="Notes", command=self.callbacks.get('notes'), image = self.icon_notes, compound="left")
+
 
         # - Clear
         self.menu_clear = tk.Menu(self.menu_edit, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
@@ -280,6 +319,7 @@ class MainMenu:
         # - FFT
         self.menu_modifications.add_command(label="FFT", command=self.callbacks.get('fast_fourier_transform'),
                                        image=self.icon_fft, compound="left")
+
 
         ''' Menu EPR '''
         self.menu_EPR = tk.Menu(self.main_menu, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,

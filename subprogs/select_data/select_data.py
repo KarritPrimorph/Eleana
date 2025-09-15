@@ -22,7 +22,7 @@ class SelectData:
         self.listFrame = builder.get_object("listFrame", master)
         self.selection_list = CTkListbox(self.listFrame, multiple_selection=True)
         self.selection_list.pack(fill="both", expand=True, padx=10, pady=10)
-        #self.selection_list.component('listbox').bind('<MouseWheel>', self.on_mousewheel)
+
 
 
         self.group_field = builder.get_object("group_field", master)
@@ -84,7 +84,7 @@ class SelectData:
         self.mainwindow.destroy()
 
     def on_mousewheel(self, event):
-        # Przewijaj listę przy użyciu kółka myszki
+
         print('Myszka')
         if event.delta:
             print(event)
