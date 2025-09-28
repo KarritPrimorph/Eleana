@@ -72,6 +72,7 @@ class MainMenu:
         self.icon_average_stack = self.prepare_icon("average_stack.png")
         self.icon_convert_to_group = self.prepare_icon('convert_to_group.png')
         self.icon_extract_from_stack = self.prepare_icon('extract_from_stack.png')
+        self.icon_copy_spreadsheet = self.prepare_icon('copy_spreadsheet.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -221,6 +222,9 @@ class MainMenu:
 
         # - Copy to clipboard
         self.menu_edit.add_command(label="Copy", command=self.callbacks.get('quick_copy'), image=self.icon_clipboard, compound="left", accelerator='Ctrl+C')
+
+        # - Copy selected to spreadsheet
+        self.menu_edit.add_command(label="Copy selected", command=lambda: self.callbacks.get('export_spreadsheet')(clipboard = True, group = False), image=self.icon_copy_spreadsheet, compound="left")
 
         # - Create from clipboard
         self.menu_edit.add_command(label="Paste", command=self.callbacks.get('quick_paste'),  image=self.icon_fromclipboard, compound="left", accelerator='Ctrl+V')

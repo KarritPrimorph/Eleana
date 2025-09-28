@@ -1893,7 +1893,7 @@ class Application():
     def export_group(self):
         self.export.group_csv(self.eleana.selections['group'])
 
-    def export_spreadsheet(self, group = False):
+    def export_spreadsheet(self, group = True, clipboard = False):
 
         if group:
             current_group = self.sel_group.get()
@@ -1975,21 +1975,27 @@ class Application():
             filled_rows = [r + [""] * (max_len - len(r)) for r in full_table]
             transposed = list(map(list, zip(*filled_rows)))
 
-        filename = filedialog.asksaveasfilename(
-            defaultextension=".csv",
-            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-            title="Save spreadsheet CSV"
-        )
+        if clipboard:
+            text_output = "\n".join("\t".join(str(item) for item in row) for row in transposed)
+            self.mainwindow.clipboard_clear()
+            self.mainwindow.clipboard_append(text_output)
+            self.mainwindow.update()
+        else:
+            filename = filedialog.asksaveasfilename(
+                defaultextension=".csv",
+                filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+                title="Save spreadsheet CSV"
+            )
 
-        if filename:  # If canceled
-            try:
-                with open(filename, "w", newline="") as f:
-                    writer = csv.writer(f)
-                    writer.writerows(transposed)
-                    self.eleana.paths['last_export_dir'] = filename
-                    self.eleana.save_paths()
-            except Exception as e:
-                Error.show(title='Export Spreadsheet', info = 'Error while saving csv speadsheet.', details = e)
+            if filename:  # If canceled
+                try:
+                    with open(filename, "w", newline="") as f:
+                        writer = csv.writer(f)
+                        writer.writerows(transposed)
+                        self.eleana.paths['last_export_dir'] = filename
+                        self.eleana.save_paths()
+                except Exception as e:
+                    Error.show(title='Export Spreadsheet', info = 'Error while saving csv speadsheet.', details = e)
 
     # --- Quit (also window close by clicking on X)
     def close_application(self, event=None):
