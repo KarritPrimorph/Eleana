@@ -15,6 +15,7 @@ def main_menubar_callbacks(inst):
              "import_excel": inst.import_excel,
              "export_first": inst.export_first,
              "export_group": inst.export_group,
+             "export_spreadsheet": inst.export_spreadsheet,
              "close_application": inst.close_application,
              # EDIT
              "edit_values_in_table": inst.edit_values_in_table,

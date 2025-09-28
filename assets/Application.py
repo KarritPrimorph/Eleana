@@ -12,7 +12,9 @@ import pygubu
 import tkinter as tk
 import pickle
 import time
+import csv
 
+from tkinter import filedialog
 
 from assets.Menu import ContextMenu
 
@@ -1890,6 +1892,104 @@ class Application():
 
     def export_group(self):
         self.export.group_csv(self.eleana.selections['group'])
+
+    def export_spreadsheet(self, group = False):
+
+        if group:
+            current_group = self.sel_group.get()
+            if current_group == 'All':
+                indexes_to_export = list(range(len(self.eleana.dataset)))
+            else:
+                indexes_to_export = self.eleana.assignmentToGroups.get(current_group)
+        else:
+            av_data = self.sel_first._values
+            av_data.pop(0)
+            # Open dialog if index_to_delete was not set
+            select_data = SelectData(master=self.mainwindow, title='Select data',
+                                     group=self.eleana.selections['group'],
+                                     items=av_data)
+            response = select_data.get()
+            if response == None:
+                return
+            indexes_to_export = self.get_indexes_by_name(response)
+
+        if not indexes_to_export:
+            return
+
+        full_table = []
+        for index in indexes_to_export:
+            data = self.eleana.dataset[index]
+            col_x = None
+            col_y = None
+            col_z = None
+            is_2D = False
+            # Single spectrum
+            if data.type == 'single 2D' and not data.complex:
+                col_x = [data.name + ' [X]'] + data.x.tolist()
+                col_y = [data.name + ' [Y]'] + data.y.tolist()
+            elif data.type == 'single 2D' and data.complex:
+                col_x = [data.name + ' [X]'] + list(data.x)
+                col_rey = [data.name + ' [Re Y]'] + data.y.real.tolist()
+                col_imy = [data.name + ' [Im Y]'] + data.y.imag.tolist()
+                col_y = [col_rey, col_imy]
+                is_2D = True
+            elif data.type == 'stack 2D' and not data.complex:
+                col_x = [data.name + ' [X]'] + list(data.x)
+                col_y = []
+                i = 0
+                for stk_name in data.stk_names:
+                    col_y_single = [data.name + ':' + stk_name + ' [Y]'] + data.y[i].tolist()
+                    col_y.append(col_y_single)
+                    i += 1
+
+                col_z = [data.name + ' [Z]'] + data.z.tolist()
+                col_y.append(col_z)
+                is_2D = True
+            elif data.type == 'stack 2D' and data.complex:
+                col_x = [data.name + ' [X]'] + list(data.x)
+                col_y = []
+                i = 0
+                for stk_name in data.stk_names:
+                    col_y_single_re = [data.name + ':' + stk_name + ' [Re Y]'] + data.y[i].real.tolist()
+                    col_y_single_im = [data.name + ':' + stk_name + ' [Im Y]'] + data.y[i].imag.tolist()
+                    col_y.append(col_y_single_re)
+                    col_y.append(col_y_single_im)
+                    i += 1
+                col_z = [data.name + ' [Z]'] + data.z.tolist()
+                col_y.append(col_z)
+                is_2D = True
+
+            else:
+                Error.show(title = 'Export spreadsheet CVS', info = 'Data not supported yet.')
+                return
+            # Add columns
+            if col_x:
+                full_table.append(col_x)
+            if col_y:
+                if is_2D:
+                    full_table.extend(col_y)
+                else:
+                    full_table.append(col_y)
+
+            max_len = max(len(r) for r in full_table)
+            filled_rows = [r + [""] * (max_len - len(r)) for r in full_table]
+            transposed = list(map(list, zip(*filled_rows)))
+
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".csv",
+            filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
+            title="Save spreadsheet CSV"
+        )
+
+        if filename:  # If canceled
+            try:
+                with open(filename, "w", newline="") as f:
+                    writer = csv.writer(f)
+                    writer.writerows(transposed)
+                    self.eleana.paths['last_export_dir'] = filename
+                    self.eleana.save_paths()
+            except Exception as e:
+                Error.show(title='Export Spreadsheet', info = 'Error while saving csv speadsheet.', details = e)
 
     # --- Quit (also window close by clicking on X)
     def close_application(self, event=None):

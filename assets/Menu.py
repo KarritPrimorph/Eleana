@@ -147,9 +147,26 @@ class MainMenu:
         # - Export first
         self.menu_export.add_command(label="Export First", command=self.callbacks.get('export_first'), image=self.icon_export_first,
                                     compound="left")
-        # # - Export group
-        self.menu_export.add_command(label="Export Group", command=self.callbacks.get('export_group'), image=self.icon_export_group,
-                                   compound="left", accelerator="Ctrl+Q")
+        # - SEPARATOR -
+        self.menu_export.add_separator()
+
+        # - Export group
+        self.menu_export.add_command(label="Export Group to folder", command=self.callbacks.get('export_group'), image=self.icon_export_group,
+                                   compound="left")
+        # - Export to folder
+        self.menu_export.add_command(label="Export Group to spreadsheet",
+                                     command=self.callbacks.get('export_spreadsheet'),
+                                     image=self.icon_export_group,
+                                     compound="left")
+
+        # - SEPARATOR -
+        self.menu_export.add_separator()
+
+        # - Export selected to spreadsheet
+        self.menu_export.add_command(label="Export Selected to spreadsheet", command=lambda: self.callbacks.get('export_spreadsheet')(group = False),
+                                     image=self.icon_export_group,
+                                     compound="left")
+
 
         # - SEPARATOR -
         self.menu_file.add_separator()

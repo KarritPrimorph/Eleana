@@ -83,10 +83,10 @@ class SelectItems:
         self.mainwindow.destroy()
 
     def on_mousewheel(self, event):
-        # Przewijaj listę przy użyciu kółka myszki
-        print('Myszka')
+
+
         if event.delta:
-            print(event)
+            return
             #self.selection_list.yview_scroll(int(-1 * (event.delta / 120)), "units")
 
 if __name__ == "__main__":
