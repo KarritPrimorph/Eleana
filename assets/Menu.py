@@ -73,6 +73,7 @@ class MainMenu:
         self.icon_convert_to_group = self.prepare_icon('convert_to_group.png')
         self.icon_extract_from_stack = self.prepare_icon('extract_from_stack.png')
         self.icon_copy_spreadsheet = self.prepare_icon('copy_spreadsheet.png')
+        self.icon_curvefit = self.prepare_icon('curvefit.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -282,6 +283,11 @@ class MainMenu:
         #  - Integrate region
         self.menu_analysis.add_command(label="Integrate region", command=self.callbacks.get('integrate_region'),
                                   image=self.icon_integrate_region, compound="left")
+
+        #  - Curve fit
+        self.menu_analysis.add_command(label="Curve fit", command=self.callbacks.get('curve_fit'),
+                                       image=self.icon_curvefit, compound="left")
+
         # #  - Statistics
         # self.menu_analysis.add_command(label="Statistics", command=self.app.quick_paste,
         #                            image=self.icon_statistics, compound="left")

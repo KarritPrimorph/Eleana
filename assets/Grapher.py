@@ -59,7 +59,6 @@ class Grapher():
         self.sel_cursor_mode.configure(values=list_of_cursor_modes)
         self.sel_cursor_mode.set('None')
 
-        self.plt = plt
         self.mplcursors = mplcursors
         self.cursor = None
         self.cursor_limit = 0
@@ -1020,7 +1019,8 @@ class Grapher():
                     'x_lim': x_lim,
                     'y_lim': y_lim,
                     'inverted_x':inverted_x,
-                    'curves':[]
+                    'curves':[],
+                    'group': self.eleana.selections['group']
                   }
 
         # Add first RE
@@ -1095,19 +1095,3 @@ class Grapher():
                 curve['im_y'] = None
         plot_data['curves'].append(curve)
         return plot_data
-
-    # def show_static_graph_window(self, number_of_plot:int):
-    #     '''
-    #     Opens window containing a static plot stored in self.eleana.static_plots.
-    #     This function is activated by dynamically created menu in Plots --> Show plots
-    #     '''
-    #
-    #     if not self.eleana.storage.active_static_plot_windows:
-    #         window_nr = 0
-    #     else:
-    #         last = self.eleana.storage.active_static_plot_windows[-1]
-    #         window_nr = last + 1
-    #     self.eleana.storage.active_static_plot_windows.append(window_nr)
-    #     command = "self.static_plot_" + str(window_nr) + " = Staticplotwindow(window_nr, number_of_plot, self.eleana.storage.static_plots, self.eleana.storage.active_static_plot_windows, self.application_mainwindow, self.main_menu)"
-    #     exec(command)
-    #     self.main_menu.create_showplots_menu()

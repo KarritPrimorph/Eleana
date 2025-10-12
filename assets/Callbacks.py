@@ -38,6 +38,7 @@ def main_menubar_callbacks(inst):
              # ANALYSIS
              "xy_distance": inst.xy_distance,
              "integrate_region": inst.integrate_region,
+             "curve_fit": inst.curve_fit,
 
              # MODIFICATION
              "normalize": inst.normalize,

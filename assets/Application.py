@@ -64,6 +64,7 @@ from subprogs.modify.modify import ModifyData
 from subprogs.group_edit.move_to_group import MoveToGroup
 from subprogs.preferences.preferences import PreferencesApp
 from subprogs.group_edit.stack_to_group import StackToGroup
+from subprogs.curve_fit.curve_fit import CurveFit
 
 # Widgets used by main application
 from widgets.CTkHorizontalSlider import CTkHorizontalSlider
@@ -1471,6 +1472,9 @@ class Application():
     def normalize(self):
         ''' Normalization of the amplitutes'''
         normalize = Normalize(self, which='first')
+
+    def curve_fit(self):
+        curve_fit = CurveFit(self, which = 'first')
 
     def delete_selected_data(self, index_to_delete=None):
         av_data = self.sel_first._values
