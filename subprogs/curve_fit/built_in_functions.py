@@ -1,5 +1,4 @@
 import sympy
-import numpy
 import copy
 from scipy import constants as spc
 
@@ -29,26 +28,27 @@ class Function:
         "$AH": [spc.m_u, "atomic mass constant"],
         "$PI": [spc.pi, "pi constant"]
     }
-
     def __init__(self,
-                 name,
-                 equation,
+                 name = '',
+                 equation_text = '',
                  variable = 'x',
                  parameters = [],
-                 initaial_values:dict = {},
+                 initial_values:dict = {},
                  minimum:dict = {},
                  maximum :dict = {},
-                 fit_parameters:dict = {}
+                 fit_parameters:dict = {},
+                 nonnegative_parameters = [],
+                 validated = False,
                  ):
 
         # Name of the function
         self.name = name
 
         # Right side of the equation
-        self.equation_text = equation
+        self.equation_text = equation_text
 
         # Right side of the equation ready to fit
-        self.equation = equation
+        self.equation = equation_text
 
         # Parameters:
         self.parameters = parameters
@@ -57,7 +57,7 @@ class Function:
         self.variable = variable
 
         # Initial values for parameters
-        self.initial_values = initaial_values
+        self.initial_values = initial_values
 
         # Boundary conditions for parameters
         self.minimum = minimum
@@ -65,6 +65,15 @@ class Function:
 
         # Fit this parameter:
         self.fit_parameters = fit_parameters
+
+        # Define which parameters should be non_negative
+        self.non_negative = nonnegative_parameters
+
+        # Validated
+        self.validated = validated
+
+    def sort_parameters(self, reverse = False):
+        self.parameters.sort(key=str.lower, reverse=reverse)
 
     def find_parameters(self):
         ''' Parse expression and get the parameters'''
@@ -90,58 +99,127 @@ class Function:
                 self.equation = self.equation.replace(key, str(val))
         self.equation = self.equation.replace('^', '**')
 
+    def validate(self):
+        pass
 
-functions = [
-                {'Name': "Boltzman",
-                 'Function': 'a2+(a1-a2)/(1+exp((x-x0)/dx))',
-                 'Variable': 'x',
-                 'Parameters' : ['a1', 'a2', 'x0', 'dx'],
-                 'InitVals'   : [],
-                 'Min':         [],
-                 'Max':         []
-                 },
+class BuiltInFunctions:
+    definitions = [
+        {'Name': "Boltzman",
+         'Equation_text': 'a2+(a1-a2)/(1+exp((x-x0)/dx))',
+         'Variable': 'x',
+         'Parameters': ['a1', 'a2', 'x0', 'dx'],
+         'InitVals': {'a1':2, 'a2':1, 'x0':0, 'dx':1},
+         'Min': {},
+         'Max': {},
+         'Validated': True},
 
-                {'Name': "Exp. Decay 1",
-                 'Function': 'a*exp(-x/t)+c',
-                 'Variable': 'x',
-                 'Parameters' : ['a', 't', 'c'],
-                 'InitVals'   : [],
-                 'Min':         [],
-                 'Max':         []
-                 },
+        {'Name': "Exp. Decay 1",
+         'Equation_text': 'a*exp(-x/t)+c',
+         'Variable': 'x',
+         'Parameters': ['a', 't', 'c'],
+         'InitVals': {},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
-                {'Name': "Exp. Decay 2",
-                 'Function': 'a1*exp(-x/t1)+a2*exp(-x/t2)+c',
-                 'Variable': 'x',
-                 'Parameters' : ['a1', 'a2', 't1', 't2', 'c'],
-                 'InitVals'   : [],
-                 'Min':         [],
-                 'Max':         []
-                 },
+        {'Name': "Exp. Decay 2",
+         'Equation_text': 'a1*exp(-x/t1)+a2*exp(-x/t2)+c',
+         'Variable': 'x',
+         'Parameters': ['a1', 'a2', 't1', 't2', 'c'],
+         'InitVals': {},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
-                {'Name': "Exp. Decay 2",
-                 'Function': 'a1*exp(-x/t1)+a2*exp(-x/t2)+c',
-                 'Variable': 'x',
-                 'Parameters' : ['a1', 'a2', 't1', 't2', 'c'],
-                 'InitVals'   : [],
-                 'Min':         [],
-                 'Max':         []
-                 },
+        {'Name': "Exp. Decay 2",
+         'Equation_text': 'a1*exp(-x/t1)+a2*exp(-x/t2)+c',
+         'Variable': 'x',
+         'Parameters': ['a1', 'a2', 't1', 't2', 'c'],
+         'InitVals': {'a1': 1, 'a2': 1, 't1': 2, 't2': 3, 'c':0},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
-                {'Name': "Exp. Decay 3",
-                 'Function': 'a1*exp(-x/t1)+a2*exp(-x/t2)+a3*exp(-x/t3)+c',
-                 'Variable': 'x',
-                 'Parameters' : ['a1', 'a2', 'a3', 't1', 't2', 't3', 'c'],
-                 'InitVals'   : [],
-                 'Min':         [],
-                 'Max':         []
-                 },
+        {'Name': "Exp. Decay 3",
+         'Equation_text': 'a1*exp(-x/t1)+a2*exp(-x/t2)+a3*exp(-x/t3)+c',
+         'Variable': 'x',
+         'Parameters': ['a1', 'a2', 'a3', 't1', 't2', 't3', 'c'],
+         'InitVals': {},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
+        {'Name': "Exp. Growth",
+         'Equation_text': 'a*exp(x/t)+c',
+         'Variable': 'x',
+         'Parameters': ['a', 't', 'c'],
+         'InitVals': {},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
     ]
 
+    def __init__(self):
+        self.functions = []
+        for function in BuiltInFunctions.definitions:
+            self.functions.append(
+                Function(
+                    name = function['Name'],
+                    equation_text = function['Equation_text'],
+                    variable = function.get('Variable', 'x'),
+                    parameters = function.get('Parameters', []),
+                    initial_values=function.get('InitVals', {}),
+                    minimum = function.get('Min', {}),
+                    maximum = function.get('Max', {}),
+                    nonnegative_parameters = function.get('Non-negative', []),
+                    validated=function.get('Validated', False)
+
+            ))
+
+    def get_list(self):
+        list_of_names = []
+        for fc in self.functions:
+            list_of_names.append(fc.name)
+        return list_of_names
+
+    def get_by_name(self, name):
+        list_of_names = self.get_list()
+        if name not in list_of_names:
+            return None
+        index = list_of_names.index(name)
+        return self.functions[index]
+
+
+# class UserDefinedFunctions:
+#     def __init__(self):
+#         self.builtin_functions = []
+#
+#         for function in BuiltInFunctions.definitions:
+#             self.builtin_functions.append(
+#                 Function(
+#                     name = function['Name'],
+#                     equation_text = function['Equation_text'],
+#                     variable = function.get('Variable', 'x'),
+#                     parameters = function.get('Parameters', []),
+#                     initial_values=function.get('InitVals', {}),
+#                     minimum = function.get('Min', {}),
+#                     maximum = function.get('Max', {}),
+#                     nonnegative_parameters = function.get('Non-negative', [])
+#
+#             ))
+#
+#     def get_list(self):
+#         list_of_names = []
+#         for fc in self.builtin_functions:
+#             list_of_names.append(fc.name)
+#         return list_of_names
+
 if __name__ == '__main__':
-    expr = Function(name = 'Expon', variable = 'x', equation = 'a*exp(x/t)+c^2+d1+$PC', fit_parameters={'t': 25})
-    expr.prepare_equation()
-    expr.find_parameters()
-    print(expr.equation)
-    print(expr.parameters)
+    builtin = BuiltInFunctions()
+    lista = builtin.get_list()
+    print(lista)

@@ -1,8 +1,8 @@
 #!/usr/bin/python3
 # IMPORT MODULES NEEDED
 # -- Here is an example --
-from asyncio import set_event_loop_policy
-
+import customtkinter as ctk
+from widgets.CTkSpinbox import CTkSpinbox
 import numpy as np
 import importlib
 import weakref
@@ -11,7 +11,9 @@ from scipy.interpolate import CubicSpline, PchipInterpolator, Akima1DInterpolato
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from modules.CTkListbox.ctk_listbox import CTkListbox
-from subprogs.curve_fit.built_in_functions import functions as built_in_functions
+from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function
+import copy
+from assets.Error import Error
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -27,7 +29,7 @@ GUI_FILE: str = 'curve_fitui.py'
 GUI_CLASS: str = 'Curve_fitUI'
 
 # Title of the window that shown in the main bar
-TITLE: str = 'Spline baseline subtraction'
+TITLE: str = 'Curve Fit'
 
 # If True, this window will be always on top
 # self.subprog_settings['on_top']
@@ -284,28 +286,50 @@ class CurveFit(Methods, WindowGUI):
         # HERE DEFINE ADDITIONAL MAIN WINDOW CONFIGURATION
         #self.mainwindow =
 
+
         # Function definition:
-        self.built_in_functions = built_in_functions
+        self.built_in_functions = BuiltInFunctions()
+        self.function_definition =Function()
 
         # References to widgets
         self.graphFrame = self.builder.get_object('graphFrame', self.master)
         self.categoryFrame = self.builder.get_object('categoryFrame', self.master)
         self.functionFrame = self.builder.get_object('functionFrame', self.master)
-        self.list_category = self.builder.get_object('tree_category', self.master)
-        self.list_function = self.builder.get_object('tree_function', self.master)
-        self.field_equation = self.builder.get_object('field_equation', self.master)
+        self.widget_equation = self.builder.get_object('widget_equation', self.master)
 
-        # Replace tree with CTkListbox
-        self.list_category.grid_remove()
-        self.list_category.destroy()
+        # Create CTkListbox for Categories and Functions
         self.list_category = self.custom_widget(CTkListbox(master = self.categoryFrame, command = self.category_selected))
         self.list_category.grid(row = 1, column = 0, sticky="nsew")
-
-        # Replace tree with CTkListbox
-        self.list_function.grid_remove()
-        self.list_function.destroy()
         self.list_function = self.custom_widget(CTkListbox(master=self.functionFrame, command = self.function_selected))
         self.list_function.grid(row=1, column=0, sticky="nsew")
+
+        self.widget_name = self.builder.get_object('widget_name', self.master)
+        self.widget_parameters = self.builder.get_object('widget_parameters', self.master)
+        self.widget_indep_var = self.builder.get_object('widget_indep_var', self.master)
+        self.widget_function_edit = self.builder.get_object('widget_function_edit', self.master)
+
+        self.button_validate = self.builder.get_object('button_validate', self.master)
+
+        #
+        # TAB: FIT
+        #
+        self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.master)
+
+        # Table Frames
+        self.tableFrames = {'parameter': self.builder.get_object('tableFrame_Parameter', self.master),
+                            'value': self.builder.get_object('tableFrame_Value', self.master),
+                            'const': self.builder.get_object('tableFrame_Const', self.master),
+                            'min': self.builder.get_object('tableFrame_Min', self.master),
+                            'max': self.builder.get_object('tableFrame_Max', self.master),
+                            'non-negative': self.builder.get_object('tableFrame_Nonnegative', self.master),
+                            }
+        self.table_widgets = {'parameter':[],
+                              'value': [],
+                              'const': [],
+                              'min':[],
+                              'max': [],
+                              'non-negative': []
+                              }
 
         # Populate lists
         self.populate_category_and_functions()
@@ -330,10 +354,210 @@ class CurveFit(Methods, WindowGUI):
     def category_selected(self, category):
         ''' Create list of functions when category is selected '''
         if category == "Built-in functions":
+            lsf = self.built_in_functions.get_list()
             i = 0
-            for name in built_in_functions['Name']:
+            for name in lsf:
                 self.list_function.insert(i, name)
                 i+= 1
+        elif category == "User defined":
+            print('Category selected: User defined')
+
+    # Handle selected from list
+    def function_selected(self, value):
+        ''' If you select a function from the list this is executed'''
+        category = self.list_category.get()
+        if category == 'Built-in functions':
+            functions_container = self.built_in_functions
+        elif category == 'User defined':
+            functions_container = "User defined"
+
+        self.function_definition = copy.deepcopy(functions_container.get_by_name(value))
+        if not self.function_definition:
+            return
+
+        # (1) Print Equation text in "Equation" textbox and Function to fit
+        self.widget_equation.configure(state='normal')
+        self.widget_equation.delete("0.0", "end")
+        self.widget_equation.insert("0.0", self.function_definition.equation_text)
+        self.widget_equation.configure(state="disabled")
+            # Display function that will be fitted
+        self.widget_function_to_fit.configure(state='normal')
+        self.widget_function_to_fit.delete("0.0", "end")
+        function = str(f'f({self.function_definition.variable})={self.function_definition.equation_text}')
+        self.widget_function_to_fit.insert("0.0", function)
+        self.widget_function_to_fit.configure(state='disabled')
+
+        # (2) Print function name in "Name" Entrybox
+        self.widget_name.delete(0, "end")
+        self.widget_name.insert(0, value)
+
+        # (3) Check if parameters are defined. If not find them in the equation
+        if self.function_definition.parameters == []:
+            self.function_definition.find_parameters()
+
+        # (4) Display parameters in the "Parameters" Entrybox
+        self.widget_parameters.delete(0, "end")
+        param_text = ", ".join(self.function_definition.parameters)
+        self.widget_parameters.insert(0, param_text)
+
+        # (5) Display the Function in the "Function" CTkTextbox
+        self.widget_function_edit.configure(state="normal")
+        self.widget_function_edit.delete('0.0', "end")
+        self.widget_function_edit.insert('0.0', self.function_definition.equation_text)
+
+        if self.function_definition.validated:
+            self.create_initial_guesses_list()
+
+
+    def validate_function(self):
+        ''' After clicking Validate button the equation is taken from the widgets
+            and entered to the function and it is checked
+        '''
+        if not self.widget_name.get().strip():
+            Error.show(title="Curve fit", info = 'Field Name should not be empty')
+            return
+        self.function_definition.name = self.widget_name.get()
+        if not self.widget_function_edit.get("1.0", "end").strip():
+            Error.show(title="Curve fit", info = 'Define a function to fit.')
+            return
+
+        self.function_definition.equation_text = self.widget_function_edit.get("1.0","end").strip()
+        self.function_definition.variable = self.widget_indep_var.get().strip()
+        self.function_definition.prepare_equation()
+        self.function_definition.find_parameters()
+        self.function_definition.sort_parameters()
+
+        # Detect parameters automatically
+        self.widget_parameters.delete(0, "end")
+        param_text = ", ".join(self.function_definition.parameters)
+        self.widget_parameters.insert(0, param_text)
+
+        # Create the table for initail guesses
+        self.create_initial_guesses_list()
+
+        # Display function that will be fitted
+        self.widget_function_to_fit.configure(state = 'normal')
+        self.widget_function_to_fit.delete("0.0", "end")
+        function = str(f'f({self.function_definition.variable})={self.function_definition.equation_text}' )
+        self.widget_function_to_fit.insert("0.0",  function)
+        self.widget_function_to_fit.configure(state='disabled')
+
+    def create_initial_guesses_list(self):
+        ''' Create table for initial guesses and displays it in the Tab
+        '''
+
+        # FRAME PARAMETERS
+        if self.table_widgets['parameter']:
+            for widget in self.tableFrames['parameter'].winfo_children():
+                widget.destroy()
+        self.table_widgets['parameter'].clear()
+        # Create entries
+        for i, param in enumerate(self.function_definition.parameters):
+            entry = ctk.CTkEntry(master = self.tableFrames['parameter'], justify = 'right', width = 40, height = 30)
+            entry.insert(0, param)
+            entry.grid(row=i, column=0, padx=2, pady=2, sticky="")
+            entry.configure(state='disabled')
+            self.table_widgets['parameter'].append(entry)
+
+
+        # FRAME VALUES
+        try:
+            for widget in self.tableFrames['value'].winfo_children():
+                widget.destroy()
+        except:
+            pass
+        self.table_widgets['value'].clear()
+
+        # Create entries
+        for i, param in enumerate(self.function_definition.parameters):
+            entry = CTkSpinbox(master = self.tableFrames['value'],
+                               width = 200,
+                               height = 34,
+                               command = lambda p=param: self.table_changed(widget = 'value', parameter = p))
+            value = self.function_definition.initial_values.get(param, 1)
+            entry.set(value)
+            entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
+            self.table_widgets['value'].append(entry)
+
+
+        # FRAME CONSTANT
+        try:
+            for widget in self.tableFrames['const'].winfo_children():
+                widget.destroy()
+        except:
+            pass
+        self.table_widgets['const'].clear()
+        # Create entries
+        for i, param in enumerate(self.function_definition.parameters):
+            entry = ctk.CTkCheckBox(master=self.tableFrames['const'],
+                                    width=40,
+                                    height=34,
+                                    text="",
+                                    command = lambda p=param: self.table_changed(widget = 'const', parameter = p))
+            value = self.function_definition.fit_parameters.get(param, False)
+            if value:
+                entry.select()
+            else:
+                entry.deselect()
+            entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
+            self.table_widgets['const'].append(entry)
+
+        # FRAME MINIMUM/MAXIMUM
+        try:
+            for widget in self.tableFrames['min'].winfo_children():
+                widget.destroy()
+        except:
+            pass
+        self.table_widgets['min'].clear()
+        for widget in self.tableFrames['max'].winfo_children():
+            widget.destroy()
+        # Create entries
+        for i, param in enumerate(self.function_definition.parameters):
+            entry_min = ctk.CTkEntry(master=self.tableFrames['min'],
+                               width=100,
+                               height=30,
+                                     )#command = lambda p=param: self.table_changed(widget = 'min', parameter = p))
+            entry_max = ctk.CTkEntry(master=self.tableFrames['max'],
+                                     width=100,
+                                     height=30,
+                                     )#command = lambda p=param: self.table_changed(widget = 'max', parameter = p))
+            value_min = self.function_definition.minimum.get(param, float("-inf"))
+            entry_min.delete(0, "end")
+            entry_min.insert(0, value_min)
+            entry_min.grid(row=i, column=0, padx=2, pady=2, sticky="we")
+            self.table_widgets['min'].append(entry_min)
+
+            value_max = self.function_definition.minimum.get(param, float("inf"))
+            entry_max.delete(0, "end")
+            entry_max.insert(0, value_max)
+            entry_max.grid(row=i, column=0, padx=2, pady=2, sticky="we")
+            self.table_widgets['max'].append(entry_max)
+
+        # FRAME NON-NEGATIVE VALUES
+        try:
+            for widget in self.tableFrames['non-negative'].winfo_children():
+                widget.destroy()
+        except:
+            pass
+        self.table_widgets['non-negative'].clear()
+        # Create entries
+        for i, param in enumerate(self.function_definition.parameters):
+            entry = ctk.CTkCheckBox(master=self.tableFrames['non-negative'],
+                    width = 80,
+                    height = 34,
+                    text = "",
+                    command = lambda p =param: self.table_changed(widget='non-negative', parameter=p))
+            value = self.function_definition.fit_parameters.get(param, False)
+            if value:
+                entry.select()
+            else:
+                entry.deselect()
+            entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
+            self.table_widgets['non-negative'].append(entry)
+
+    def table_changed(self, widget, parameter):
+        print('widget:',widget)
+        print('parameter:',parameter)
 
     def calculate_stack(self, commandline = False):
         ''' If STACK_SEP is False it means that data in stack should
