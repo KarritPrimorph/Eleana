@@ -18,9 +18,10 @@ class CTkSpinbox(ctk.CTkFrame):
                  master: any,
                  width: int = 100,
                  height: int = 30,
+                 button_width = 10,
                  start_value: float = 0.0,
-                 min_value: float = -1000000000000.0,
-                 max_value: float = 1000000000000.0,
+                 min_value: float = float("-inf"),
+                 max_value: float = float("+inf"),
                  step_value: float = 1.0,
                  scroll_value: float = 5.0,
                  variable: any = None,
@@ -32,7 +33,7 @@ class CTkSpinbox(ctk.CTkFrame):
                  button_hover_color: str = ('#AAA', '#555'),
                  border_width: int = 2,
                  corner_radius: int = 5,
-                 button_corner_radius: int = 0,
+                 button_corner_radius: int = 5,
                  button_border_width: int = 2,
                  button_border_color: str = ('#AAA', '#555'),
                  state: str = 'normal',
@@ -93,45 +94,49 @@ class CTkSpinbox(ctk.CTkFrame):
 
         # decrement button
         self.decrement = ctk.CTkButton(self,
-                                       text='▼',
+                                       text='-',
                                        font=self.font,
                                        text_color=self.text_color,
                                        fg_color=self.button_color,
                                        hover_color=self.button_hover_color,
                                        text_color_disabled='#888',
                                        corner_radius=self.button_corner_radius,
-                                       border_width=self.button_border_width,
+                                       #border_width=self.button_border_width,
                                        border_color=self.button_border_color,
-                                       width=height,
+                                       width=button_width,
                                        height=height,
                                        command=self.decrement_counter)
 
         # increment button
         self.increment = ctk.CTkButton(self,
-                                       text='▲',
+                                       text='+',
                                        font=self.font,
                                        text_color=self.text_color,
                                        fg_color=self.button_color,
                                        hover_color=self.button_hover_color,
                                        text_color_disabled='#888',
                                        corner_radius=self.button_corner_radius,
-                                       border_width=self.button_border_width,
+                                       #border_width=self.button_border_width,
                                        border_color=self.button_border_color,
-                                       width=height,
+                                       width=button_width,
                                        height=height,
                                        command=self.increment_counter)
 
         # grid
         self.rowconfigure(0, weight=1)
         self.columnconfigure(0, weight=1)  # Make column 0 expandable
-        self.columnconfigure(1, weight=0, minsize=height)  # Set fixed width for column 1
-        self.columnconfigure(2, weight=0, minsize=height)  # Set fixed width for column 2
+        self.columnconfigure(1, weight=0, minsize=button_width)  # Set fixed width for column 1
+        self.columnconfigure(2, weight=0, minsize=button_width)  # Set fixed width for column 2
         self.grid_propagate(False)
 
         # layout
-        self.counter.grid(row=0, column=0, sticky='ew', padx=(4, 0), pady=4)
-        self.increment.grid(row=0, column=1, sticky='news', padx=0, pady=4)
-        self.decrement.grid(row=0, column=2, sticky='news', padx=(0, 4), pady=4)
+        #self.counter.grid(row=0, column=0, sticky='ew', padx=(4, 0), pady=4)
+        #self.increment.grid(row=0, column=1, sticky='news', padx=0, pady=4)
+        #self.decrement.grid(row=0, column=2, sticky='news', padx=(0, 4), pady=4)
+
+        self.counter.grid(row=0, column=0, sticky='nsew', padx=0, pady=0)
+        self.increment.grid(row=0, column=1, sticky='nsew', padx=0, pady=0)
+        self.decrement.grid(row=0, column=2, sticky='nsew', padx=0, pady=0)
 
         # scroll bind
         # FOR WINDOWS
