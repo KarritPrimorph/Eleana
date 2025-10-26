@@ -14,6 +14,7 @@ from modules.CTkListbox.ctk_listbox import CTkListbox
 from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function
 import copy
 from assets.Error import Error
+from subprogs.notepad.notepad import Notepad
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -172,7 +173,7 @@ CURSOR_CHANGING: bool = True
 # Possible values: 'None', 'Continuous read XY', 'Selection of points with labels'
 #                  'Selection of points', 'Numbered selections', 'Free select', 'Crosshair', 'Range select'
 # self.subprog_cursor['type']
-CURSOR_TYPE: str = 'Free select'
+CURSOR_TYPE: str = 'Range select'
 
 # Set the maximum number of annotations that can be added to the graph.
 # Set to 0 for no limit
@@ -186,7 +187,7 @@ CURSOR_CLEAR_ON_START: bool = True
 # Minimum number of cursor annotations needed for calculations.
 # Set 0 for no checking
 # self.subprog_cursor['cursor_required']
-CURSOR_REQUIRED: int = 2
+CURSOR_REQUIRED: int = 0
 
 # A text string to show in a pop up window if number of cursors is less than required for calculations
 # Leve this empty if no error should be displayed
@@ -286,7 +287,6 @@ class CurveFit(Methods, WindowGUI):
         # HERE DEFINE ADDITIONAL MAIN WINDOW CONFIGURATION
         #self.mainwindow =
 
-
         # Function definition:
         self.built_in_functions = BuiltInFunctions()
         self.function_definition =Function()
@@ -296,6 +296,8 @@ class CurveFit(Methods, WindowGUI):
         self.categoryFrame = self.builder.get_object('categoryFrame', self.master)
         self.functionFrame = self.builder.get_object('functionFrame', self.master)
         self.widget_equation = self.builder.get_object('widget_equation', self.master)
+
+        self.tab_window = self.builder.get_object('tab_window', self.master)
 
         # Create CTkListbox for Categories and Functions
         self.list_category = self.custom_widget(CTkListbox(master = self.categoryFrame, command = self.category_selected))
@@ -459,7 +461,6 @@ class CurveFit(Methods, WindowGUI):
             entry.configure(state='disabled')
             self.table_widgets['parameter'].append(entry)
 
-
         # FRAME VALUES
         try:
             for widget in self.tableFrames['value'].winfo_children():
@@ -478,7 +479,6 @@ class CurveFit(Methods, WindowGUI):
             entry.set(value)
             entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
             self.table_widgets['value'].append(entry)
-
 
         # FRAME CONSTANT
         try:
@@ -559,6 +559,76 @@ class CurveFit(Methods, WindowGUI):
         print('widget:',widget)
         print('parameter:',parameter)
 
+    def collect_values_from_table(self):
+        ''' Get all the values entered to the Table and stores it in self.function.definition'''
+        row = 0
+        rows = len(self.table_widgets['parameter'])
+        if rows == 0:
+            Error.show(title = " ", info = "No initial parameters detected. Please validate function first.")
+            return
+        while row <= rows:
+            parameter = self.table_widgets['parameter'][row].get()
+            value = self.table_widgets['value'][row].get()
+            const = self.table_widgets['const'][row].get()
+            min = self.table_widgets['min'][row].get()
+            max = self.table_widgets['max'][row].get()
+            nonnegative = self.table_widgets['non-negative'][row].get()
+            # Check if the parameter is consistent with the function definition
+            if parameter in self.function_definition.parameters:
+                Error.show(title = " ", info = f'Parameter {parameter} is not consistent with the defined function. Please check if parameter: {parameter} exists in the formula.')
+                return
+            row+=1
+
+            self.function_definition.initial_values[parameter] = value
+            self.function_definition.constants[parameter] = const
+            self.function_definition.minimum[parameter] = min
+            self.function_definition.maximum[parameter] = max
+            self.function_definition.non_negative[parameter] = nonnegative
+
+
+    # ----------------------------------
+    # DEFINE FUNCTION PANEL - BUTTONS
+    # ----------------------------------
+
+    def store_btn_clicked(self):
+        ''' Function activated by clicking on STORE button'''
+        print('store')
+
+    def delete_btn_clicked(self):
+        ''' Function activated by clicking on DELETE button'''
+        print('delete')
+
+    def store_btn_clicked(self):
+        ''' Function activated by clicking on STORE button'''
+        print('store')
+
+    def export_function_btn_clicked(self):
+        ''' Function activated by clicking on EXPORT FUNCTION button'''
+        print('store')
+
+    def import_function_btn_clicked(self):
+        ''' Function activated by clicking on IMPORT FUNCTION button'''
+        print('import')
+
+    def constants_btn_clicked(self):
+        ''' Function activated by clicking on IMPORT FUNCTION button'''
+        constants_text = "SYMBOL  =  VALUE  :    CONSTANT\n"
+        constants_text = constants_text + "-----------------------------\n"
+        for key, value in Function.constants.items():
+            constants_text = constants_text + key + "  =    " + str(value[0]) + "  : " + value[1] + "\n"
+        constants_window = Notepad(master=self.mainwindow, title = "List of available constants that may be used in your formulas", text = constants_text)
+
+    def go_to_fitting_clicked(self):
+        ''' Switch to the Init guesses panel if function is validated.'''
+        if not self.function_definition.validated:
+            Error.show(title = " ", info = "Please validate function first.")
+            return
+        self.tab_window.set("Fitting")
+
+    def go_to_define_function_clicked(self):
+        ''' Switch to Define Function Tab'''
+        self.tab_window.set("Define Function")
+
     def calculate_stack(self, commandline = False):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
@@ -607,6 +677,8 @@ class CurveFit(Methods, WindowGUI):
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
 
+
+        self.collect_values_from_table()
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
         # -----------------------------------------
@@ -634,7 +706,6 @@ class CurveFit(Methods, WindowGUI):
             parameters2 = self.data_for_calculations[1+sft]['parameters']
         cursor_positions = self.grapher.cursor_annotations
         # ------------------------------------------
-
 
         # Add to additional plots
         #self.clear_additional_plots()

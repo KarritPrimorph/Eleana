@@ -1,6 +1,7 @@
 import sympy
 import copy
 from scipy import constants as spc
+from sympy import symbols, sympify, exp, lambdify
 
 class Function:
     constants = {
@@ -39,6 +40,7 @@ class Function:
                  fit_parameters:dict = {},
                  nonnegative_parameters = [],
                  validated = False,
+                 constant: dict = {}
                  ):
 
         # Name of the function
@@ -72,11 +74,14 @@ class Function:
         # Validated
         self.validated = validated
 
+        # Constant values
+        self.constant = constant
+
     def sort_parameters(self, reverse = False):
         self.parameters.sort(key=str.lower, reverse=reverse)
 
     def find_parameters(self):
-        ''' Parse expression and get the parameters'''
+        ''' Parse expression and get the parameters from the equation'''
         try:
             expression = sympy.sympify(self.equation)
             symbols = expression.free_symbols
@@ -98,6 +103,35 @@ class Function:
             for key, val in self.fit_parameters.items():
                 self.equation = self.equation.replace(key, str(val))
         self.equation = self.equation.replace('^', '**')
+        self.constant_parameters()
+
+    def constant_parameters(self):
+        ''' Replace parameters with values if constant checkbutton is selected
+            It eliminates the parameter from fitting
+        '''
+        if not self.constant:
+            return
+        for key, val in self.constant.items():
+            if val and key in self.equation:
+                self.equation = self.equation.replace(key, str(val))
+                self.parameters.pop(key)
+
+    def calculate(self, x=None):
+        ''' Calculate function values for given x using the equation from self.equation'''
+        if not x:
+            if self.eleana.devel_mode:
+                print("Function.calculate: No x axis defined.")
+            return
+
+        # Define parameters
+        parameters = {name: symbols(name) for name in self.parameters}
+
+        equation = sympify(self.equation, locals=parameters)
+        ordinate = []
+        for arg in x:
+            result = equation.subs(self.initial_values).evalf()
+            ordinate.append(result)
+
 
     def validate(self):
         pass

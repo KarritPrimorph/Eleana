@@ -40,7 +40,7 @@
           <property type="row" id="0" name="weight">1</property>
         </containerlayout>
         <child>
-          <object class="customtkinter.CTkTabview" id="ctktabview1">
+          <object class="customtkinter.CTkTabview" id="tab_window" named="True">
             <property name="state">normal</property>
             <layout manager="grid">
               <property name="column">0</property>
@@ -121,16 +121,6 @@
                           <property type="col" id="0" name="weight">1</property>
                           <property type="row" id="1" name="weight">1</property>
                         </containerlayout>
-                        <child>
-                          <object class="ttk.Scrollbar" id="scrollbar3">
-                            <property name="orient">vertical</property>
-                            <layout manager="grid">
-                              <property name="column">1</property>
-                              <property name="row">1</property>
-                              <property name="sticky">ns</property>
-                            </layout>
-                          </object>
-                        </child>
                         <child>
                           <object class="customtkinter.CTkLabel" id="ctklabel3">
                             <property name="text" translatable="yes">Equation</property>
@@ -329,7 +319,7 @@
                                 </child>
                                 <child>
                                   <object class="customtkinter.CTkTextbox" id="widget_function_edit" named="True">
-                                    <property name="text" translatable="yes">sf
+                                    <property name="text" translatable="yes">
 </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
@@ -356,6 +346,7 @@
                         </layout>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton1">
+                            <property name="command" type="command" cbtype="simple">store_btn_clicked</property>
                             <property name="text" translatable="yes">Store</property>
                             <layout manager="grid">
                               <property name="column">0</property>
@@ -367,6 +358,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton2">
+                            <property name="command" type="command" cbtype="simple">delete_btn_clicked</property>
                             <property name="fg_color">#a80021</property>
                             <property name="hover_color">#930021</property>
                             <property name="text" translatable="yes">Delete</property>
@@ -380,6 +372,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton3">
+                            <property name="command" type="command" cbtype="simple">export_function_btn_clicked</property>
                             <property name="fg_color">#a88e21</property>
                             <property name="hover_color">#a86321</property>
                             <property name="text" translatable="yes">Export function</property>
@@ -393,6 +386,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton4">
+                            <property name="command" type="command" cbtype="simple">import_function_btn_clicked</property>
                             <property name="fg_color">#a88e21</property>
                             <property name="hover_color">#a86321</property>
                             <property name="text" translatable="yes">Import function</property>
@@ -406,6 +400,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton5">
+                            <property name="command" type="command" cbtype="simple">constants_btn_clicked</property>
                             <property name="fg_color">#fc9414</property>
                             <property name="hover_color">#fc6b14</property>
                             <property name="text" translatable="yes">Constants</property>
@@ -434,6 +429,7 @@
                     </containerlayout>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton8">
+                        <property name="command" type="command" cbtype="simple">cancel</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">Quit</property>
@@ -445,6 +441,7 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton9">
+                        <property name="command" type="command" cbtype="simple">go_to_fitting_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">NEXT --&gt;</property>
@@ -832,6 +829,7 @@
                     </layout>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton16">
+                        <property name="command" type="command" cbtype="simple">go_to_define_function_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">&lt;-- Previous</property>
@@ -845,6 +843,7 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton17">
+                        <property name="command" type="command" cbtype="simple">ok_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">FIT</property>

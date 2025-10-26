@@ -75,6 +75,7 @@ class MainMenu:
         self.icon_copy_spreadsheet = self.prepare_icon('copy_spreadsheet.png')
         self.icon_curvefit = self.prepare_icon('curvefit.png')
 
+
     def create(self, master):
         ''' BUILD MENU '''
         self.main_menu = tk.Menu(master, bg = self.bg, fg = self.fg, font = self.font, activebackground=self.activebg, activeforeground=self.activefg, borderwidth=self.borderwidth_bar, activeborderwidth=self.borderwidth)
