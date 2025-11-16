@@ -2,6 +2,8 @@
 # IMPORT MODULES NEEDED
 # -- Here is an example --
 import customtkinter as ctk
+
+from modules.CTkMessagebox import CTkMessagebox
 from widgets.CTkSpinbox import CTkSpinbox
 import numpy as np
 import importlib
@@ -11,10 +13,11 @@ from scipy.interpolate import CubicSpline, PchipInterpolator, Akima1DInterpolato
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from modules.CTkListbox.ctk_listbox import CTkListbox
-from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function
+from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function, UserDefinedFunctions
 import copy
 from assets.Error import Error
 from subprogs.notepad.notepad import Notepad
+from subprogs.user_input.single_dialog import SingleDialog
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -206,7 +209,6 @@ CURSOR_OUTSIDE_Y: bool = False
 # self.subprog_cursor['cursor_outside_text']
 CURSOR_OUTSIDE_TEXT: str = 'One or more selected points are outside the (x, y) range of data.'
 
-
 '''**************************************************************************************************
 *                      THE DEFAULT CONSTRUCTOR (LINES BETWEEN **)                                   * 
 **************************************************************************************************'''
@@ -220,7 +222,7 @@ else:
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
 
-from subprogs.general_methods.SubprogMethods5 import SubMethods_05 as Methods
+from subprogs.general_methods.SubprogMethods6 import SubMethods_06 as Methods
 class CurveFit(Methods, WindowGUI):
     def __init__(self, app=None, which='first', commandline=False):
         self.__app = weakref.ref(app)
@@ -241,7 +243,6 @@ class CurveFit(Methods, WindowGUI):
         self.stack_sep = STACK_SEP
         Methods.__init__(self, app_weak=self.__app, which=which, commandline=commandline, close_subprogs=CLOSE_SUBPROGS)
         self.mainwindow.protocol('WM_DELETE_WINDOW', self.cancel)
-
 
     # PRE-DEFINED FUNCTIONS TO EXECUTE AT DIFFERENT STAGES OF SUBPROG METHODS
     # Unused definitions can be deleted
@@ -289,7 +290,9 @@ class CurveFit(Methods, WindowGUI):
 
         # Function definition:
         self.built_in_functions = BuiltInFunctions()
-        self.function_definition =Function()
+        self.user_defined_functions = UserDefinedFunctions(store_file=self.eleana.paths['storage_dir'])
+        self.user_defined_functions.restore_functions()
+        self.function_definition = Function()
 
         # References to widgets
         self.graphFrame = self.builder.get_object('graphFrame', self.master)
@@ -299,6 +302,15 @@ class CurveFit(Methods, WindowGUI):
 
         self.tab_window = self.builder.get_object('tab_window', self.master)
 
+        self.button_validate = self.builder.get_object('button_validate', self.master)
+        self.function_definition.validated = False
+        self.configure_button_validate()
+
+        self.preview_checkbox = self.builder.get_object('preview_chcekbox', self.master)
+        self.preview_checkbox.select()
+        self.extrapolate_checkbox = self.builder.get_object('extrapolate_chcecbox', self.master)
+        self.extrapolate_checkbox.select()
+
         # Create CTkListbox for Categories and Functions
         self.list_category = self.custom_widget(CTkListbox(master = self.categoryFrame, command = self.category_selected))
         self.list_category.grid(row = 1, column = 0, sticky="nsew")
@@ -307,6 +319,7 @@ class CurveFit(Methods, WindowGUI):
 
         self.widget_name = self.builder.get_object('widget_name', self.master)
         self.widget_parameters = self.builder.get_object('widget_parameters', self.master)
+        self.widget_parameters.configure(state='disabled')
         self.widget_indep_var = self.builder.get_object('widget_indep_var', self.master)
         self.widget_function_edit = self.builder.get_object('widget_function_edit', self.master)
 
@@ -345,9 +358,49 @@ class CurveFit(Methods, WindowGUI):
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
 
+        # Set inital values to widgets
+        self.list_category.activate(0)
+        self.category_selected('User defined')
+
+        # Set binds to the text
+        self.widget_name.bind('<Return>', lambda event, w='name', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_name.bind('<KP_Enter>', lambda event, w='name', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_name.bind('<FocusOut>', lambda event, w='name', p='': self.table_changed(widget=w, parameter=p))
+
+        self.widget_function_edit.bind('<Return>', lambda event, w='equation_text', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_function_edit.bind('<KP_Enter>', lambda event, w='equation_text', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_function_edit.bind('<FocusOut>', lambda event, w='equation_text', p='': self.table_changed(widget=w, parameter=p))
+
+        self.widget_indep_var.bind('<Return>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_indep_var.bind('<KP_Enter>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
+        self.widget_indep_var.bind('<FocusOut>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
+
+        # Center window
+        self.mainwindow.update_idletasks()
+
+        w = self.mainwindow.winfo_width()
+        h = self.mainwindow.winfo_height()
+
+        sw = self.mainwindow.winfo_screenwidth()
+        sh = self.mainwindow.winfo_screenheight()
+
+        x = (sw - w) // 2
+        y = (sh - h) // 2
+
+        self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
+
+
+
     #
     # CATEGORY AND FUNCTIONS WIDGETS
     #
+    def configure_button_validate(self):
+        ''' Configure layout of Validate button depending on the state of function_definition'''
+        if not self.function_definition.validated:
+            self.button_validate.configure(text = "Validate", fg_color='#eb4034')
+        else:
+            self.button_validate.configure(text = "Valid", fg_color = '#136317')
+
     def populate_category_and_functions(self):
         ''' Create list of function categories and the categories '''
         self.list_category.insert(0, 'User defined')
@@ -355,6 +408,7 @@ class CurveFit(Methods, WindowGUI):
 
     def category_selected(self, category):
         ''' Create list of functions when category is selected '''
+        self.list_function.delete("all")
         if category == "Built-in functions":
             lsf = self.built_in_functions.get_list()
             i = 0
@@ -362,7 +416,11 @@ class CurveFit(Methods, WindowGUI):
                 self.list_function.insert(i, name)
                 i+= 1
         elif category == "User defined":
-            print('Category selected: User defined')
+            lsf = self.user_defined_functions.get_list()
+            i = 0
+            for name in lsf:
+                self.list_function.insert(i, name)
+                i += 1
 
     # Handle selected from list
     def function_selected(self, value):
@@ -371,7 +429,7 @@ class CurveFit(Methods, WindowGUI):
         if category == 'Built-in functions':
             functions_container = self.built_in_functions
         elif category == 'User defined':
-            functions_container = "User defined"
+            functions_container = self.user_defined_functions
 
         self.function_definition = copy.deepcopy(functions_container.get_by_name(value))
         if not self.function_definition:
@@ -382,7 +440,7 @@ class CurveFit(Methods, WindowGUI):
         self.widget_equation.delete("0.0", "end")
         self.widget_equation.insert("0.0", self.function_definition.equation_text)
         self.widget_equation.configure(state="disabled")
-            # Display function that will be fitted
+        # Display function that will be fitted
         self.widget_function_to_fit.configure(state='normal')
         self.widget_function_to_fit.delete("0.0", "end")
         function = str(f'f({self.function_definition.variable})={self.function_definition.equation_text}')
@@ -398,9 +456,11 @@ class CurveFit(Methods, WindowGUI):
             self.function_definition.find_parameters()
 
         # (4) Display parameters in the "Parameters" Entrybox
+        self.widget_parameters.configure(state="normal")
         self.widget_parameters.delete(0, "end")
         param_text = ", ".join(self.function_definition.parameters)
         self.widget_parameters.insert(0, param_text)
+        self.widget_function_edit.configure(state="disabled")
 
         # (5) Display the Function in the "Function" CTkTextbox
         self.widget_function_edit.configure(state="normal")
@@ -410,29 +470,43 @@ class CurveFit(Methods, WindowGUI):
         if self.function_definition.validated:
             self.create_initial_guesses_list()
 
+        self.configure_button_validate()
 
     def validate_function(self):
         ''' After clicking Validate button the equation is taken from the widgets
             and entered to the function and it is checked
         '''
+        self.collect_values_from_table()
+        self.function_definition.validated = False
+
         if not self.widget_name.get().strip():
-            Error.show(title="Curve fit", info = 'Field Name should not be empty')
-            return
+           Error.show(title="Curve fit", info = 'Field Name cannot be empty')
+           return
+        # Set name
         self.function_definition.name = self.widget_name.get()
+
+        # Set equation text
         if not self.widget_function_edit.get("1.0", "end").strip():
             Error.show(title="Curve fit", info = 'Define a function to fit.')
             return
-
         self.function_definition.equation_text = self.widget_function_edit.get("1.0","end").strip()
+
+        # Set variable
         self.function_definition.variable = self.widget_indep_var.get().strip()
-        self.function_definition.prepare_equation()
-        self.function_definition.find_parameters()
+
+        status = self.function_definition.prepare_equation()
+        if not status:
+            Error.show(title='Equation validation', info = "Function cannot be validated. Check the formula")
+            return
+        status = self.function_definition.find_parameters()
         self.function_definition.sort_parameters()
 
         # Detect parameters automatically
+        self.widget_parameters.configure(state='normal')
         self.widget_parameters.delete(0, "end")
         param_text = ", ".join(self.function_definition.parameters)
         self.widget_parameters.insert(0, param_text)
+        self.widget_parameters.configure(state='disabled')
 
         # Create the table for initail guesses
         self.create_initial_guesses_list()
@@ -443,6 +517,8 @@ class CurveFit(Methods, WindowGUI):
         function = str(f'f({self.function_definition.variable})={self.function_definition.equation_text}' )
         self.widget_function_to_fit.insert("0.0",  function)
         self.widget_function_to_fit.configure(state='disabled')
+        self.function_definition.validated = True
+        self.configure_button_validate()
 
     def create_initial_guesses_list(self):
         ''' Create table for initial guesses and displays it in the Tab
@@ -454,10 +530,11 @@ class CurveFit(Methods, WindowGUI):
                 widget.destroy()
         self.table_widgets['parameter'].clear()
         # Create entries
+        self.tableFrames['parameter'].columnconfigure(0, weight=1)
         for i, param in enumerate(self.function_definition.parameters):
             entry = ctk.CTkEntry(master = self.tableFrames['parameter'], justify = 'right', width = 40, height = 30)
             entry.insert(0, param)
-            entry.grid(row=i, column=0, padx=2, pady=2, sticky="")
+            entry.grid(row=i, column=0, padx=2, pady=2, sticky="we")
             entry.configure(state='disabled')
             self.table_widgets['parameter'].append(entry)
 
@@ -470,6 +547,7 @@ class CurveFit(Methods, WindowGUI):
         self.table_widgets['value'].clear()
 
         # Create entries
+        self.tableFrames['value'].columnconfigure(0, weight=1)
         for i, param in enumerate(self.function_definition.parameters):
             entry = CTkSpinbox(master = self.tableFrames['value'],
                                width = 200,
@@ -488,20 +566,23 @@ class CurveFit(Methods, WindowGUI):
             pass
         self.table_widgets['const'].clear()
         # Create entries
+        self.tableFrames['const'].columnconfigure(0, weight=0)
+        self.tableFrames['const'].grid_anchor("center")
         for i, param in enumerate(self.function_definition.parameters):
-            entry = ctk.CTkCheckBox(master=self.tableFrames['const'],
-                                    width=40,
-                                    height=34,
-                                    text="",
-                                    command = lambda p=param: self.table_changed(widget = 'const', parameter = p))
-            value = self.function_definition.fit_parameters.get(param, False)
-            if value:
-                entry.select()
-            else:
-                entry.deselect()
-            entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
-            self.table_widgets['const'].append(entry)
+            entry = ctk.CTkCheckBox(
+                master=self.tableFrames['const'],
+                width=40,
+                height=34,
+                text="",
+                command=lambda p=param: self.table_changed(widget='const', parameter=p)
+            )
 
+            value = self.function_definition.fit_parameters.get(param, False)
+            entry.select() if value else entry.deselect()
+
+            entry.grid(row=i, column=0, padx=2, pady=0, sticky="")  # brak sticky = brak rozciągania
+
+            self.table_widgets['const'].append(entry)
         # FRAME MINIMUM/MAXIMUM
         try:
             for widget in self.tableFrames['min'].winfo_children():
@@ -511,16 +592,19 @@ class CurveFit(Methods, WindowGUI):
         self.table_widgets['min'].clear()
         for widget in self.tableFrames['max'].winfo_children():
             widget.destroy()
+        self.table_widgets['max'].clear()
         # Create entries
+        self.tableFrames['min'].columnconfigure(0, weight = 1)
+        self.tableFrames['max'].columnconfigure(0, weight=1)
         for i, param in enumerate(self.function_definition.parameters):
             entry_min = ctk.CTkEntry(master=self.tableFrames['min'],
                                width=100,
                                height=30,
-                                     )#command = lambda p=param: self.table_changed(widget = 'min', parameter = p))
+                               )
             entry_max = ctk.CTkEntry(master=self.tableFrames['max'],
                                      width=100,
                                      height=30,
-                                     )#command = lambda p=param: self.table_changed(widget = 'max', parameter = p))
+                               )
             value_min = self.function_definition.minimum.get(param, float("-inf"))
             entry_min.delete(0, "end")
             entry_min.insert(0, value_min)
@@ -541,6 +625,7 @@ class CurveFit(Methods, WindowGUI):
             pass
         self.table_widgets['non-negative'].clear()
         # Create entries
+        self.tableFrames['non-negative'].columnconfigure(0, weight=0)
         for i, param in enumerate(self.function_definition.parameters):
             entry = ctk.CTkCheckBox(master=self.tableFrames['non-negative'],
                     width = 80,
@@ -552,12 +637,32 @@ class CurveFit(Methods, WindowGUI):
                 entry.select()
             else:
                 entry.deselect()
-            entry.grid(row=i, column=0, padx=2, pady=0, sticky="we")
+            entry.grid(row=i, column=0, padx=2, pady=0, sticky="")
             self.table_widgets['non-negative'].append(entry)
 
-    def table_changed(self, widget, parameter):
-        print('widget:',widget)
-        print('parameter:',parameter)
+    def table_changed(self, widget = None, parameter=None):
+        ''' Called when function values, parameters or anything in GUI changes'''
+
+        if widget == 'name':
+            self.function_definition.name = self.widget_name.get()
+        elif widget == 'equation_text' or widget == 'variable':
+            self.validate_function()
+            self.collect_values_from_table()
+
+        preview = self.preview_checkbox.get()
+        if preview and self.function_definition.validated:
+            self.ok_clicked(calculate=False)
+            x1 = self.data_for_calculations[0]['x']
+            self.create_preview(x_vals=x1)
+
+    def create_preview(self, x_vals):
+        ''' Create temporary plot showing function defined in self.function_definition '''
+        self.collect_values_from_table()
+        x = np.asarray(x_vals)
+        y = self.function_definition.evaluate(x_vals=x)
+
+        self.add_to_additional_plots(x=x, y=y, clear=True)
+        self.grapher.plot_graph()
 
     def collect_values_from_table(self):
         ''' Get all the values entered to the Table and stores it in self.function.definition'''
@@ -565,26 +670,28 @@ class CurveFit(Methods, WindowGUI):
         rows = len(self.table_widgets['parameter'])
         if rows == 0:
             Error.show(title = " ", info = "No initial parameters detected. Please validate function first.")
-            return
-        while row <= rows:
+            return False
+        while row < rows:
             parameter = self.table_widgets['parameter'][row].get()
             value = self.table_widgets['value'][row].get()
             const = self.table_widgets['const'][row].get()
             min = self.table_widgets['min'][row].get()
             max = self.table_widgets['max'][row].get()
             nonnegative = self.table_widgets['non-negative'][row].get()
+
             # Check if the parameter is consistent with the function definition
-            if parameter in self.function_definition.parameters:
+            if parameter not in self.function_definition.parameters:
                 Error.show(title = " ", info = f'Parameter {parameter} is not consistent with the defined function. Please check if parameter: {parameter} exists in the formula.')
-                return
+                return False
             row+=1
 
             self.function_definition.initial_values[parameter] = value
-            self.function_definition.constants[parameter] = const
+            self.function_definition.constant[parameter] = const
             self.function_definition.minimum[parameter] = min
             self.function_definition.maximum[parameter] = max
-            self.function_definition.non_negative[parameter] = nonnegative
-
+            if nonnegative:
+                self.function_definition.non_negative.append(parameter)
+            return True
 
     # ----------------------------------
     # DEFINE FUNCTION PANEL - BUTTONS
@@ -592,29 +699,70 @@ class CurveFit(Methods, WindowGUI):
 
     def store_btn_clicked(self):
         ''' Function activated by clicking on STORE button'''
-        print('store')
+        new_function = copy.deepcopy(self.function_definition)
+
+        if not self.function_definition.validated:
+            Error.show(title='Store function', info='Please validate function first')
+            return
+        self.collect_values_from_table()
+        self.user_defined_functions.add_new(function = new_function)
+        self.user_defined_functions.store()
+        category = self.list_category.get()
+        self.category_selected(category)
+        user_def_list = self.user_defined_functions.get_list()
+        self.list_function.delete('all')
+        for user_function in enumerate(user_def_list):
+            self.list_function.insert(index = user_function[0], option = user_function[1])
+        self.list_category.activate(0)
 
     def delete_btn_clicked(self):
         ''' Function activated by clicking on DELETE button'''
-        print('delete')
-
-    def store_btn_clicked(self):
-        ''' Function activated by clicking on STORE button'''
-        print('store')
+        category = self.list_category.get()
+        name = self.list_function.get()
+        if category == 'Built-in functions':
+            return
+        elif category == 'User defined':
+            question = CTkMessagebox(master=self.mainwindow, title = '', icon = 'question', message=f'Do you want to delete {self.function_definition.name}?', option_1 = 'Cancel', option_2='Delete')
+            response = question.get()
+            if response == 'Cancel':
+                return
+            self.user_defined_functions.delete(name)
+            self.category_selected('User defined')
 
     def export_function_btn_clicked(self):
         ''' Function activated by clicking on EXPORT FUNCTION button'''
-        print('store')
+        status = self.collect_values_from_table()
+        if not status:
+            return
+        self.mainwindow.attributes('-topmost', False)
+        self.mainwindow.update()
+        self.function_definition.export(master = self.mainwindow)
+        self.mainwindow.attributes('-topmost', ON_TOP)
+        self.mainwindow.update()
 
     def import_function_btn_clicked(self):
         ''' Function activated by clicking on IMPORT FUNCTION button'''
-        print('import')
+        status = self.function_definition.import_function(master = self.mainwindow)
+        if status is False:
+            return
+
+        self.function_definition = status
+        name = self.function_definition.name[0]
+        name = name.strip()
+        user_functions_list = self.user_defined_functions.get_list()
+        user_functions_list = [x.strip() for x in user_functions_list]
+        if name in user_functions_list:
+            single_dialog = SingleDialog(master=self.mainwindow, title='There is a function with the same name', label='Enter new name', text=name, enable_dot=True)
+            response = single_dialog.get()
+            if response is None:
+                response = name
+            self.function_definition.name = response
 
     def constants_btn_clicked(self):
         ''' Function activated by clicking on IMPORT FUNCTION button'''
         constants_text = "SYMBOL  =  VALUE  :    CONSTANT\n"
         constants_text = constants_text + "-----------------------------\n"
-        for key, value in Function.constants.items():
+        for key, value in Function.physical_constants.items():
             constants_text = constants_text + key + "  =    " + str(value[0]) + "  : " + value[1] + "\n"
         constants_window = Notepad(master=self.mainwindow, title = "List of available constants that may be used in your formulas", text = constants_text)
 
@@ -635,6 +783,7 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
             '''
+
 
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY
@@ -677,8 +826,8 @@ class CurveFit(Methods, WindowGUI):
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
 
+        self.function_definition.build_lmfit_model()
 
-        self.collect_values_from_table()
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
         # -----------------------------------------
@@ -704,7 +853,7 @@ class CurveFit(Methods, WindowGUI):
             origin2 = self.data_for_calculations[1+sft]['origin']
             comment2 = self.data_for_calculations[1+sft]['comment']
             parameters2 = self.data_for_calculations[1+sft]['parameters']
-        cursor_positions = self.grapher.cursor_annotations
+        cursor_positions = self.eleana.settings.grapher['custom_annotations']
         # ------------------------------------------
 
         # Add to additional plots

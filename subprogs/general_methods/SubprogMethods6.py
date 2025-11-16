@@ -16,7 +16,7 @@ import weakref
 ======================================================
 ==                                                  ==
 ==            SUBPROG METHODS VERSION               ==
-==                       5                          ==
+==                       6                          ==
 ==                                                  ==
 ====================================================== 
 '''
@@ -31,7 +31,7 @@ import weakref
 #         return method(self, *args, **kwargs)  # Go to a method
 #     return wrapper
 
-class SubMethods_05:
+class SubMethods_06:
 
     ''' This list is only for debuging'''
     # List of class instances
@@ -39,7 +39,7 @@ class SubMethods_05:
 
     def __init__(self, app_weak=None, commandline=False, which = 'first', close_subprogs = False):
         # Add created instance to the list
-        SubMethods_05._instances.append(weakref.ref(self))
+        SubMethods_06._instances.append(weakref.ref(self))
 
         ''' Start init '''
         self.registered_custom_widgets = []
@@ -354,7 +354,7 @@ class SubMethods_05:
     # STANDARD METHODS FOR SUBPROG GUI BUTTONS
     # -------------------------------------------------
 
-    def ok_clicked(self):
+    def ok_clicked(self, calculate = True):
         ''' [-OK-] button
             This is standard function in SubprogMethods '''
 
@@ -364,7 +364,7 @@ class SubMethods_05:
             return
         self.eleana.busy = True
         try:
-            self.start_single_calculations()
+            self.start_single_calculations(calculate = calculate)
         except Exception as e:
             self.eleana.busy = False
             self.set_mouse_state(state='')
@@ -374,6 +374,8 @@ class SubMethods_05:
         self.set_mouse_state(state='')
         self.eleana.busy = False
         self.after_ok_clicked()
+        if not calculate:
+            return
         self.show_results_matching_first()
 
         # Clear memory
@@ -425,7 +427,7 @@ class SubMethods_05:
     # TRIGGERING CALCULATIONS
     # -----------------------------------------------
 
-    def start_single_calculations(self):
+    def start_single_calculations(self, calculate):
         ''' This function is triggered by clicking "Calculate" button'''
         required_cursors = self.subprog_cursor.get('cursor_required', 0)
         nr_of_annotations = len(self.eleana.settings.grapher['custom_annotations'])
@@ -436,9 +438,9 @@ class SubMethods_05:
         self.skip_next_error = False
         status = self.get_data()
         if status:
-            self.perform_single_calculations(group_processing=False)
+            self.perform_single_calculations(group_processing=False, calculate = calculate)
 
-    def perform_single_calculations(self, group_processing=False):
+    def perform_single_calculations(self, calculate, group_processing=False):
         ''' Prepares for calculations of single data selected in First or Second
             This function checks if this is a single data of stack and if stack
             can be calculated as separate data or must be taken as whole.
@@ -448,7 +450,7 @@ class SubMethods_05:
         skip_report_show = True
         #self.set_mouse_state("watch")
         # Create result_dataset if add or replace is set
-        if self.subprog_settings.get('result') == 'add':
+        if self.subprog_settings.get('result') == 'add' and calculate:
             # Simply add the result to the eleana.results_dataset
             self.result_data = copy.deepcopy(self.original_data1)
 
@@ -464,7 +466,7 @@ class SubMethods_05:
             self.eleana.results_dataset.append(self.result_data)
             self.current_index_in_results = len(self.eleana.results_dataset) - 1
 
-        elif self.subprog_settings.get('result') == 'replace':
+        elif self.subprog_settings.get('result') == 'replace' and calculate:
             # The replace mode was set
             self.result_data = copy.deepcopy(self.original_data1)
             self.result_data.name = self.result_data.name + self.subprog_settings.get('name_suffix', '')
@@ -497,7 +499,7 @@ class SubMethods_05:
             # This is stack 2D then check if stack is calculated as separate data
             self.stk_index = 0
             if not self.stack_sep:
-                status = self.stack_calc()  # Prepare the whole stack for calculations
+                status = self.stack_calc(calculate = calculate)  # Prepare the whole stack for calculations
                 if not status:
                     return status
             else:
@@ -528,7 +530,7 @@ class SubMethods_05:
                 self.data_label.configure(text=self.original_data1.name_nr)
                 if group_processing == False:
                     self.app.mainwindow.update()
-            status = self.do_calc_single2D()
+            status = self.do_calc_single2D(calculate)
             if status:
                 self.consecutive_number += 1
             else:
@@ -743,7 +745,8 @@ class SubMethods_05:
         else:
             self.data_for_calculations.append(None)
         # Go to calculate function
-        row_to_report = self.calculate()
+        if calculate:
+            row_to_report = self.calculate()
         # Update data and report
         if isinstance(row_to_report, list):
             if self.report['create']:
@@ -751,7 +754,7 @@ class SubMethods_05:
         self.create_result()
         return True
 
-    def do_calc_single2D(self):
+    def do_calc_single2D(self, calculate):
         ''' Gets data from original_data1 and original_data2 and send
             to calculate
         '''
@@ -865,6 +868,8 @@ class SubMethods_05:
             self.data_for_calculations.append(None)
 
         # Go to calculate function
+        if calculate is False:
+            return
         row_to_report = self.calculate()
         # Check if cursors are within (x,y) of x_data1 and y_data1
         status = self.check_cursor_bounds(x=x_data1, y=y_data1)
@@ -880,7 +885,7 @@ class SubMethods_05:
         #self.set_mouse_state(state='')
         return True
 
-    def stack_calc(self):
+    def stack_calc(self, calculate):
         ''' This method is used if stk_data is calculated as a whole
             using self.calculate_stack method
         '''

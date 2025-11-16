@@ -1,5 +1,7 @@
 #!/usr/bin/python3
 import pathlib
+from faulthandler import enable
+
 import pygubu
 import tkinter as tk
 import re
@@ -9,7 +11,8 @@ PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "single_dialog.ui"
 
 class SingleDialog:
-    def __init__(self, master=None, title='', label='', text=''):
+    def __init__(self, master=None, title='', label='', text='', enable_dot=False):
+        self.enable_dot = enable_dot
         self.master = master
         # Pygubu part below:
         self.builder = builder = pygubu.Builder()
@@ -58,7 +61,7 @@ class SingleDialog:
     def ok(self, event = None):
         pattern = r"\.\s"
         text = self.textbox.get()
-        if re.search(pattern, text):
+        if re.search(pattern, text) and not self.enable_dot:
             CTkMessagebox(title="Name check", message="The name cannot contain a dot followed by a space.")
             return
         self.response = text

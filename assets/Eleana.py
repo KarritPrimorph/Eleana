@@ -74,6 +74,8 @@ class Eleana:
              'last_projects': [],
              'last_export_dir':''
              }
+
+        self.paths['storage_dir'] = self.paths['home_dir'] / '.EleanaPy'
         # Load saved paths
         try:
             self.load_paths()
@@ -532,15 +534,4 @@ class Eleana:
                 y = data.y[index_stk]
         return {'x':x, 're_y':y, 'complex':False, 'im_y':np.array([])}
 
-    # def data_from_selected_range(self, which='first'):
-    #     # Gets x and y data from the range selected in graph
-    #     x = None
-    #     y = None
-    #     index_in_dataset = self.selections[which]
-    #     if index_in_dataset == -1:
-    #         return x,y
-    #     data = self.dataset[index_in_dataset]
-    #     x = data.x
-    #     y = data.y
-    #     type = data.type
 

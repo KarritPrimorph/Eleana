@@ -40,7 +40,7 @@
           <property type="row" id="0" name="weight">1</property>
         </containerlayout>
         <child>
-          <object class="customtkinter.CTkTabview" id="ctktabview1">
+          <object class="customtkinter.CTkTabview" id="tab_window" named="True">
             <property name="state">normal</property>
             <layout manager="grid">
               <property name="column">0</property>
@@ -122,16 +122,6 @@
                           <property type="row" id="1" name="weight">1</property>
                         </containerlayout>
                         <child>
-                          <object class="ttk.Scrollbar" id="scrollbar3">
-                            <property name="orient">vertical</property>
-                            <layout manager="grid">
-                              <property name="column">1</property>
-                              <property name="row">1</property>
-                              <property name="sticky">ns</property>
-                            </layout>
-                          </object>
-                        </child>
-                        <child>
                           <object class="customtkinter.CTkLabel" id="ctklabel3">
                             <property name="text" translatable="yes">Equation</property>
                             <layout manager="grid">
@@ -142,6 +132,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkTextbox" id="widget_equation" named="True">
+                            <property name="font">{Arial} 15 {}</property>
                             <property name="state">normal</property>
                             <property name="text" translatable="yes"> </property>
                             <layout manager="grid">
@@ -206,6 +197,7 @@
                             </child>
                             <child>
                               <object class="customtkinter.CTkEntry" id="widget_name" named="True">
+                                <property name="font">{Arial} 15 {}</property>
                                 <layout manager="grid">
                                   <property name="column">1</property>
                                   <property name="padx">4</property>
@@ -227,6 +219,7 @@
                             </child>
                             <child>
                               <object class="customtkinter.CTkEntry" id="widget_parameters" named="True">
+                                <property name="font">{Arial} 15 {}</property>
                                 <property name="state">normal</property>
                                 <layout manager="grid">
                                   <property name="column">1</property>
@@ -277,6 +270,7 @@
                                 </child>
                                 <child>
                                   <object class="customtkinter.CTkEntry" id="widget_indep_var" named="True">
+                                    <property name="font">{Arial} 15 {}</property>
                                     <property name="text" translatable="yes">x</property>
                                     <layout manager="grid">
                                       <property name="column">1</property>
@@ -317,7 +311,7 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel5">
-                                    <property name="text" translatable="yes">      Function</property>
+                                    <property name="text" translatable="yes">  Edit function</property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="padx">4</property>
@@ -329,8 +323,7 @@
                                 </child>
                                 <child>
                                   <object class="customtkinter.CTkTextbox" id="widget_function_edit" named="True">
-                                    <property name="text" translatable="yes">sf
-</property>
+                                    <property name="font">{Arial} 15 {}</property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="columnspan">2</property>
@@ -356,6 +349,7 @@
                         </layout>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton1">
+                            <property name="command" type="command" cbtype="simple">store_btn_clicked</property>
                             <property name="text" translatable="yes">Store</property>
                             <layout manager="grid">
                               <property name="column">0</property>
@@ -367,6 +361,7 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton2">
+                            <property name="command" type="command" cbtype="simple">delete_btn_clicked</property>
                             <property name="fg_color">#a80021</property>
                             <property name="hover_color">#930021</property>
                             <property name="text" translatable="yes">Delete</property>
@@ -379,23 +374,26 @@
                           </object>
                         </child>
                         <child>
-                          <object class="customtkinter.CTkButton" id="ctkbutton3">
-                            <property name="fg_color">#a88e21</property>
-                            <property name="hover_color">#a86321</property>
-                            <property name="text" translatable="yes">Export function</property>
+                          <object class="customtkinter.CTkLabel" id="ctklabel19">
+                            <property name="bg_color">#7e7e7e</property>
+                            <property name="font">{Arial} 1 {}</property>
+                            <property name="height">1</property>
+                            <property name="text" translatable="yes"> </property>
                             <layout manager="grid">
                               <property name="column">0</property>
                               <property name="padx">10</property>
                               <property name="pady">10</property>
                               <property name="row">2</property>
+                              <property name="sticky">ew</property>
                             </layout>
                           </object>
                         </child>
                         <child>
-                          <object class="customtkinter.CTkButton" id="ctkbutton4">
+                          <object class="customtkinter.CTkButton" id="ctkbutton3">
+                            <property name="command" type="command" cbtype="simple">export_function_btn_clicked</property>
                             <property name="fg_color">#a88e21</property>
                             <property name="hover_color">#a86321</property>
-                            <property name="text" translatable="yes">Import function</property>
+                            <property name="text" translatable="yes">Save function</property>
                             <layout manager="grid">
                               <property name="column">0</property>
                               <property name="padx">10</property>
@@ -405,7 +403,37 @@
                           </object>
                         </child>
                         <child>
+                          <object class="customtkinter.CTkButton" id="ctkbutton4">
+                            <property name="command" type="command" cbtype="simple">import_function_btn_clicked</property>
+                            <property name="fg_color">#a88e21</property>
+                            <property name="hover_color">#a86321</property>
+                            <property name="text" translatable="yes">Load function</property>
+                            <layout manager="grid">
+                              <property name="column">0</property>
+                              <property name="padx">10</property>
+                              <property name="pady">10</property>
+                              <property name="row">4</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
+                          <object class="customtkinter.CTkLabel" id="ctklabel20">
+                            <property name="bg_color">#7e7e7e</property>
+                            <property name="font">{Arial} 1 {}</property>
+                            <property name="height">1</property>
+                            <property name="text" translatable="yes"> </property>
+                            <layout manager="grid">
+                              <property name="column">0</property>
+                              <property name="padx">10</property>
+                              <property name="pady">10</property>
+                              <property name="row">5</property>
+                              <property name="sticky">ew</property>
+                            </layout>
+                          </object>
+                        </child>
+                        <child>
                           <object class="customtkinter.CTkButton" id="ctkbutton5">
+                            <property name="command" type="command" cbtype="simple">constants_btn_clicked</property>
                             <property name="fg_color">#fc9414</property>
                             <property name="hover_color">#fc6b14</property>
                             <property name="text" translatable="yes">Constants</property>
@@ -413,7 +441,7 @@
                               <property name="column">0</property>
                               <property name="padx">10</property>
                               <property name="pady">10</property>
-                              <property name="row">4</property>
+                              <property name="row">6</property>
                             </layout>
                           </object>
                         </child>
@@ -434,6 +462,7 @@
                     </containerlayout>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton8">
+                        <property name="command" type="command" cbtype="simple">cancel</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">Quit</property>
@@ -445,6 +474,7 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton9">
+                        <property name="command" type="command" cbtype="simple">go_to_fitting_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">NEXT --&gt;</property>
@@ -485,8 +515,10 @@
                       </object>
                     </child>
                     <child>
-                      <object class="customtkinter.CTkTextbox" id="ctktextbox4">
+                      <object class="customtkinter.CTkTextbox" id="widget_function_to_fit" named="True">
+                        <property name="font">{Arial} 16 {}</property>
                         <property name="height">70</property>
+                        <property name="state">disabled</property>
                         <property name="text" translatable="yes">f(x) = a / 2*$pi + exp(-(x-center) / 2)</property>
                         <property name="width">600</property>
                         <layout manager="grid">
@@ -503,6 +535,7 @@
                 <child>
                   <object class="customtkinter.CTkScrollableFrame" id="ctkscrollableframe1">
                     <property name="border_width">2</property>
+                    <property name="height">500</property>
                     <layout manager="grid">
                       <property name="column">0</property>
                       <property name="row">1</property>
@@ -540,10 +573,11 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel8">
-                                    <property name="text" translatable="yes">Parameter</property>
+                                    <property name="text" translatable="yes"> Parameter </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
@@ -554,20 +588,6 @@
                                       <property name="row">1</property>
                                       <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkEntry" id="ctkentry2">
-                                        <property name="justify">right</property>
-                                        <property name="text" translatable="yes">ctkentry19</property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -585,34 +605,21 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel10">
-                                    <property name="text" translatable="yes">Value</property>
+                                    <property name="text" translatable="yes"> Value </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="customtkinter.CTkFrame" id="ctkframe20" named="True">
+                                  <object class="customtkinter.CTkFrame" id="tableFrame_Value" named="True">
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">1</property>
                                       <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkEntry" id="tableFrame_Value" named="True">
-                                        <property name="justify">right</property>
-                                        <property name="text" translatable="yes">ctkentry20</property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -626,10 +633,11 @@
                                 </layout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel11">
-                                    <property name="text" translatable="yes">Const.</property>
+                                    <property name="text" translatable="yes"> Const. </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
@@ -640,21 +648,6 @@
                                       <property name="row">1</property>
                                       <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkCheckBox" id="ctkcheckbox1">
-                                        <property name="text" translatable="yes"> </property>
-                                        <property name="width">30</property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="padx">10</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -672,10 +665,11 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel12">
-                                    <property name="text" translatable="yes">Minimum</property>
+                                    <property name="text" translatable="yes"> Minimum </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
@@ -686,20 +680,6 @@
                                       <property name="row">1</property>
                                       <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkEntry" id="ctkentry6">
-                                        <property name="justify">right</property>
-                                        <property name="text" translatable="yes">ctkentry21</property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -717,34 +697,21 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel13">
-                                    <property name="text" translatable="yes">Maximum</property>
+                                    <property name="text" translatable="yes"> Maximum </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="customtkinter.CTkFrame" id="ctkframe27" named="True">
+                                  <object class="customtkinter.CTkFrame" id="tableFrame_Max" named="True">
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">1</property>
                                       <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkEntry" id="tableFrame_Max" named="True">
-                                        <property name="justify">right</property>
-                                        <property name="text" translatable="yes">ctkentry21</property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -763,34 +730,21 @@
                                 </containerlayout>
                                 <child>
                                   <object class="customtkinter.CTkLabel" id="ctklabel9">
-                                    <property name="text" translatable="yes">Non-negative</property>
+                                    <property name="text" translatable="yes"> Set ≥0 </property>
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">0</property>
+                                      <property name="sticky">w</property>
                                     </layout>
                                   </object>
                                 </child>
                                 <child>
-                                  <object class="customtkinter.CTkFrame" id="ctkframe6" named="True">
+                                  <object class="customtkinter.CTkFrame" id="tableFrame_Nonnegative" named="True">
                                     <layout manager="grid">
                                       <property name="column">0</property>
                                       <property name="row">1</property>
-                                      <property name="sticky">ew</property>
+                                      <property name="sticky">nsew</property>
                                     </layout>
-                                    <containerlayout manager="grid">
-                                      <property type="col" id="0" name="weight">1</property>
-                                    </containerlayout>
-                                    <child>
-                                      <object class="customtkinter.CTkCheckBox" id="tableFrame_Nonnegative" named="True">
-                                        <property name="text" translatable="yes"> </property>
-                                        <layout manager="grid">
-                                          <property name="column">0</property>
-                                          <property name="padx">10</property>
-                                          <property name="row">0</property>
-                                          <property name="sticky">ew</property>
-                                        </layout>
-                                      </object>
-                                    </child>
                                   </object>
                                 </child>
                               </object>
@@ -810,12 +764,27 @@
                     </layout>
                     <containerlayout manager="grid">
                       <property type="col" id="0" name="weight">1</property>
+                      <property type="col" id="1" name="weight">1</property>
                     </containerlayout>
                     <child>
-                      <object class="customtkinter.CTkCheckBox" id="check_autocalc" named="True">
-                        <property name="text" translatable="yes">auto calculate</property>
+                      <object class="customtkinter.CTkCheckBox" id="preview_chcekbox" named="True">
+                        <property name="command" type="command" cbtype="simple">table_changed</property>
+                        <property name="text" translatable="yes">Preview</property>
                         <layout manager="grid">
                           <property name="column">0</property>
+                          <property name="padx">4</property>
+                          <property name="pady">4</property>
+                          <property name="row">0</property>
+                          <property name="sticky">w</property>
+                        </layout>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="customtkinter.CTkCheckBox" id="extrapolate_chcecbox" named="True">
+                        <property name="command" type="command" cbtype="simple">table_changed</property>
+                        <property name="text" translatable="yes">Extrapolate</property>
+                        <layout manager="grid">
+                          <property name="column">1</property>
                           <property name="padx">4</property>
                           <property name="pady">4</property>
                           <property name="row">0</property>
@@ -827,10 +796,12 @@
                       <object class="customtkinter.CTkFrame" id="ctkframe28">
                         <layout manager="grid">
                           <property name="column">0</property>
+                          <property name="columnspan">2</property>
                           <property name="row">1</property>
                           <property name="sticky">ew</property>
                         </layout>
                         <containerlayout manager="grid">
+                          <property type="col" id="0" name="weight">1</property>
                           <property type="col" id="1" name="weight">1</property>
                           <property type="col" id="3" name="weight">1</property>
                           <property type="col" id="5" name="weight">1</property>
@@ -915,6 +886,7 @@
                     </layout>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton16">
+                        <property name="command" type="command" cbtype="simple">go_to_define_function_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">&lt;-- Previous</property>
@@ -928,6 +900,7 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton17">
+                        <property name="command" type="command" cbtype="simple">ok_clicked</property>
                         <property name="fg_color">#09790c</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">FIT</property>
