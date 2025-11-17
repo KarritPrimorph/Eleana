@@ -390,7 +390,6 @@ class CurveFit(Methods, WindowGUI):
         self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
 
 
-
     #
     # CATEGORY AND FUNCTIONS WIDGETS
     #
@@ -478,6 +477,7 @@ class CurveFit(Methods, WindowGUI):
         '''
         self.collect_values_from_table()
         self.function_definition.validated = False
+        self.configure_button_validate()
 
         if not self.widget_name.get().strip():
            Error.show(title="Curve fit", info = 'Field Name cannot be empty')
@@ -494,11 +494,11 @@ class CurveFit(Methods, WindowGUI):
         # Set variable
         self.function_definition.variable = self.widget_indep_var.get().strip()
 
-        status = self.function_definition.prepare_equation()
+        self.function_definition.prepare_equation()
+        status = self.function_definition.find_parameters()
         if not status:
             Error.show(title='Equation validation', info = "Function cannot be validated. Check the formula")
-            return
-        status = self.function_definition.find_parameters()
+            return False
         self.function_definition.sort_parameters()
 
         # Detect parameters automatically
@@ -519,6 +519,7 @@ class CurveFit(Methods, WindowGUI):
         self.widget_function_to_fit.configure(state='disabled')
         self.function_definition.validated = True
         self.configure_button_validate()
+        return True
 
     def create_initial_guesses_list(self):
         ''' Create table for initial guesses and displays it in the Tab
@@ -691,7 +692,7 @@ class CurveFit(Methods, WindowGUI):
             self.function_definition.maximum[parameter] = max
             if nonnegative:
                 self.function_definition.non_negative.append(parameter)
-            return True
+        return True
 
     # ----------------------------------
     # DEFINE FUNCTION PANEL - BUTTONS

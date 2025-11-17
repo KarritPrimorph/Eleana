@@ -8,7 +8,7 @@ from pathlib import Path
 from modules.CTkMessagebox import CTkMessagebox
 from pathlib import Path
 from customtkinter import filedialog
-import lmfit
+from lmfit import Model
 
 class Function:
     physical_constants = {
@@ -118,6 +118,7 @@ class Function:
                 self.equation = self.equation.replace(key, str(val))
         self.equation = self.equation.replace('^', '**')
         self.constant_parameters()
+
 
     def constant_parameters(self):
         ''' Replace parameters with values if constant checkbutton is selected
@@ -263,21 +264,9 @@ class Function:
         This creates object lmfit.Model based on self.equation_text i self.variable.
         """
 
-        if isinstance(self.equation, str):
-            def func(x, **params):
-                # namespace: parametry + stałe
-                ns = {}
-                ns.update(params)
-                ns.update(self.constant)
-                ns['x'] = x
-                ns['np'] = np
-                return eval(self.equation, {"__builtins__": {}}, ns)
-        else:
-            # self.equation jest callable
-            func = self.equation
 
-        model = lmfit.Model(func, independent_vars=['x'])
-        return model
+    def _model_from_string(self, expr, params):
+
 
 class BuiltInFunctions:
     definitions = [
