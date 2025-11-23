@@ -606,13 +606,13 @@ class CurveFit(Methods, WindowGUI):
                                      width=100,
                                      height=30,
                                )
-            value_min = self.function_definition.minimum.get(param, float("-inf"))
+            value_min = self.function_definition.minimum.get(param, float(-np.inf))
             entry_min.delete(0, "end")
             entry_min.insert(0, value_min)
             entry_min.grid(row=i, column=0, padx=2, pady=2, sticky="we")
             self.table_widgets['min'].append(entry_min)
 
-            value_max = self.function_definition.minimum.get(param, float("inf"))
+            value_max = self.function_definition.minimum.get(param, float(np.inf))
             entry_max.delete(0, "end")
             entry_max.insert(0, value_max)
             entry_max.grid(row=i, column=0, padx=2, pady=2, sticky="we")
@@ -827,7 +827,7 @@ class CurveFit(Methods, WindowGUI):
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
 
-        self.function_definition.build_lmfit_model()
+        model, params = self.function_definition.build_lmfit_model()
 
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
@@ -854,8 +854,17 @@ class CurveFit(Methods, WindowGUI):
             origin2 = self.data_for_calculations[1+sft]['origin']
             comment2 = self.data_for_calculations[1+sft]['comment']
             parameters2 = self.data_for_calculations[1+sft]['parameters']
-        cursor_positions = self.eleana.settings.grapher['custom_annotations']
+        #cursor_positions = self.eleana.settings.grapher['custom_annotations']
         # ------------------------------------------
+
+        if np.iscomplexobj(y1):
+            Error.show(title='Curve fit', info = "Y data contains complex values. The fitting routine will use only real parts.")
+            return False
+        result = model.fit(y1.real, params=params, x=x1)
+
+
+        print("koniec")
+
 
         # Add to additional plots
         #self.clear_additional_plots()

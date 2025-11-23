@@ -8,7 +8,8 @@ from pathlib import Path
 from modules.CTkMessagebox import CTkMessagebox
 from pathlib import Path
 from customtkinter import filedialog
-from lmfit import Model
+from lmfit.models import ExpressionModel
+from assets.Error import Error
 
 class Function:
     physical_constants = {
@@ -53,35 +54,37 @@ class Function:
         # Name of the function
         self.name = name
 
-        # Right side of the equation
+        # Right side of the equation entered by a user
         self.equation_text = equation_text
 
-        # Right side of the equation ready to fit
+        # Right side of the equation ready to fit, parsed by sympy
         self.equation = equation_text
 
-        # Parameters:
+        # Parameters -> list, f. example: ['a', 'b']:
         self.parameters = parameters
 
-        # Name of independent variable
+        # Name of independent variable -> string for example 'x'
         self.variable = variable
 
-        # Initial values for parameters
+        # Initial values for parameters -> dictionary, for example {'a': 1, 'b': 2}
         self.initial_values = initial_values
 
-        # Boundary conditions for parameters
+        # Boundary conditions for parameters -> dictionary, for example {'a': -1, 'b': -2}
         self.minimum = minimum
         self.maximum = maximum
 
-        # Fit this parameter:
+        # Fit this parameter -> dictionary, for example: {'a': True, 'b': False}
         self.fit_parameters = fit_parameters
 
         # Define which parameters should be non_negative
+        # Dictionary, for example: {'a':  False, 'b': False}
         self.non_negative = nonnegative_parameters
 
-        # Validated
+        # Validated -> bool, means that function wasa checked and parsed by sympy
         self.validated = validated
 
-        # Constant values
+        # Constant values -> defines which parameter must be kept constant.
+        # For example {'a': True, 'b': False}
         self.constant = constant
 
         # Export path
@@ -118,7 +121,6 @@ class Function:
                 self.equation = self.equation.replace(key, str(val))
         self.equation = self.equation.replace('^', '**')
         self.constant_parameters()
-
 
     def constant_parameters(self):
         ''' Replace parameters with values if constant checkbutton is selected
@@ -261,11 +263,68 @@ class Function:
 
     def build_lmfit_model(self):
         """
-        This creates object lmfit.Model based on self.equation_text i self.variable.
+        Creates lmfit ExpressionModel and Parameters based on the equation
+        and parameter settings stored in this object.
         """
 
+        def _safe_float(value, default):
+            """
+            Convert value (possibly a string) to float.
+            If empty / None → return default (np.inf or -np.inf)
+            """
+            if value is None:
+                return default
+            if isinstance(value, str):
+                v = value.strip().lower()
+                if v == "":
+                    return default
+                if v in ("inf", "+inf"):
+                    return np.inf
+                if v == "-inf":
+                    return -np.inf
+            return float(value)
 
-    def _model_from_string(self, expr, params):
+        # Build model and parameters object
+        model = ExpressionModel(self.equation, independent_vars=[self.variable])
+        params = model.make_params()
+
+        # Loop over declared parameters
+        for p in self.parameters:
+
+            # ----- Initial value -----
+            if p in self.initial_values:
+                params[p].value = self.initial_values[p]
+            else:
+                Error.show(
+                    title="build_lmfit_model",
+                    info=f"Parameter '{p}' not found in initial_values."
+                )
+                return None
+
+            # ----- Minimum -----
+            if p in self.minimum:
+                params[p].min = _safe_float(self.minimum.get(p), -np.inf)
+            else:
+                params[p].min = _safe_float(self.minimum.get(p), -np.inf)
+
+            # ----- Maximum -----
+            if p in self.maximum:
+                params[p].max = _safe_float(self.maximum.get(p), np.inf)
+            else:
+                params[p].max = _safe_float(self.maximum.get(p), np.inf)
+
+            # ----- Non-negative -----
+            if p in self.non_negative and self.non_negative[p] is True:
+                params[p].min = max(params[p].min, 0)
+
+            # ----- Constant parameter -----
+            if p in self.constant and self.constant[p] is True:
+                params[p].vary = False
+
+            # ----- Fit parameter switch -----
+            elif p in self.fit_parameters:
+                params[p].vary = self.fit_parameters[p]
+        return model, params
 
 
 class BuiltInFunctions:
