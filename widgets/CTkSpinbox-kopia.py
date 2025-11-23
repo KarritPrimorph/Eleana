@@ -40,9 +40,7 @@ class CTkSpinbox(ctk.CTkFrame):
                  command: any = None,
                  wait_for: float = 0.05,
                  logarithm_step: bool = False,
-                 disable_wheel = False,
-                 fractional_change = 0,
-                 ):  # Add wait_for parameter
+                 disable_wheel = False):  # Add wait_for parameter
 
         super().__init__(master,
                          height=height,
@@ -52,7 +50,6 @@ class CTkSpinbox(ctk.CTkFrame):
                          border_width=border_width,
                          corner_radius=corner_radius)
 
-        self.fractional_change = fractional_change
         self.logarithm_step = logarithm_step
         self.command = command
         # values
@@ -236,10 +233,6 @@ class CTkSpinbox(ctk.CTkFrame):
 
     def schedule_update(self):
         '''Schedules an update of the counter after a delay.'''
-
-        if self.fractional_change and not self.logarithm_step:
-            self.step_value = float(self.counter_var.get()) * self.fractional_change
-            self.scroll_value = float(self.counter_var.get()) * self.fractional_change
         if self.update_timer:
             self.update_timer.cancel()
         self.update_timer = threading.Timer(self.wait_for, self.update_counter, [None])
@@ -306,10 +299,6 @@ class CTkSpinbox(ctk.CTkFrame):
         # Update the variable if provided
         if self.variable:
             self.variable.set(value)
-
-        # Update the step_value dynamically based on current value
-        #if self.fractional_change:
-        #    self.step_value = abs(value * self.fractional_change)
 
         # Call the command if provided
         if self.command:
