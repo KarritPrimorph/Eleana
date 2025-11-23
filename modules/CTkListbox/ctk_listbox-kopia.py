@@ -26,13 +26,21 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                  command=None,
                  justify="left",
                  disable_selection = False,
+                 gui_appearance = 'dark',
                  **kwargs):
         # mode = customtkinter.get_appearance_mode()
+
+
         self.disable_selection = disable_selection
-        if customtkinter.get_appearance_mode() == 'Light':
-            text_color = '#454545'
+        if gui_appearance == 'light':
+           text_color = '#454545'
+           select_color = '#bbbbbb'
+           hover_color = '#aaaaaa'
+        else:
+            text_color = '#eaeaea'
             select_color = '#bbbbbb'
             hover_color = '#aaaaaa'
+
         super().__init__(master, width=width, height=height, fg_color=fg_color, border_width=border_width, **kwargs)
         self._scrollbar.grid_configure(padx=(0, border_width + 4))
         self._scrollbar.configure(width=12)
@@ -92,7 +100,7 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
         if self._scrollbar:
             current_position = self._scrollbar.get()[1]
             if current_position < 1.0:
-                new_position = min(current_position + 0.01, 1.0)  # Zmniejszenie wartości zmiany
+                new_position = min(current_position + 0.01, 1.0)
                 self._scrollbar.set(new_position - 0.01, new_position)
         self._parent_canvas.yview("scroll", int(100 / 20), "units")
 
@@ -102,7 +110,7 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
         if self._scrollbar:
             current_position = self._scrollbar.get()[0]
             if current_position > 0.0:
-                new_position = max(current_position - 0.01, 0.0)  # Zmniejszenie wartości zmiany
+                new_position = max(current_position - 0.01, 0.0)
                 self._scrollbar.set(new_position, new_position + 0.01)
         self._parent_canvas.yview("scroll", -int(100 / 20), "units")
 
@@ -167,7 +175,8 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                     index += 1
 
     def bind(self, key, func):
-        super().bind_all(key, lambda e: func(self.get()), add="+")
+        #super().bind_all(key, lambda e: func(self.get()), add="+")
+        super().bind(key, lambda e: func(self.get()), add="+")
 
     def deselect(self, index):
         """Deselect the option."""

@@ -215,7 +215,6 @@ CURSOR_OUTSIDE_TEXT: str = 'One or more selected points are outside the (x, y) r
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
-    from assets.Eleana import Eleana
 else:
     module_path = f"{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
@@ -289,6 +288,8 @@ class CurveFit(Methods, WindowGUI):
         #self.mainwindow =
 
         # Function definition:
+        self.show_errors = {'complex_error_show' : True}
+
         self.built_in_functions = BuiltInFunctions()
         self.user_defined_functions = UserDefinedFunctions(store_file=self.eleana.paths['storage_dir'])
         self.user_defined_functions.restore_functions()
@@ -325,7 +326,8 @@ class CurveFit(Methods, WindowGUI):
 
         self.button_validate = self.builder.get_object('button_validate', self.master)
 
-        #
+        self.textReport = self.builder.get_object('textReport', self.master)
+
         # TAB: FIT
         #
         self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.master)
@@ -388,6 +390,26 @@ class CurveFit(Methods, WindowGUI):
         y = (sh - h) // 2
 
         self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
+
+        # Define available fitting algorithms:
+        self.algorithms = {
+            'Levenberg-Marquardt': 'leastsq',
+            'Nelder-Mead simplex': 'nelder',
+            'L - BFGS - B': 'lbfgsb',
+            'Powell method': 'powell',
+            'Conjugated gradient method': 'cg',
+            'BFGS': 'bfgs',
+            'Truncated Newton': 'tnc',
+            'Newton method': 'trust-ncg',
+            'Trust region dogleg': 'dogleg'
+            }
+        self.sel_algorithm = self.builder.get_object('sel_algorithm', self.mainwindow)
+        self.sel_algorithm.configure(values = list(self.algorithms.keys()))
+        self.sel_algorithm.set('Levenberg-Marquardt')
+
+        self.replace_table_chceck = self.builder.get_object('replace_table_chceck', self.mainwindow)
+        self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
+        self.show_fitted_curve_checkbox = self.builder.get_object('show_fitted_curve_checkbox', self.mainwindow)
 
 
     #
@@ -827,8 +849,12 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
+        self.collect_values_from_table()
 
         model, params = self.function_definition.build_lmfit_model()
+
+        # Set algorithm
+
 
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
@@ -858,14 +884,36 @@ class CurveFit(Methods, WindowGUI):
         #cursor_positions = self.eleana.settings.grapher['custom_annotations']
         # ------------------------------------------
 
+        # Check if data is complex
         if np.iscomplexobj(y1):
-            Error.show(title='Curve fit', info = "Y data contains complex values. The fitting routine will use only real parts.")
-            return False
-        result = model.fit(y1.real, params=params, x=x1)
+            if self.show_errors['complex_error_show']:
+                Error.show(title='Curve fit', info = "Y data contains complex values. The fitting routine will use only real parts.\n This message is shown only once")
+                self.show_errors['complex_error_show'] = False
 
+        # Prepare function to fit and perform fit
+        method = self.algorithms.get(self.sel_algorithm.get(), '')
+        result = model.fit(y1.real, params=params, x=x1, method=method)
 
-        print("koniec")
+        # Print best fit
+        fit_y = result.best_fit.copy()
+        self.data_for_calculations[0]['y'] = fit_y
 
+        # Write parameters to the table
+        parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
+        for name, param in result.params.items():
+            if name in parameter_names:
+                idx = parameter_names.index(name)
+                value_spinbox = self.table_widgets['value'][idx]
+                value_spinbox.set(param.value)
+
+        # Prepare result report
+        log_report = self.log_report(result)
+        self.textReport.delete("0.0", "end")
+        self.textReport.insert("0.0", result.fit_report())
+
+        # Draw residuals
+
+        self.draw_results()
 
         # Add to additional plots
         #self.clear_additional_plots()
@@ -879,6 +927,23 @@ class CurveFit(Methods, WindowGUI):
 
         return row_to_report
 
+    def draw_results(self, ):
+        ''' Draw the plot in the Result Tab: residuals and original curve and fit
+        '''
+        self.ax.clear()
+        resid = y1 - result.best_fit
+        self.ax.plot(self.data_for_calculations[0]['x'], resid)
+        self.ax.plot(self.data_for_calculations[0]['x'], self.data_for_calculations[0]['y'])
+        self.ax.set_xlabel("x")
+        self.ax.set_ylabel("y")
+        self.ax.grid(True)
+
+        self.canvas.draw()  # 3. odśwież canvas
+
+    def log_report(self, result):
+        ''' Reformat report from lmfit'''
+        return result.fit_report()
+
     def save_settings(self):
         ''' Stores required values to self.eleana.subprog_storage
             This is stored in memory only, not in disk
@@ -886,11 +951,64 @@ class CurveFit(Methods, WindowGUI):
             {'key_for_storage' : function_for_getting_value()}
         '''
         return  [
-            {},
-                ]
+            {'algorithms': self.sel_algorithm.get(),
+             'category': self.list_category.get(),
+             'list_function': self.list_function.get(),
+             'preview': self.preview_checkbox.get(),
+             'extrapolate': self.extrapolate_checkbox.get(),
+             'replace_table_check': self.replace_table_chceck.get(),
+             'show_original_curve_checkbox': self.show_original_curve_checkbox.get(),
+             'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get()
+             }]
 
     def restore_settings(self):
-        pass
+        val = self.restore('algorithms')
+        if val:
+            self.sel_algorithm.set(val)
+
+        category = self.restore('category')
+        if category:
+            if category == 'User defined':
+                self.list_category.activate(0)
+            elif category == 'Built-in functions':
+                self.list_category.activate(1)
+            self.category_selected(category)
+
+        val = self.restore('list_function')
+        if val:
+            function_list = [btn.cget("text") for btn in self.list_function.buttons.values()]
+            if val in function_list:
+                self.list_function.activate(val)
+
+        val = self.restore('preview')
+        if val is True or val is None:
+            self.preview_checkbox.select()
+        else:
+            self.preview_checkbox.deselect()
+
+        val = self.restore('extrapolate')
+        if val is True or val is None:
+            self.extrapolate_checkbox.select()
+        else:
+            self.extrapolate_checkbox.deselect()
+
+        val = self.restore('replace_table_chceck')
+        if val is True or val is None:
+            self.replace_table_chceck.select()
+        else:
+            self.replace_table_chceck.deselect()
+
+        val = self.restore('show_original_curve_checkbox')
+        if val is True or val is None:
+            self.show_original_curve_checkbox.select()
+        else:
+            self.show_original_curve_checkbox.deselect()
+
+        val = self.restore('show_fitted_curve_checkbox')
+        if val is True or val is None:
+            self.show_fitted_curve_checkbox.select()
+        else:
+            self.show_fitted_curve_checkbox.deselect()
 
 if __name__ == "__main__":
     tester = TemplateClass()

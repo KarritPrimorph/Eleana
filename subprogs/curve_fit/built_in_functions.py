@@ -96,33 +96,33 @@ class Function:
     def sort_parameters(self, reverse = False):
         self.parameters.sort(key=str.lower, reverse=reverse)
 
-    # def find_parameters(self):
-    #     ''' Parse expression and get the parameters from the equation'''
-    #     try:
-    #         expression = sympy.sympify(self.equation)
-    #         symbols = expression.free_symbols
-    #         self.parameters.clear()
-    #         self.parameters = []
-    #
-    #         for symbol in symbols:
-    #             if str(symbol) != self.variable:
-    #                 self.parameters.append(str(symbol))
-    #         return True
-    #     except:
-    #         return False
-
     def find_parameters(self):
+        ''' Parse expression and get the parameters from the equation'''
         try:
             expression = sympy.sympify(self.equation)
             symbols = expression.free_symbols
             self.parameters.clear()
             self.parameters = []
+
             for symbol in symbols:
                 if str(symbol) != self.variable:
                     self.parameters.append(str(symbol))
             return True
         except:
             return False
+
+    # def find_parameters(self):
+    #     try:
+    #         expression = sympy.sympify(self.equation)
+    #         symbols = expression.free_symbols
+    #         self.parameters.clear()
+    #         self.parameters = []
+    #         for symbol in symbols:
+    #             if str(symbol) != self.variable:
+    #                 self.parameters.append(str(symbol))
+    #         return True
+    #     except:
+    #         return False
 
     def prepare_equation(self):
         ''' Prepare the equation for fitting  '''

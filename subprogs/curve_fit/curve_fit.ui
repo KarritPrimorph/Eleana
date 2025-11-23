@@ -819,7 +819,6 @@
                         </child>
                         <child>
                           <object class="customtkinter.CTkComboBox" id="sel_algorithm" named="True">
-                            <property name="values">["Levenberg-Marquardt", "Nelder-Mead Simplex"]</property>
                             <property name="width">180</property>
                             <layout manager="grid">
                               <property name="column">1</property>
@@ -840,7 +839,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="customtkinter.CTkEntry" id="ent_iterations" named="True">
+                          <object class="customtkinter.CTkEntry" id="entry_iterations" named="True">
                             <property name="justify">right</property>
                             <property name="text" translatable="yes">123456</property>
                             <property name="width">60</property>
@@ -863,7 +862,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="customtkinter.CTkEntry" id="ctkentry9">
+                          <object class="customtkinter.CTkEntry" id="entry_tolerance" named="True">
                             <property name="justify">right</property>
                             <property name="text" translatable="yes">0.000000000000001</property>
                             <layout manager="grid">
@@ -873,6 +872,15 @@
                             </layout>
                           </object>
                         </child>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="customtkinter.CTkCheckBox" id="replace_table_chceck" named="True">
+                        <property name="text" translatable="yes">Update with best fit</property>
+                        <layout manager="grid">
+                          <property name="column">2</property>
+                          <property name="row">0</property>
+                        </layout>
                       </object>
                     </child>
                   </object>
@@ -965,8 +973,8 @@
                               <property type="col" id="1" name="weight">1</property>
                             </containerlayout>
                             <child>
-                              <object class="customtkinter.CTkButton" id="btn_fit" named="True">
-                                <property name="text" translatable="yes">Fitted curve</property>
+                              <object class="customtkinter.CTkCheckBox" id="show_original_curve_checkbox" named="True">
+                                <property name="text" translatable="yes">Show original curve</property>
                                 <layout manager="grid">
                                   <property name="column">0</property>
                                   <property name="row">0</property>
@@ -974,8 +982,8 @@
                               </object>
                             </child>
                             <child>
-                              <object class="customtkinter.CTkButton" id="btn_residuals" named="True">
-                                <property name="text" translatable="yes">Residuals</property>
+                              <object class="customtkinter.CTkCheckBox" id="show_fitted_curve_checkbox" named="True">
+                                <property name="text" translatable="yes">Show fit</property>
                                 <layout manager="grid">
                                   <property name="column">1</property>
                                   <property name="row">0</property>

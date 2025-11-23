@@ -154,6 +154,11 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                 for i in self.buttons:
                     self.select(i)
             return
+        elif isinstance(index, str):
+            elements = [btn.cget("text") for btn in self.buttons.values()]
+            if index in elements:
+                idx = elements.index(index)
+                index = idx
         selected = list(self.buttons.keys())[index]
         self.select(selected)
 
@@ -197,6 +202,10 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
             for i in self.buttons:
                 self.deselect(i)
             return
+        elif isinstance(index, str):
+            if index in self.listvariable:
+                idx = self.listvariable.index(index)
+                index = idx
         selected = list(self.buttons.keys())[index]
         self.deselect(selected)
 
