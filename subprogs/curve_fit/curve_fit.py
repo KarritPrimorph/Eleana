@@ -329,6 +329,7 @@ class CurveFit(Methods, WindowGUI):
         self.textReport = self.builder.get_object('textReport', self.mainwindow)
         self.show_fitted_curve_checkbox = self.builder.get_object('show_fitted_curve_checkbox', self.mainwindow)
         self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
+        self.show_resid_checkbox = self.builder.get_object('show_resid_checkbox', self.mainwindow)
 
         # TAB: FIT
         #
@@ -360,11 +361,16 @@ class CurveFit(Methods, WindowGUI):
         # Create Graph
         self.plt = plt
         self.graphFrame = self.builder.get_object("graphFrame", self.mainwindow)
+        self.graphFrame.rowconfigure(0, weight=1)
+        self.graphFrame.columnconfigure(0, weight=1)
         self.fig = Figure(figsize=(8,4), dpi=100)
         self.ax = self.fig.add_subplot(111)
         self.canvas = FigureCanvasTkAgg(self.fig, master = self.graphFrame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
+
+        # Create variables to store temporary data
+        self.temporary_data = {}
 
         # Set inital values to widgets
         self.list_category.activate(0)
@@ -855,6 +861,7 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
+        self.temporary_data = {}
         self.collect_values_from_table()
 
         model, params = self.function_definition.build_lmfit_model()
@@ -902,6 +909,10 @@ class CurveFit(Methods, WindowGUI):
 
         # Print best fit
         best_fit = result.best_fit.copy()
+        self.temporary_data['best_fit'] = best_fit
+        self.temporary_data['x'] = copy.deepcopy(x1)
+        self.temporary_data['y'] = copy.deepcopy(y1)
+        self.temporary_data['resid'] = copy.deepcopy(y1 - best_fit)
         self.data_for_calculations[0]['y'] = best_fit
 
         # Write parameters to the table
@@ -919,7 +930,7 @@ class CurveFit(Methods, WindowGUI):
 
         # Draw residuals
 
-        self.draw_results(best_fit = best_fit, x_data = x1, y_data = y1.real)
+        self.draw_results()
 
         # Add to additional plots
         #self.clear_additional_plots()
@@ -933,14 +944,25 @@ class CurveFit(Methods, WindowGUI):
 
         return row_to_report
 
-    def draw_results(self, best_fit, x_data, y_data):
+    def draw_results(self, event=None):
         ''' Draw the plot in the Result Tab: residuals and original curve and fit
         '''
+        resid = self.temporary_data.get('resid', None)
+        best_fit = self.temporary_data.get('best_fit', None)
+        x = self.temporary_data.get('x', None)
+        y = self.temporary_data.get('y', None)
+
+        # Add curves to the plot
         self.ax.clear()
+        if x is None or best_fit is None:
+            return False
+
         if self.show_fitted_curve_checkbox.get():
-            self.ax.plot(x_data, resid)
+            self.ax.plot(x, best_fit)
         if self.show_original_curve_checkbox.get():
-            self.ax.plot(x_data, y_data)
+            self.ax.plot(x, y)
+        if self.show_resid_checkbox.get():
+            self.ax.plot(x, resid)
 
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
@@ -968,7 +990,8 @@ class CurveFit(Methods, WindowGUI):
              'extrapolate': self.extrapolate_checkbox.get(),
              'replace_table_check': self.replace_table_chceck.get(),
              'show_original_curve_checkbox': self.show_original_curve_checkbox.get(),
-             'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get()
+             'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get(),
+             'show_resid': self.show_resid_checkbox.get()
              }]
 
     def restore_settings(self):
@@ -1002,7 +1025,7 @@ class CurveFit(Methods, WindowGUI):
         else:
             self.extrapolate_checkbox.deselect()
 
-        val = self.restore('replace_table_chceck')
+        val = self.restore('replace_table_check')
         if val is True or val is None:
             self.replace_table_chceck.select()
         else:
@@ -1019,6 +1042,12 @@ class CurveFit(Methods, WindowGUI):
             self.show_fitted_curve_checkbox.select()
         else:
             self.show_fitted_curve_checkbox.deselect()
+
+        val = self.restore('show_resid')
+        if val is True or val is None:
+            self.show_resid_checkbox.select()
+        else:
+            self.show_resid_checkbox.deselect()
 
 if __name__ == "__main__":
     tester = TemplateClass()

@@ -95,9 +95,7 @@ if __name__ == "__main__":
     cmd = CommandProcessor()
 
     # Create application instance
-    root = tk.Tk()
-    root.withdraw()
-    app = Application(eleana, cmd, master = root)  # This is GUI
+    app = Application(eleana, cmd, master = None)  # This is GUI
 
     # Start application
     app.run()
