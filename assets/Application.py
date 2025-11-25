@@ -99,6 +99,8 @@ PROJECT_UI = PROJECT_PATH / "EleanaGUI.ui"
 
 class Application():
     def __init__(self, eleana_instance, command_processor, master=None):
+
+        self.root = master
         # Create reference to eleana and commandprocessor
         self.eleana = eleana_instance
         self.notify = self.eleana.notify_on
@@ -110,10 +112,12 @@ class Application():
         self.builder.add_from_file(PROJECT_UI)
 
         # Main widget
+
         self.mainwindow = builder.get_object("EleanaWindow", master)
         self.mainwindow.iconify()
         self.mainwindow.withdraw()
         self.builder.connect_callbacks(self)
+
 
         # Create references to Widgets and Frames
         self.switch_comparison = builder.get_object("switch_comp_view", self.mainwindow)

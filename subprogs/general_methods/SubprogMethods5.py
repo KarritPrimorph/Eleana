@@ -64,6 +64,7 @@ class SubMethods_05:
             # Window start from Menu in GUI
             self.__app = app_weak
             self.mainwindow.title(self.subprog_settings.get('title', ''))
+
             self.mainwindow.attributes('-topmost', self.subprog_settings.get('on_top', True))
 
             if self.subprog_settings.get('data_label'):

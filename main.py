@@ -1,4 +1,5 @@
 import sys
+import tkinter as tk
 
 # BASIC CONFIGURATION
 ELEANA_VERSION = 1              # Set the Eleana version. This will be stored in self.eleana.version
@@ -94,7 +95,9 @@ if __name__ == "__main__":
     cmd = CommandProcessor()
 
     # Create application instance
-    app = Application(eleana, cmd)  # This is GUI
+    root = tk.Tk()
+    root.withdraw()
+    app = Application(eleana, cmd, master = root)  # This is GUI
 
     # Start application
     app.run()

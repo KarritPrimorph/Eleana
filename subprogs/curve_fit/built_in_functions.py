@@ -338,7 +338,7 @@ class Function:
             elif p in self.fit_parameters:
                 params[p].vary = self.fit_parameters[p]
         return model, params
-
+        pass
 
 class BuiltInFunctions:
     definitions = [

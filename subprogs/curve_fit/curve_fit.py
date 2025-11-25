@@ -296,20 +296,20 @@ class CurveFit(Methods, WindowGUI):
         self.function_definition = Function()
 
         # References to widgets
-        self.graphFrame = self.builder.get_object('graphFrame', self.master)
-        self.categoryFrame = self.builder.get_object('categoryFrame', self.master)
-        self.functionFrame = self.builder.get_object('functionFrame', self.master)
-        self.widget_equation = self.builder.get_object('widget_equation', self.master)
+        self.graphFrame = self.builder.get_object('graphFrame', self.mainwindow)
+        self.categoryFrame = self.builder.get_object('categoryFrame', self.mainwindow)
+        self.functionFrame = self.builder.get_object('functionFrame', self.mainwindow)
+        self.widget_equation = self.builder.get_object('widget_equation', self.mainwindow)
 
-        self.tab_window = self.builder.get_object('tab_window', self.master)
+        self.tab_window = self.builder.get_object('tab_window', self.mainwindow)
 
-        self.button_validate = self.builder.get_object('button_validate', self.master)
+        self.button_validate = self.builder.get_object('button_validate', self.mainwindow)
         self.function_definition.validated = False
         self.configure_button_validate()
 
-        self.preview_checkbox = self.builder.get_object('preview_chcekbox', self.master)
+        self.preview_checkbox = self.builder.get_object('preview_chcekbox', self.mainwindow)
         self.preview_checkbox.select()
-        self.extrapolate_checkbox = self.builder.get_object('extrapolate_chcecbox', self.master)
+        self.extrapolate_checkbox = self.builder.get_object('extrapolate_chcecbox', self.mainwindow)
         self.extrapolate_checkbox.select()
 
         # Create CTkListbox for Categories and Functions
@@ -318,27 +318,29 @@ class CurveFit(Methods, WindowGUI):
         self.list_function = self.custom_widget(CTkListbox(master=self.functionFrame, command = self.function_selected))
         self.list_function.grid(row=1, column=0, sticky="nsew")
 
-        self.widget_name = self.builder.get_object('widget_name', self.master)
-        self.widget_parameters = self.builder.get_object('widget_parameters', self.master)
+        self.widget_name = self.builder.get_object('widget_name', self.mainwindow)
+        self.widget_parameters = self.builder.get_object('widget_parameters', self.mainwindow)
         self.widget_parameters.configure(state='disabled')
-        self.widget_indep_var = self.builder.get_object('widget_indep_var', self.master)
-        self.widget_function_edit = self.builder.get_object('widget_function_edit', self.master)
+        self.widget_indep_var = self.builder.get_object('widget_indep_var', self.mainwindow)
+        self.widget_function_edit = self.builder.get_object('widget_function_edit', self.mainwindow)
 
-        self.button_validate = self.builder.get_object('button_validate', self.master)
+        self.button_validate = self.builder.get_object('button_validate', self.mainwindow)
 
-        self.textReport = self.builder.get_object('textReport', self.master)
+        self.textReport = self.builder.get_object('textReport', self.mainwindow)
+        self.show_fitted_curve_checkbox = self.builder.get_object('show_fitted_curve_checkbox', self.mainwindow)
+        self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
 
         # TAB: FIT
         #
-        self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.master)
+        self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.mainwindow)
 
         # Table Frames
-        self.tableFrames = {'parameter': self.builder.get_object('tableFrame_Parameter', self.master),
-                            'value': self.builder.get_object('tableFrame_Value', self.master),
-                            'const': self.builder.get_object('tableFrame_Const', self.master),
-                            'min': self.builder.get_object('tableFrame_Min', self.master),
-                            'max': self.builder.get_object('tableFrame_Max', self.master),
-                            'non-negative': self.builder.get_object('tableFrame_Nonnegative', self.master),
+        self.tableFrames = {'parameter': self.builder.get_object('tableFrame_Parameter', self.mainwindow),
+                            'value': self.builder.get_object('tableFrame_Value', self.mainwindow),
+                            'const': self.builder.get_object('tableFrame_Const', self.mainwindow),
+                            'min': self.builder.get_object('tableFrame_Min', self.mainwindow),
+                            'max': self.builder.get_object('tableFrame_Max', self.mainwindow),
+                            'non-negative': self.builder.get_object('tableFrame_Nonnegative', self.mainwindow),
                             }
         self.table_widgets = {'parameter':[],
                               'value': [],
@@ -350,6 +352,10 @@ class CurveFit(Methods, WindowGUI):
 
         # Populate lists
         self.populate_category_and_functions()
+
+        #
+        # TAB: RESULTS
+        #
 
         # Create Graph
         self.plt = plt
@@ -895,8 +901,8 @@ class CurveFit(Methods, WindowGUI):
         result = model.fit(y1.real, params=params, x=x1, method=method)
 
         # Print best fit
-        fit_y = result.best_fit.copy()
-        self.data_for_calculations[0]['y'] = fit_y
+        best_fit = result.best_fit.copy()
+        self.data_for_calculations[0]['y'] = best_fit
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
@@ -913,7 +919,7 @@ class CurveFit(Methods, WindowGUI):
 
         # Draw residuals
 
-        self.draw_results()
+        self.draw_results(best_fit = best_fit, x_data = x1, y_data = y1.real)
 
         # Add to additional plots
         #self.clear_additional_plots()
@@ -927,18 +933,22 @@ class CurveFit(Methods, WindowGUI):
 
         return row_to_report
 
-    def draw_results(self, ):
+    def draw_results(self, best_fit, x_data, y_data):
         ''' Draw the plot in the Result Tab: residuals and original curve and fit
         '''
         self.ax.clear()
-        resid = y1 - result.best_fit
-        self.ax.plot(self.data_for_calculations[0]['x'], resid)
-        self.ax.plot(self.data_for_calculations[0]['x'], self.data_for_calculations[0]['y'])
+        if self.show_fitted_curve_checkbox.get():
+            self.ax.plot(x_data, resid)
+        if self.show_original_curve_checkbox.get():
+            self.ax.plot(x_data, y_data)
+
         self.ax.set_xlabel("x")
         self.ax.set_ylabel("y")
         self.ax.grid(True)
+        self.canvas.draw()
 
-        self.canvas.draw()  # 3. odśwież canvas
+        self.show_fitted_curve_checkbox.get()
+        self.show_original_curve_checkbox.get()
 
     def log_report(self, result):
         ''' Reformat report from lmfit'''
