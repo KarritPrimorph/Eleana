@@ -972,6 +972,9 @@ class CurveFit(Methods, WindowGUI):
         self.show_fitted_curve_checkbox.get()
         self.show_original_curve_checkbox.get()
 
+    def copy_results_to_clipboard(self):
+        print('Copy')
+
     def log_report(self, result):
         ''' Reformat report from lmfit'''
         return result.fit_report()
