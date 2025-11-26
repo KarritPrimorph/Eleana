@@ -18,6 +18,7 @@ import copy
 from assets.Error import Error
 from subprogs.notepad.notepad import Notepad
 from subprogs.user_input.single_dialog import SingleDialog
+from lmfit import conf_interval, printfuncs
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -368,9 +369,6 @@ class CurveFit(Methods, WindowGUI):
         self.canvas = FigureCanvasTkAgg(self.fig, master = self.graphFrame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
-
-        # Create variables to store temporary data
-        self.temporary_data = {}
 
         # Set inital values to widgets
         self.list_category.activate(0)
@@ -861,7 +859,7 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
-        self.temporary_data = {}
+        self.function_definition.fit_results = {}
         self.collect_values_from_table()
 
         model, params = self.function_definition.build_lmfit_model()
@@ -907,13 +905,22 @@ class CurveFit(Methods, WindowGUI):
         method = self.algorithms.get(self.sel_algorithm.get(), '')
         result = model.fit(y1.real, params=params, x=x1, method=method)
 
+        # Calculate confidence intervals
+        #ci = result.conf_interval(sigmas=[1, 2, 3])
+
+
+
         # Print best fit
         best_fit = result.best_fit.copy()
-        self.temporary_data['best_fit'] = best_fit
-        self.temporary_data['x'] = copy.deepcopy(x1)
-        self.temporary_data['y'] = copy.deepcopy(y1)
-        self.temporary_data['resid'] = copy.deepcopy(y1 - best_fit)
+        self.function_definition.fit_results['best_fit'] = best_fit
+        self.function_definition.fit_results['x'] = copy.deepcopy(x1)
+        self.function_definition.fit_results['y'] = copy.deepcopy(y1)
+        self.function_definition.fit_results['resid'] = copy.deepcopy(y1 - best_fit)
+        self.function_definition.fit_results['report_txt'] = result.fit_report()
+        #self.function_definition.fit_results['ci_txt'] = self.function_definition.ci_to_text(ci)
         self.data_for_calculations[0]['y'] = best_fit
+
+
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
@@ -924,9 +931,10 @@ class CurveFit(Methods, WindowGUI):
                 value_spinbox.set(param.value)
 
         # Prepare result report
-        log_report = self.log_report(result)
+        log_report = result.fit_report()
         self.textReport.delete("0.0", "end")
-        self.textReport.insert("0.0", result.fit_report())
+        self.textReport.insert("0.0", log_report)
+
 
         # Draw residuals
 
@@ -947,10 +955,10 @@ class CurveFit(Methods, WindowGUI):
     def draw_results(self, event=None):
         ''' Draw the plot in the Result Tab: residuals and original curve and fit
         '''
-        resid = self.temporary_data.get('resid', None)
-        best_fit = self.temporary_data.get('best_fit', None)
-        x = self.temporary_data.get('x', None)
-        y = self.temporary_data.get('y', None)
+        resid = self.function_definition.fit_results.get('resid', None)
+        best_fit = self.function_definition.fit_results.get('best_fit', None)
+        x = self.function_definition.fit_results.get('x', None)
+        y = self.function_definition.fit_results.get('y', None)
 
         # Add curves to the plot
         self.ax.clear()

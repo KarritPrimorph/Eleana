@@ -48,7 +48,8 @@ class Function:
                  fit_parameters:dict = {},
                  nonnegative_parameters = [],
                  validated = False,
-                 constant: dict = {}
+                 constant: dict = {},
+                 fit_results: dict = {}
                  ):
 
         # Name of the function
@@ -93,6 +94,21 @@ class Function:
         # Import path
         self.import_path = Path.home()
 
+        # Optimized results
+        self.fit_results = fit_results
+
+    def ci_to_text(self, ci):
+        ''' Convert CI to text '''
+        lines = []
+        for parname, sigma_dict in ci.items():
+            lines.append(f"Parameter: {parname}")
+            # sigma_dict = {sigma_value: (lower, upper)}
+            for sigma, (lower, upper) in sigma_dict.items():
+                lines.append(f"  {sigma}σ :  lower = {lower:.6g},  upper = {upper:.6g}")
+            lines.append("")  # empty line between params
+        return "\n".join(lines)
+
+
     def sort_parameters(self, reverse = False):
         self.parameters.sort(key=str.lower, reverse=reverse)
 
@@ -110,19 +126,6 @@ class Function:
             return True
         except:
             return False
-
-    # def find_parameters(self):
-    #     try:
-    #         expression = sympy.sympify(self.equation)
-    #         symbols = expression.free_symbols
-    #         self.parameters.clear()
-    #         self.parameters = []
-    #         for symbol in symbols:
-    #             if str(symbol) != self.variable:
-    #                 self.parameters.append(str(symbol))
-    #         return True
-    #     except:
-    #         return False
 
     def prepare_equation(self):
         ''' Prepare the equation for fitting  '''
