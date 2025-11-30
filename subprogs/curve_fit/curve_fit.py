@@ -875,9 +875,6 @@ class CurveFit(Methods, WindowGUI):
 
         model, params = self.function_definition.build_lmfit_model()
 
-        # Set algorithm
-
-
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
         # -----------------------------------------
@@ -945,7 +942,6 @@ class CurveFit(Methods, WindowGUI):
             y = y1
 
         best_fit = self.function_definition.evaluate(x_vals=x)
-        #best_fit = result.best_fit.copy()
         self.function_definition.fit_results['best_fit'] = best_fit
         self.function_definition.fit_results['x'] = copy.deepcopy(x)
         self.function_definition.fit_results['y'] = copy.deepcopy(y)
@@ -1068,11 +1064,6 @@ class CurveFit(Methods, WindowGUI):
     def log_report(self, result):
         ''' Reformat report from lmfit'''
         return result.fit_report()
-
-
-    def add_to_dataset(self):
-        ''' Add fit curve to dataset'''
-        print('Add to dataset')
 
     def default_settings_clicked(self):
         ''' Use default settings '''

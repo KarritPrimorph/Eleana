@@ -1020,18 +1020,6 @@
                                 </layout>
                               </object>
                             </child>
-                            <child>
-                              <object class="customtkinter.CTkButton" id="ctkbutton7">
-                                <property name="command" type="command" cbtype="simple">copy_results_to_clipboard</property>
-                                <property name="text" translatable="yes">Copy</property>
-                                <property name="width">40</property>
-                                <layout manager="grid">
-                                  <property name="column">3</property>
-                                  <property name="padx">5</property>
-                                  <property name="row">0</property>
-                                </layout>
-                              </object>
-                            </child>
                           </object>
                         </child>
                       </object>
@@ -1134,6 +1122,7 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton10">
+                        <property name="command" type="command" cbtype="simple">cancel</property>
                         <property name="fg_color">#b93b20</property>
                         <property name="hover_color">#09640c</property>
                         <property name="text" translatable="yes">Quit</property>
@@ -1147,10 +1136,10 @@
                     </child>
                     <child>
                       <object class="customtkinter.CTkButton" id="ctkbutton11">
-                        <property name="command" type="command" cbtype="simple">add_to_dataset</property>
+                        <property name="command" type="command" cbtype="simple">copy_results_to_clipboard</property>
                         <property name="fg_color">#4e90d9</property>
                         <property name="hover_color">#09640c</property>
-                        <property name="text" translatable="yes">Add to dataset</property>
+                        <property name="text" translatable="yes">Copy to clipboard</property>
                         <layout manager="grid">
                           <property name="column">1</property>
                           <property name="padx">10</property>

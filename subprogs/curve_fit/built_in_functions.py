@@ -2,9 +2,7 @@ import copy
 from scipy import constants as spc
 import sympy
 import numpy as np
-import re
 import json
-from pathlib import Path
 from modules.CTkMessagebox import CTkMessagebox
 from pathlib import Path
 from customtkinter import filedialog
@@ -273,7 +271,6 @@ class Function:
             Error.show(title='Load user functions', info='The file is not compatible with Eleana function format.', details=e)
             return False
 
-
     def show_in_table(self, master):
         ''' Show parameters ond/or confidence intervals in spreadsheet'''
 
@@ -357,6 +354,11 @@ class Function:
                 params[p].vary = self.fit_parameters[p]
         return model, params
         pass
+
+    def generate_eleana_parameters(self, experimental_data):
+        ''' Generate parameters to store in parameters in eleana_dataset'''
+        fitting_par = {'experiment_dataset_indexoriginal_data': self.equation_text,}
+
 
 class BuiltInFunctions:
     definitions = [

@@ -5,7 +5,8 @@ from modules.Magnettech.magnettech import load_magnettech
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
 from Error import Error
-
+from datetime import datetime
+import random
 # how bruker Elexsys parameters are mapped to eleana parameters
 # If you want eleana to extract more parameters from dsc
 # just add them here
@@ -79,6 +80,11 @@ def extract_eleana_parameters(input_pars: Dict[str,str], mapped: Dict[str,str]) 
             result[eleana_key] = val
     return result
 
+def generate_id():
+    return datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
+        str(random.randint(0, 9)) for _ in range(10)
+    )
+
 @dataclass
 class BaseDataModel:
     name: str
@@ -93,6 +99,7 @@ class BaseDataModel:
     groups: List[str] = field(default_factory=lambda: ['All'])
     comment: str = ''
     stk_names: Optional[List[str]] = None
+    id: str = field(default_factory=generate_id, init=False)
 
     @classmethod
     def from_dict(cls, data):
