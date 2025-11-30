@@ -2048,8 +2048,8 @@ class Application():
                                 master=self.mainwindow,
                                 x = data.x,
                                 y = data.y,
-                                name = data.name,
-                                window_title = f"Edit {data.name}",
+                                #name = data.name,
+                                #window_title = f"Edit {data.name}",
                                 column_names = headers,
                                 complex = data.complex
                                 )

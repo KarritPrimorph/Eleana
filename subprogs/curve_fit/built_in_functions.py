@@ -10,6 +10,7 @@ from pathlib import Path
 from customtkinter import filedialog
 from lmfit.models import ExpressionModel
 from assets.Error import Error
+from subprogs.edit_values_in_table.edit_values_in_table import EditValuesInTable
 
 class Function:
     physical_constants = {
@@ -273,6 +274,20 @@ class Function:
             return False
 
 
+    def show_in_table(self, master):
+        ''' Show parameters ond/or confidence intervals in spreadsheet'''
+
+        if not self.fit_results['ci']:
+            return
+        headers = self.fit_results['ci'].pop(0)
+        rows = self.fit_results['ci']
+        table = EditValuesInTable(window_title= 'Confidence intervals',
+                                  master = master,
+                                  column_names=headers,
+                                  complex=False,
+                                    spreadsheet = rows
+                                  )
+        response = table.get()
     # ------------------
     # FITTING PROCEDURES
     # ------------------

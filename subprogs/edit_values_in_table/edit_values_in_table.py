@@ -12,19 +12,21 @@ PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "edit_values_in_table.ui"
 
 class EditValuesInTable:
-    def __init__(self, eleana_app, master,
-                    x,                      # X array as 1D of np.array type
-                    y,                      # Y array as 1D or 2D np.array type
+    def __init__(self, eleana_app=None, master=None,
+                    x = None,               # X array as 1D of np.array type
+                    y = None,               # Y array as 1D or 2D np.array type
                     column_names = None,    # The column headers if None will be default
                     window_title = None,    # The title of the window. If none it will be default
-                    complex = None          # Are the data complex? If None, it will be determined automatically
+                    complex = None,         # Are the data complex? If None, it will be determined automatically
+                    spreadsheet = None,     # Data ready to display in tksheet
                  ):
 
         self.master = master
-        self.eleana = eleana_app
+        #self.eleana = eleana_app
         self.builder = builder = pygubu.Builder()
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
+        self.spreadsheet = spreadsheet
 
         # Main widget
         self.mainwindow = builder.get_object("toplevel1", master)
@@ -46,29 +48,33 @@ class EditValuesInTable:
         self.frame_3.grid_remove()
 
         # Create data for table:
-        self.row_counts = len(x)
-        x_data = np.atleast_1d(x)
-        shape = y.shape
-        if len(shape) == 2:
-            self.column_counts = shape[0] + 1
-        else:
-            self.column_counts = 2
-        y_data = np.atleast_2d(y).T
+        if spreadsheet is None:
+            self.row_counts = len(x)
+            x_data = np.atleast_1d(x)
+            shape = y.shape
+            if len(shape) == 2:
+                self.column_counts = shape[0] + 1
+            else:
+                self.column_counts = 2
+            y_data = np.atleast_2d(y).T
 
-        if complex is None:
-            self.complex = np.iscomplexobj(y_data)
+            if complex is None:
+                self.complex = np.iscomplexobj(y_data)
+            else:
+                self.complex = complex
+            list2D = [[x_data[i], *y_data[i]] for i in range(0, len(x_data))]
+            if not column_names:
+                column_names = []
+                n = len(list2D[0])
+                for i in range(0, n):
+                    label = ""
+                    while i >= 0:
+                        label = string.ascii_uppercase[i % 26] + label
+                        i = i // 26 - 1
+                    column_names.append(label)
         else:
-            self.complex = complex
-        list2D = [[x_data[i], *y_data[i]] for i in range(0, len(x_data))]
-        if not column_names:
-            column_names = []
-            n = len(list2D[0])
-            for i in range(0, n):
-                label = ""
-                while i >= 0:
-                    label = string.ascii_uppercase[i % 26] + label
-                    i = i // 26 - 1
-                column_names.append(label)
+            list2D = spreadsheet
+            self.row_counts = len(list2D)
         self.generate_table(column_names, list2D)
 
         self.response = None
