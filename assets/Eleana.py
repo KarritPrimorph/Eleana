@@ -11,8 +11,8 @@ import json
 from tkinter.filedialog import asksaveasfile, askopenfilename
 import gc
 from modules.CTkMessagebox import CTkMessagebox
-from datetime import datetime
 import random
+from datetime import datetime
 
 @dataclass
 class GuiState:
@@ -438,6 +438,15 @@ class Eleana:
     #     if selected_value_text in numbered_names:
     #         index = numbered_names.index(selected_value_text)
     #         return index
+
+    def create_missing_id(self):
+        """Scan dataset and check if ID is created. If not, create unique ID."""
+        for data in self.dataset:
+            if not hasattr(data, "id") or data.id is None:
+                timestamp = datetime.now().strftime("%y%m%d%H%M%S")
+                random_digits = ''.join(str(random.randint(0, 9)) for _ in range(10))
+                data.id = timestamp + random_digits
+
 
     def get_index_by_name(self, selected_value_text):
         ''' Function returns index in dataset of spectrum

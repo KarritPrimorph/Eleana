@@ -357,8 +357,16 @@ class Function:
 
     def generate_eleana_parameters(self, experimental_data):
         ''' Generate parameters to store in parameters in eleana_dataset'''
-        fitting_par = {'experiment_dataset_indexoriginal_data': self.equation_text,}
 
+        fitting_par = {'data_id': experimental_data.id,
+                       'data_name': experimental_data.name,
+                       'equation_text': self.equation_text,
+                       'independent_variable': self.variable,
+                       'parameters': self.initial_values,
+                       'fit_report': self.fit_results.get('report_txt', 'No fitting results'),
+                       'confidence_intervals': self.fit_results.get('ci', 'No CI results')
+                       }
+        return fitting_par
 
 class BuiltInFunctions:
     definitions = [

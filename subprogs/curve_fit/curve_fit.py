@@ -57,7 +57,7 @@ DATA_LABEL: str = None
 # For example if "Spectrum" is processed and NAME_SUFFIX = "_MODIFIED"
 # you will get "Spectrum_MODIFIED" name in result
 # self.subprog_settings['name_suffix']
-NAME_SUFFIX: str = '_BASELINE'
+NAME_SUFFIX: str = '_FIT'
 
 # If true, calculations are done automatically upon selection of data in the main GUI
 # self.subprog_settings['auto_calculate']
@@ -978,6 +978,11 @@ class CurveFit(Methods, WindowGUI):
         row_to_report = None
 
         self.tab_window.set("Result")
+
+        data = self.eleana.dataset[self.eleana.selections['first']]
+        merged_parameters = copy.deepcopy(parameters1) | self.function_definition.generate_eleana_parameters(data)
+        self.data_for_calculations[0]['parameters'] = merged_parameters
+
         return row_to_report
 
     def confidence_intervals(self, fit_result):

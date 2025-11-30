@@ -1695,6 +1695,7 @@ class Application():
         self.main_menubar.create_showplots_menu()
         if not project:
             return
+        self.eleana.create_missing_id()
         self.update.dataset_list()
         self.update.groups()
         self.update.all_lists()
