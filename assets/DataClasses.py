@@ -81,9 +81,12 @@ def extract_eleana_parameters(input_pars: Dict[str,str], mapped: Dict[str,str]) 
     return result
 
 def generate_id():
-    return datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
+    id_dec_str = datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
         str(random.randint(0, 9)) for _ in range(10)
     )
+    id_hex = hex(int(id_dec_str))
+    return format(int(id_dec_str), 'x')
+
 
 @dataclass
 class BaseDataModel:
@@ -91,6 +94,9 @@ class BaseDataModel:
     x: np.ndarray
     y: np.ndarray
     z: Optional[np.ndarray] = None
+    error_x: Optional[np.ndarray] = None
+    error_y: Optional[np.ndarray] = None
+    error_z: Optional[np.ndarray] = None
     parameters: Dict[str, str] = field(default_factory=dict)
     complex: bool = False
     type: Literal['single 2D', 'stack 2D'] = 'single 2D'

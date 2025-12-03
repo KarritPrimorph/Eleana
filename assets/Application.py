@@ -1677,7 +1677,6 @@ class Application():
 
             self.sel_graph_cursor(value = 'None', clear_annotations = True)
 
-
     def preferences(self):
         ''' Open window for editing preferences '''
         #preferences = PreferencesApp(self.mainwindow, self.grapher, self.color_theme, self.gui_appearence)
