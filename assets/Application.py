@@ -1687,13 +1687,16 @@ class Application():
         preferences = PreferencesApp(master = self.mainwindow, eleana = self.eleana, grapher = self.grapher)
         response = preferences.get()
 
-    def load_project(self, event=None, recent=None):
+    def load_project(self, event=None, recent=None, filename = None):
         ''' Load project created with the Application '''
-        if recent is not None:
+        if filename:
+            recent = filename
+        if recent is not None and filename is None:
             try:
                 recent = self.eleana.paths['last_projects'][recent]
             except IndexError:
                 Error.show(title = 'Error', info = "The project could not be found on list.")
+
         project = self.load.load_project(recent)
         self.main_menubar.create_showplots_menu()
         if not project:
@@ -1730,7 +1733,7 @@ class Application():
         index = int(index[0])
         index = index - 1
         recent = self.eleana.paths['last_projects'][index]
-        self.load_project(ecent=recent)
+        self.load_project(recent=recent)
         self.eleana.paths['last_project_dir'] = Path(recent).parent
         self.grapher.plot_graph()
 

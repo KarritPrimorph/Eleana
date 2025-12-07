@@ -79,6 +79,7 @@ class MainMenu:
         self.icon_drop_real = self.prepare_icon('drop_real.png')
         self.icon_magnitude = self.prepare_icon('magnitude.png')
         self.icon_swap_re_im = self.prepare_icon('swap_re_im.png')
+        self.icon_drag_file = self.prepare_icon('drag_file.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -145,7 +146,7 @@ class MainMenu:
 
         # - Drag & Drop Loader
 
-        self.menu_file.add_command(label="Drag and drop file", command=self.callbacks.get("drag_and_drop_files"), image=self.icon_save_as,
+        self.menu_file.add_command(label="Drag and drop file", command=self.callbacks.get("drag_and_drop_files"), image=self.icon_drag_file,
                                    compound="left")
 
         # # - SEPARATOR -
