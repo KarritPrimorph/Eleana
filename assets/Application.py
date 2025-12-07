@@ -13,6 +13,9 @@ import tkinter as tk
 import pickle
 import time
 import csv
+from multiprocessing import Process, Queue
+import customtkinter as ctk
+from tkinterdnd2 import TkinterDnD, DND_FILES
 
 from tkinter import filedialog
 
@@ -37,6 +40,7 @@ from LoadSave import Load, Save, Export
 from Update import Update
 from DataClasses import BaseDataModel
 from Error import Error
+from Dropfiles import FileDropWindow
 
 ''' SUBPROGS '''
 from subprogs.filter_fft.fft_filter import FFTFilter
@@ -1726,7 +1730,7 @@ class Application():
         index = int(index[0])
         index = index - 1
         recent = self.eleana.paths['last_projects'][index]
-        self.load_project(recent=recent)
+        self.load_project(ecent=recent)
         self.eleana.paths['last_project_dir'] = Path(recent).parent
         self.grapher.plot_graph()
 
@@ -1753,10 +1757,15 @@ class Application():
               IMPORT EXTERNAL DATA             
     *********************************************'''
 
-    def import_elexsys(self):
+    def drag_and_drop_files(self):
+        ''' Display drag and drop window for files'''
+        self.mainwindow.iconify()
+        files = FileDropWindow(callbacks = main_menubar_callbacks(self))
+
+    def import_elexsys(self, filename = None):
         ''' Open window that loads the spectra '''
         try:
-            self.load.loadElexsys()
+            self.load.loadElexsys(filename = filename)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
@@ -2276,6 +2285,10 @@ class Application():
     def xy_distance(self):
         xy_distance = DistanceRead(self, which='first')
 
+    # ---------------------------------------------------
+    # Menu: MODIFICATIONS
+    #-----------------------------------------------------
+
     def trim_data(self):
         subprog_trim_data = TrimData(self, which="first")
 
@@ -2299,6 +2312,47 @@ class Application():
 
     def spectra_subtraction(self):
         subprog_spectra_subtraction = SpectraSubtraction(self, which = 'first')
+
+    def complex_modifications(self, operation, which = None):
+        refresh_first = None
+        refresh_second = None
+        if which is None:
+            selected_data = self.select_data_from_group(title = operation)
+        elif which == 'first':
+            selected_data = [self.sel_first.get()]
+        elif which == 'second':
+            selected_data = [self.sel_second.get()]
+        else:
+            return
+
+        if not selected_data:
+            return
+        for name in selected_data:
+            index = self.eleana.get_index_by_name(name)
+            if index is not None:
+                data = self.eleana.dataset[index]
+                if data.complex:
+                    data.complex = False
+
+                    if operation == 'Drop imaginary part':
+                        data.y = np.asarray(data.y.real, dtype=float)
+                    elif operation == 'Drop real part':
+                        data.y = np.asarray(data.y.imag, dtype=float)
+                    elif operation == 'Magnitude':
+                        data.y = np.asarray(np.abs(data.y), dtype=float)
+                    elif operation == 'Swap Re/Im':
+                        data.y = data.y.imag + 1j * data.y.real
+                        data.complex = True
+
+                if data.name_nr == self.sel_first.get():
+                    refresh_first = data.name_nr
+                if data.name_nr == self.sel_second.get():
+                    refresh_second = data.name_nr
+
+            if refresh_first:
+                self.first_selected(refresh_first)
+            if refresh_second:
+                self.second_selected(refresh_second)
 
 
     # --------------------------------------------
@@ -2343,6 +2397,16 @@ class Application():
         self.eleana.gui_state.cursor_mode = copy.copy(value)
         self.grapher.plot_graph()
 
+    def select_data_from_group(self, title):
+        av_data = self.sel_first._values
+        av_data.pop(0)
+        selected_data = SelectData(master = self.mainwindow,
+                                   title=title,
+                                   group=self.eleana.selections['group'],
+                                   items=av_data)
+        response = selected_data.get()
+        return response
+
 
     '''***********************************************
     *           METHODS FOR CONTEXT MENU             *
@@ -2381,24 +2445,6 @@ class Application():
             stk_index = self.eleana.selections['s_stk']
         else:
             return
-
-        # data_y = self.eleana.dataset[data_index].y
-        # data_z = self.eleana.dataset[data_index].z
-        # data_names = self.eleana.dataset[data_index].stk_names
-        # if data_y.size == 0:
-        #     # Already empty np.array. Return
-        #     return
-
-        # # Remove stk data from dataset.y
-        # new_y = np.delete(data_y, stk_index, axis=0)
-        # self.eleana.dataset[data_index].y = new_y
-
-        # # Remove values from z axis of stk data
-        # new_z = np.delete(data_z, stk_index)
-        # self.eleana.dataset[data_index].z = new_z
-
-        # # Remove stk names
-        # del self.eleana.dataset[data_index].stk_names[stk_index]
 
         data_stack: BaseDataModel = self.eleana.dataset[data_index]
         data_stack.remove_from_stack_by_index(stk_index)

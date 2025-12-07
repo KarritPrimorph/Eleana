@@ -1,9 +1,10 @@
 def main_menubar_callbacks(inst):
-    ''' This creates callbacks for mein menubar to methods in Application.py '''
+    ''' This creates callbacks for main menubar to methods in Application.py '''
     return {
              # FILE
              "load_project": inst.load_project,
              "save_as": inst.save_as,
+             "drag_and_drop_files": inst.drag_and_drop_files,
              "import_elexsys": inst.import_elexsys,
              "import_EMX": inst.import_EMX,
              "import_magnettech1": inst.import_magnettech1,
@@ -17,6 +18,8 @@ def main_menubar_callbacks(inst):
              "export_group": inst.export_group,
              "export_spreadsheet": inst.export_spreadsheet,
              "close_application": inst.close_application,
+
+
              # EDIT
              "edit_values_in_table": inst.edit_values_in_table,
              "create_from_table": inst.create_from_table,
@@ -50,6 +53,7 @@ def main_menubar_callbacks(inst):
              "filter_fft_lowpass": inst.filter_fft_lowpass,
              "pseudomodulation": inst.pseudomodulation,
              "fast_fourier_transform": inst.fast_fourier_transform,
+             "complex_modifications": inst.complex_modifications,
 
              # EPR
              "epr_b_to_g": inst.epr_b_to_g,
@@ -93,6 +97,7 @@ def contextmenu_callbacks(inst):
                     "edit_comment": inst.edit_comment,
                     "edit_parameters": inst.edit_parameters,
                     "delete_single_stk_data": inst.delete_single_stk_data,
+                    "complex_modifications": inst.complex_modifications,
                 }
             }
 

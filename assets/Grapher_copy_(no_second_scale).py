@@ -66,7 +66,6 @@ class Grapher():
         # Create canvas
         self.fig = Figure(figsize=(8, 4), dpi=100)
         self.ax = self.fig.add_subplot(111)
-
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graphFrame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()

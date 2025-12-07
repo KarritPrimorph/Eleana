@@ -74,7 +74,11 @@ class MainMenu:
         self.icon_extract_from_stack = self.prepare_icon('extract_from_stack.png')
         self.icon_copy_spreadsheet = self.prepare_icon('copy_spreadsheet.png')
         self.icon_curvefit = self.prepare_icon('curvefit.png')
-
+        self.icon_complex = self.prepare_icon('complex.png')
+        self.icon_drop_imaginary = self.prepare_icon('drop_imaginary.png')
+        self.icon_drop_real = self.prepare_icon('drop_real.png')
+        self.icon_magnitude = self.prepare_icon('magnitude.png')
+        self.icon_swap_re_im = self.prepare_icon('swap_re_im.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -98,7 +102,7 @@ class MainMenu:
         # - Save
         self.menu_file.add_command(label="Save", command=self.callbacks.get("save_current"), image=self.icon_save_as, compound="left", accelerator="Ctrl+S")
 
-        # # - Import data
+        # - Import data
         self.menu_import = tk.Menu(self.menu_file, tearoff=0, bg = self.bg, fg = self.fg, font = self.font, activebackground=self.activebg, activeforeground=self.activefg, borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
         self.menu_file.add_cascade(label="Import data", menu=self.menu_import, image = self.icon_import, compound="left")
 
@@ -138,6 +142,12 @@ class MainMenu:
         # ------------ Excel
         self.menu_import.add_command(label="MS Excel/LibreOffice Calc", command = self.callbacks.get("import_excel"), image = self.icon_import_excel, compound='left')
         #
+
+        # - Drag & Drop Loader
+
+        self.menu_file.add_command(label="Drag and drop file", command=self.callbacks.get("drag_and_drop_files"), image=self.icon_save_as,
+                                   compound="left")
+
         # # - SEPARATOR -
         self.menu_file.add_separator()
         #
@@ -348,6 +358,36 @@ class MainMenu:
         self.menu_modifications.add_command(label="FFT", command=self.callbacks.get('fast_fourier_transform'),
                                        image=self.icon_fft, compound="left")
 
+        self.menu_modifications.add_separator()
+
+        # - COMPLEX
+        self.menu_complex = tk.Menu(self.menu_modifications, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
+                                 activebackground=self.activebg, activeforeground=self.activefg,
+                                 borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
+        self.menu_modifications.add_cascade(label="Complex numbers", menu=self.menu_complex, image = self.icon_complex, compound="left")
+
+        # --- Drop Imaginary
+        self.menu_complex.add_command(label="Drop imaginary part",
+                                      command=lambda x='Drop imaginary part': self.callbacks.get("complex_modifications")(operation = x),
+                                      image=self.icon_drop_imaginary, compound="left")
+
+        # --- Drop Real
+        self.menu_complex.add_command(label="Drop real part",
+                                      command=lambda x='Drop real part': self.callbacks.get(
+                                          "complex_modifications")(operation=x),
+                                      image=self.icon_drop_real, compound="left")
+
+        # --- Magnitude
+        self.menu_complex.add_command(label="Magnitude",
+                                      command=lambda x='Magnitude': self.callbacks.get(
+                                          "complex_modifications")(operation=x),
+                                      image=self.icon_magnitude, compound="left")
+
+        # --- Swap Re Im
+        self.menu_complex.add_command(label="Swap Re/Im",
+                                      command=lambda x='Swap Re/Im': self.callbacks.get(
+                                          "complex_modifications")(operation=x),
+                                      image=self.icon_swap_re_im, compound="left")
 
         ''' Menu EPR '''
         self.menu_EPR = tk.Menu(self.main_menu, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
@@ -555,6 +595,8 @@ class ContextMenu:
         self.context_menu_first.add_command(label="Duplicate", command=lambda: self.callbacks.get('duplicate_data')('first'))
         self.context_menu_first.add_command(label="Assign to group", command=self.callbacks.get('first_to_group'))
         self.context_menu_first.add_command(label="Convert stack to group", command=lambda: self.callbacks.get('stack_to_group')('first'))
+        self.context_menu_first.add_command(label="Drop imaginary part", command=lambda: self.callbacks.get("complex_modifications")(operation = 'Drop imaginary part', which = 'first'))
+        self.context_menu_first.add_command(label="Drop real part", command=lambda: self.callbacks.get("complex_modifications")(operation='Drop real part', which='first'))
         self.context_menu_first.add_command(label="Edit comment", command=lambda: self.callbacks.get('edit_comment')('first'))
         self.context_menu_first.add_command(label="Edit parameters", command = lambda: self.callbacks.get('edit_parameters')('first'))
 
@@ -570,6 +612,12 @@ class ContextMenu:
         self.context_menu_second.add_command(label="Duplicate", command=lambda: self.callbacks.get('duplicate_data')('second'))
         self.context_menu_second.add_command(label="Assign to group", command=self.callbacks.get('second_to_group'))
         self.context_menu_second.add_command(label="Convert stack to group", command=lambda: self.callbacks.get('stack_to_group')('second'))
+        self.context_menu_first.add_command(label="Drop imaginary part",
+                                            command=lambda: self.callbacks.get("complex_modifications")(
+                                                operation='Drop imaginary part', which='second'))
+        self.context_menu_first.add_command(label="Drop real part",
+                                            command=lambda: self.callbacks.get("complex_modifications")(
+                                                operation='Drop real part', which='second'))
         self.context_menu_second.add_command(label="Edit comment", command=lambda: self.callbacks.get('edit_comment')('second'))
         self.context_menu_second.add_command(label="Edit parameters", command=lambda: self.callbacks.get('edit_parameters')('second'))
 

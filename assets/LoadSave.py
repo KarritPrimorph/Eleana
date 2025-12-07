@@ -138,17 +138,21 @@ class Load:
             return None
 
     # Import EPR
-    def loadElexsys(self) -> object:
-        path = self.eleana.paths['last_import_dir']
-        filetypes = (
-            ('Elexsys DTA', '*.DTA'),
-            ('Elexsys DSC', '*.DSC'),
-            ('Elexsys YGF', '*.YGF'),
-            ('All files', '*.*')
-            )
-        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
-        if len(filenames) == 0:
-            return
+    def loadElexsys(self, filename = None) -> object:
+        if filename is None:
+            path = self.eleana.paths['last_import_dir']
+            filetypes = (
+                ('Elexsys DTA', '*.DTA'),
+                ('Elexsys DSC', '*.DSC'),
+                ('Elexsys YGF', '*.YGF'),
+                ('All files', '*.*')
+                )
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+            if len(filenames) == 0:
+                return
+        else:
+            filenames = [filename]
+
         for file in filenames:
             spectrum = createFromElexsys(file)
             self.eleana.dataset.append(spectrum)
