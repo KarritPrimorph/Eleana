@@ -2,7 +2,9 @@ import customtkinter as ctk
 from tkinterdnd2 import DND_FILES, TkinterDnD
 
 class FileDropWindow:
-    def __init__(self, callbacks):
+    def __init__(self, master, callbacks):
+        self.master = master
+        self.master.iconify()
         self.callbacks = callbacks
         self.files = []
 
@@ -55,7 +57,8 @@ class FileDropWindow:
                 method = 'import_elexsys'
             elif type_ == 'ele':
                 method = 'load_project'
-
+            elif type_ == 'spc':
+                method = 'import_EMX'
 
             # Run function to import
             callback_func = self.callbacks.get(method)
@@ -63,4 +66,5 @@ class FileDropWindow:
                 callback_func(filename = file)
 
     def close_window(self):
+        self.master.deiconify()
         self.root.destroy()

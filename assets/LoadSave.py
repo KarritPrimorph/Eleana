@@ -160,13 +160,16 @@ class Load:
         self.eleana.paths['last_import_dir'] = last_import_dir
         return
 
-    def loadEMX(self):
-        path = self.eleana.paths['last_import_dir']
-        filetypes = (
-            ('EMX', '*.spc'),
-            ('All files', '*.*')
-        )
-        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+    def loadEMX(self, filename = None):
+        if filename is not None:
+            filenames = [filename]
+        else:
+            path = self.eleana.paths['last_import_dir']
+            filetypes = (
+                ('EMX', '*.spc'),
+                ('All files', '*.*')
+            )
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
         if len(filenames) == 0:
             return
         for file in filenames:

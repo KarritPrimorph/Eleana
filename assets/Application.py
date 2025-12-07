@@ -1762,8 +1762,7 @@ class Application():
 
     def drag_and_drop_files(self):
         ''' Display drag and drop window for files'''
-        self.mainwindow.iconify()
-        files = FileDropWindow(callbacks = main_menubar_callbacks(self))
+        files = FileDropWindow(master = self.mainwindow, callbacks = main_menubar_callbacks(self))
 
     def import_elexsys(self, filename = None):
         ''' Open window that loads the spectra '''
@@ -1777,9 +1776,9 @@ class Application():
         except Exception as e:
             Error.show(title = "Error loading Elexsys file.", info = e)
 
-    def import_EMX(self):
+    def import_EMX(self, filename = None):
         try:
-            self.load.loadEMX()
+            self.load.loadEMX(filename = filename)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
