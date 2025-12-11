@@ -600,6 +600,7 @@ class ContextMenu:
         self.context_menu_first.add_command(label="Drop real part", command=lambda: self.callbacks.get("complex_modifications")(operation='Drop real part', which='first'))
         self.context_menu_first.add_command(label="Edit comment", command=lambda: self.callbacks.get('edit_comment')('first'))
         self.context_menu_first.add_command(label="Edit parameters", command = lambda: self.callbacks.get('edit_parameters')('first'))
+        self.context_menu_first.add_command(label="Show ID", command=lambda: self.callbacks.get('show_id')('first'))
 
     def build_menu_f_stk(self):
         '''This creates positions for FIRST STK context menu '''

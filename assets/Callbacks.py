@@ -19,7 +19,6 @@ def main_menubar_callbacks(inst):
              "export_spreadsheet": inst.export_spreadsheet,
              "close_application": inst.close_application,
 
-
              # EDIT
              "edit_values_in_table": inst.edit_values_in_table,
              "create_from_table": inst.create_from_table,
@@ -82,9 +81,11 @@ def contextmenu_callbacks(inst):
                     "s_stk": inst.s_stk,
                     "resultFrame": inst.resultFrame,
                     "sel_result": inst.sel_result
+
                 },
             'callbacks':
                 {
+                    "show_id": inst.show_id,
                     "delete_group": inst.delete_group,
                     "data_to_other_group": inst.data_to_other_group,
                     "delete_data_from_group": inst.delete_data_from_group,

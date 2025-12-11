@@ -18,9 +18,7 @@ import copy
 from assets.Error import Error
 from subprogs.notepad.notepad import Notepad
 from subprogs.user_input.single_dialog import SingleDialog
-from scipy.stats import norm
-import re
-from assets.DataClasses import BaseDataModel
+from lmfit import conf_interval, printfuncs
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -57,7 +55,7 @@ DATA_LABEL: str = None
 # For example if "Spectrum" is processed and NAME_SUFFIX = "_MODIFIED"
 # you will get "Spectrum_MODIFIED" name in result
 # self.subprog_settings['name_suffix']
-NAME_SUFFIX: str = '_FIT'
+NAME_SUFFIX: str = '_BASELINE'
 
 # If true, calculations are done automatically upon selection of data in the main GUI
 # self.subprog_settings['auto_calculate']
@@ -333,15 +331,6 @@ class CurveFit(Methods, WindowGUI):
         self.show_fitted_curve_checkbox = self.builder.get_object('show_fitted_curve_checkbox', self.mainwindow)
         self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
         self.show_resid_checkbox = self.builder.get_object('show_resid_checkbox', self.mainwindow)
-
-        self.ci_entry = self.builder.get_object('ci_entry', self.mainwindow)
-        self.default_settings_btn = self.builder.get_object('default_settings_btn', self.mainwindow)
-        self.entry_iterations = self.builder.get_object('entry_iterations', self.mainwindow)
-        self.entry_tolerance = self.builder.get_object('entry_tolerance', self.mainwindow)
-        self.set_validation_for_ctkentries([self.entry_iterations, self.entry_tolerance])
-        self.lbl_1 = self.builder.get_object('lbl_1', self.mainwindow)
-        self.lbl_2 = self.builder.get_object('lbl_2', self.mainwindow)
-
 
         # TAB: FIT
         #
@@ -875,14 +864,15 @@ class CurveFit(Methods, WindowGUI):
 
         model, params = self.function_definition.build_lmfit_model()
 
+        # Set algorithm
+
+
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
         # -----------------------------------------
         sft = +self.regions['orig_in_odd_idx']
         x1 = self.data_for_calculations[0]['x']
-        x1_orig = self.data_for_calculations[1]['x']
         y1 = self.data_for_calculations[0]['y']
-        y1_orig = self.data_for_calculations[1]['y']
         z1 = self.data_for_calculations[0]['z']
         name1 = self.data_for_calculations[0]['name']
         stk_value1 = self.data_for_calculations[0]['stk_value']
@@ -912,44 +902,25 @@ class CurveFit(Methods, WindowGUI):
                 self.show_errors['complex_error_show'] = False
 
         # Prepare function to fit and perform fit
-        try:
-            method = self.algorithms.get(self.sel_algorithm.get(), '')
-            if self.default_settings_btn.get():
-                n_iter = int(self.entry_iterations.get())
-                toler = float(self.entry_tolerance.get())
-                result = model.fit(y1.real, params=params, x=x1, method=method, max_nfev=n_iter, xtol=toler)
-            else:
-                result = model.fit(y1.real, params=params, x=x1, method=method)
-        except Exception as e:
-            Error.show(title = 'Curve fit', info = e)
-            return False
-
-        # Write best fitted parameters to initial_values in self.function_definition
-        params = result.params
-        for p in self.function_definition.parameters:
-            self.function_definition.initial_values[p] = params[p].value
+        method = self.algorithms.get(self.sel_algorithm.get(), '')
+        result = model.fit(y1.real, params=params, x=x1, method=method)
 
         # Calculate confidence intervals
-        confidence_text = self.confidence_intervals(fit_result=result)
+        #ci = result.conf_interval(sigmas=[1, 2, 3])
 
-        # Prepare the x,y for estimations
-        if self.extrapolate_checkbox.get():
-            # Extrapolation selected
-            x = x1_orig
-            y = y1_orig
-        else:
-            x = x1
-            y = y1
 
-        best_fit = self.function_definition.evaluate(x_vals=x)
+
+        # Print best fit
+        best_fit = result.best_fit.copy()
         self.function_definition.fit_results['best_fit'] = best_fit
-        self.function_definition.fit_results['x'] = copy.deepcopy(x)
-        self.function_definition.fit_results['y'] = copy.deepcopy(y)
-        self.function_definition.fit_results['resid'] = copy.deepcopy(y - best_fit)
+        self.function_definition.fit_results['x'] = copy.deepcopy(x1)
+        self.function_definition.fit_results['y'] = copy.deepcopy(y1)
+        self.function_definition.fit_results['resid'] = copy.deepcopy(y1 - best_fit)
         self.function_definition.fit_results['report_txt'] = result.fit_report()
-        self.function_definition.fit_results['ci'] = confidence_text
+        #self.function_definition.fit_results['ci_txt'] = self.function_definition.ci_to_text(ci)
         self.data_for_calculations[0]['y'] = best_fit
-        self.data_for_calculations[0]['x'] = x
+
+
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
@@ -964,12 +935,14 @@ class CurveFit(Methods, WindowGUI):
         self.textReport.delete("0.0", "end")
         self.textReport.insert("0.0", log_report)
 
+
         # Draw residuals
 
         self.draw_results()
 
         # Add to additional plots
-        self.clear_additional_plots()
+        #self.clear_additional_plots()
+        #self.add_to_additional_plots(x = x1_orig, y = poly_curve, clear=True)
 
         # Send calculated values to result (if needed). This will be sent to command line
         result = None # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE
@@ -977,63 +950,7 @@ class CurveFit(Methods, WindowGUI):
         # Create summary row to add to the report. The values must match the column names in REPORT_HEADERS
         row_to_report = None
 
-        self.tab_window.set("Result")
-
-        data = self.eleana.dataset[self.eleana.selections['first']]
-        merged_parameters = copy.deepcopy(parameters1) | self.function_definition.generate_eleana_parameters(data)
-        self.data_for_calculations[0]['parameters'] = merged_parameters
-
         return row_to_report
-
-    def confidence_intervals(self, fit_result):
-        ''' Calculate confidence intervals for defined levels '''
-        try:
-            get_ci = self.ci_entry.get()
-            get_ci = get_ci.strip()
-            if not get_ci:
-                CI_levels = [0.90, 0.95, 0.99]
-            else:
-                parts = re.split(r'[ ,;]+', get_ci.strip())
-                try:
-                    CI_levels = [float(p) for p in parts if p]
-                except:
-                    Error.show(title = "Confidence intervals", info = 'Confidence intervals (P=) contain non numerical values.')
-                    return [[]]
-
-            sigmas = [norm.ppf((1 + ci) / 2) for ci in CI_levels]
-            ci = fit_result.conf_interval(sigmas = sigmas, trace=False, maxiter=500)
-        except Exception as e:
-            Error.show(title='Curve fit', info='Cannot determine confidence intervals', details=e)
-            return [[]]
-
-        low_headers = [f"{int(ci * 100)}%_low" for ci in CI_levels]
-        high_headers = [f"{int(ci * 100)}%_high" for ci in CI_levels]
-
-        rows = [["Parameter"] + low_headers + ["BEST"] + high_headers]
-
-        for p_name, entries in ci.items():
-            # entries: lista (prob, val)
-            entries = [(float(prob), float(val)) for prob, val in entries]
-            entries.sort(key=lambda x: x[0])
-
-            probs = [p for p, _ in entries]
-            vals = [v for _, v in entries]
-
-            # Detect BEST
-            best = fit_result.params[p_name].value
-
-            mid_index = len(entries) // 2
-
-            low_vals = vals[:mid_index]
-            high_vals = vals[mid_index:]
-            row = [p_name] + low_vals + [best] + high_vals
-            rows.append(row)
-        return rows
-
-    def show_CI(self):
-        ''' Show Confidence intervals after clicking the button'''
-        if self.function_definition.fit_results['ci']:
-            self.function_definition.show_in_table(master = self.mainwindow)
 
     def draw_results(self, event=None):
         ''' Draw the plot in the Result Tab: residuals and original curve and fit
@@ -1070,21 +987,6 @@ class CurveFit(Methods, WindowGUI):
         ''' Reformat report from lmfit'''
         return result.fit_report()
 
-    def default_settings_clicked(self):
-        ''' Use default settings '''
-        state = self.default_settings_btn.get()
-        if state:
-            self.entry_iterations.grid_remove()
-            self.entry_tolerance.grid_remove()
-            self.lbl_1.grid_remove()
-            self.lbl_2.grid_remove()
-        else:
-            self.entry_iterations.grid()
-            self.entry_tolerance.grid()
-            self.lbl_1.grid()
-            self.lbl_2.grid()
-
-
     def save_settings(self):
         ''' Stores required values to self.eleana.subprog_storage
             This is stored in memory only, not in disk
@@ -1100,9 +1002,7 @@ class CurveFit(Methods, WindowGUI):
              'replace_table_check': self.replace_table_chceck.get(),
              'show_original_curve_checkbox': self.show_original_curve_checkbox.get(),
              'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get(),
-             'show_resid': self.show_resid_checkbox.get(),
-             'ci_entry': self.ci_entry.get(),
-             'use_default': self.default_settings_btn.get(),
+             'show_resid': self.show_resid_checkbox.get()
              }]
 
     def restore_settings(self):
@@ -1159,20 +1059,6 @@ class CurveFit(Methods, WindowGUI):
             self.show_resid_checkbox.select()
         else:
             self.show_resid_checkbox.deselect()
-
-        val = self.restore('ci_entry')
-        self.ci_entry.delete(0, 'end')
-        if val is True or val is None:
-            self.ci_entry.insert(0, '0.90; 0.95; 0.99')
-        else:
-            self.ci_entry.insert(0, val)
-
-        val = self.restore('use_default')
-        if val is True or val is None:
-            self.default_settings_btn.deselect()
-        else:
-            self.default_settings_btn.select()
-        self.default_settings_clicked()
 
 if __name__ == "__main__":
     tester = TemplateClass()

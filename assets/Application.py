@@ -2074,7 +2074,6 @@ class Application():
         self.update.all_lists()
         self.grapher.plot_graph()
 
-
     def notes(self):
         notepad = Notepad(master=self.mainwindow, title="Edit notes", text=self.eleana.notes)
         response = notepad.get()
@@ -2255,6 +2254,12 @@ class Application():
         command = "self.static_plot_" + str(window_nr) + " = Staticplotwindow(window_nr, number_of_plot, self.eleana.storage.static_plots, self.eleana.storage.active_static_plot_windows, self.mainwindow, self.main_menubar)"
         exec(command)
         self.main_menubar.create_showplots_menu()
+
+    def show_id(self, which):
+        ''' Display the ID of the selected data'''
+        selection = self.eleana.selections.get(which, None)
+        if selection is not None:
+            self.eleana.dataset[selection].show_id(master = self.mainwindow)
 
     def clear_selected_ranges(self):
         self.grapher.clear_selected_ranges()

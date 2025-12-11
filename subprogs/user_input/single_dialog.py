@@ -11,13 +11,14 @@ PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "single_dialog.ui"
 
 class SingleDialog:
-    def __init__(self, master=None, title='', label='', text='', enable_dot=False):
+    def __init__(self, master=None, title='', label='', text='', enable_dot=False, disable_edit = False):
         self.enable_dot = enable_dot
         self.master = master
         # Pygubu part below:
         self.builder = builder = pygubu.Builder()
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
+        self.disable_edit = disable_edit
         # Main widget
         self.mainwindow = builder.get_object("toplevel1", self.master)
         builder.connect_callbacks(self)
@@ -37,6 +38,8 @@ class SingleDialog:
         self.textbox.delete(0, tk.END)
         self.textbox.insert(0, text)
         self.textbox.focus_set()
+        if self.disable_edit:
+            self.make_readonly(self.textbox)
 
         # Set return
         self.response = None
@@ -46,6 +49,19 @@ class SingleDialog:
         self.mainwindow.bind('<Return>', self.ok)
 
     ''' DO NOT REMOVE GET AND RUN FUNCTIONS'''
+
+    def make_readonly(self, textbox):
+
+        def block_event(event):
+            if (event.state & 0x4) and event.keysym.lower() == "c":
+                return
+            return "break"
+
+        for seq in [
+            "<Key>", "<BackSpace>", "<Delete>", "<Return>",
+            "<Control-v>", "<Control-x>"]:
+            self.textbox.bind(seq, block_event)
+
     def get(self):
         if self.mainwindow.winfo_exists():
             self.master.wait_window(self.mainwindow)

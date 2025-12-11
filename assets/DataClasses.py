@@ -7,6 +7,7 @@ from typing import List, Optional, Dict, Literal
 from Error import Error
 from datetime import datetime
 import random
+from subprogs.user_input.single_dialog import SingleDialog
 # how bruker Elexsys parameters are mapped to eleana parameters
 # If you want eleana to extract more parameters from dsc
 # just add them here
@@ -152,6 +153,12 @@ class BaseDataModel:
                 self.y = self.y.flatten()
                 self.z = None
                 self.stk_names = None
+
+    def show_id(self, master):
+        ''' Shows the ID of the data '''
+        title = f'{self.name}'
+        text = f'{self.id}'
+        show = SingleDialog(title = title, label = 'ID', text = text, disable_edit=True)
 
 
 @dataclass
