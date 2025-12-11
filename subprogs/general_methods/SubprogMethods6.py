@@ -111,6 +111,24 @@ class SubMethods_06:
                 self.restore_settings()
             self.mainwindow.protocol('WM_DELETE_WINDOW', self.cancel)
 
+            # Center window
+            self.mainwindow.update_idletasks()
+            self.master.update_idletasks()
+
+            w = self.mainwindow.winfo_width()
+            h = self.mainwindow.winfo_height()
+
+            mw = self.master.winfo_width()
+            mh = self.master.winfo_height()
+
+            mx = self.master.winfo_x()
+            my = self.master.winfo_y()
+
+            x = mx + (mw - w) // 2
+            y = my + (mh - h) // 2
+
+            self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
+
     # Create weak references to eleana, grapher and update
     # through weakref app
     # ----------------------------------------------

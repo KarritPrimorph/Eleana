@@ -228,7 +228,7 @@ class CurveFit(Methods, WindowGUI):
         self.__app = weakref.ref(app)
         if app and not commandline:                                                                 #|
             # Initialize window if app is defined and not commandline                               #|
-            WindowGUI.__init__(self, self.__app().mainwindow)
+            WindowGUI.__init__(self, master=self.__app().mainwindow)
             #|
         # Create settings for the subprog                                                           #|
         self.subprog_settings = {'folder':SUBPROG_FOLDER, 'title': TITLE, 'on_top': ON_TOP, 'data_label': DATA_LABEL, 'name_suffix': NAME_SUFFIX,
@@ -388,18 +388,24 @@ class CurveFit(Methods, WindowGUI):
         self.widget_indep_var.bind('<FocusOut>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
 
         # Center window
-        self.mainwindow.update_idletasks()
+        # self.mainwindow.update_idletasks()
+        # self.master.update_idletasks()
+        #
+        # w = self.mainwindow.winfo_width()
+        # h = self.mainwindow.winfo_height()
+        #
+        # mw = self.master.winfo_width()
+        # mh = self.master.winfo_height()
+        #
+        # mx = self.master.winfo_x()
+        # my = self.master.winfo_y()
+        #
+        # x = mx + (mw - w) // 2
+        # y = my + (mh - h) // 2
+        #
+        # self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
 
-        w = self.mainwindow.winfo_width()
-        h = self.mainwindow.winfo_height()
 
-        sw = self.mainwindow.winfo_screenwidth()
-        sh = self.mainwindow.winfo_screenheight()
-
-        x = (sw - w) // 2
-        y = (sh - h) // 2
-
-        self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
 
         # Define available fitting algorithms:
         self.algorithms = {

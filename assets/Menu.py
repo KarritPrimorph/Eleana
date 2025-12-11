@@ -614,10 +614,10 @@ class ContextMenu:
         self.context_menu_second.add_command(label="Duplicate", command=lambda: self.callbacks.get('duplicate_data')('second'))
         self.context_menu_second.add_command(label="Assign to group", command=self.callbacks.get('second_to_group'))
         self.context_menu_second.add_command(label="Convert stack to group", command=lambda: self.callbacks.get('stack_to_group')('second'))
-        self.context_menu_first.add_command(label="Drop imaginary part",
+        self.context_menu_second.add_command(label="Drop imaginary part",
                                             command=lambda: self.callbacks.get("complex_modifications")(
                                                 operation='Drop imaginary part', which='second'))
-        self.context_menu_first.add_command(label="Drop real part",
+        self.context_menu_second.add_command(label="Drop real part",
                                             command=lambda: self.callbacks.get("complex_modifications")(
                                                 operation='Drop real part', which='second'))
         self.context_menu_second.add_command(label="Edit comment", command=lambda: self.callbacks.get('edit_comment')('second'))
@@ -632,7 +632,7 @@ class ContextMenu:
         '''This creates positions for SECOND context menu '''
         self.context_menu_result.add_command(label="Rename", command=lambda: self.callbacks.get('rename_data')('result'))
         self.context_menu_result.add_command(label="Delete", command=lambda: self.callbacks.get('delete_data')('result'))
-        self.context_menu_second.add_command(label="Duplicate", command=lambda: self.callbacks.get('duplicate_data')('result'))
+        self.context_menu_result.add_command(label="Duplicate", command=lambda: self.callbacks.get('duplicate_data')('result'))
 
     def show_context_menu_group(self, event):
         self.context_menu_group.tk_popup(event.x_root, event.y_root)
