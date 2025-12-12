@@ -229,6 +229,7 @@ class CurveFit(Methods, WindowGUI):
         if app and not commandline:                                                                 #|
             # Initialize window if app is defined and not commandline                               #|
             WindowGUI.__init__(self, master=self.__app().mainwindow)
+
             #|
         # Create settings for the subprog                                                           #|
         self.subprog_settings = {'folder':SUBPROG_FOLDER, 'title': TITLE, 'on_top': ON_TOP, 'data_label': DATA_LABEL, 'name_suffix': NAME_SUFFIX,
@@ -387,26 +388,6 @@ class CurveFit(Methods, WindowGUI):
         self.widget_indep_var.bind('<KP_Enter>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
         self.widget_indep_var.bind('<FocusOut>', lambda event, w='variable', p='': self.table_changed(widget=w, parameter=p))
 
-        # Center window
-        # self.mainwindow.update_idletasks()
-        # self.master.update_idletasks()
-        #
-        # w = self.mainwindow.winfo_width()
-        # h = self.mainwindow.winfo_height()
-        #
-        # mw = self.master.winfo_width()
-        # mh = self.master.winfo_height()
-        #
-        # mx = self.master.winfo_x()
-        # my = self.master.winfo_y()
-        #
-        # x = mx + (mw - w) // 2
-        # y = my + (mh - h) // 2
-        #
-        # self.mainwindow.geometry(f"{w}x{h}+{x}+{y}")
-
-
-
         # Define available fitting algorithms:
         self.algorithms = {
             'Levenberg-Marquardt': 'leastsq',
@@ -426,6 +407,7 @@ class CurveFit(Methods, WindowGUI):
         self.replace_table_chceck = self.builder.get_object('replace_table_chceck', self.mainwindow)
         self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
         self.show_fitted_curve_checkbox = self.builder.get_object('show_fitted_curve_checkbox', self.mainwindow)
+
 
 
     #

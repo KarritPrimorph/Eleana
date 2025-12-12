@@ -226,6 +226,12 @@ class Application():
         self.infoframe.grid_remove()
         self.btn_clear_cursors.grid_remove()
         self.annotationsFrame.grid_remove()
+        self.check_aux_x = builder.get_object('check_aux_x', self.mainwindow)
+        self.check_aux_y = builder.get_object('check_aux_y', self.mainwindow)
+        self.check_move_x = builder.get_object('check_move_x', self.mainwindow)
+        self.check_move_y = builder.get_object('check_move_y', self.mainwindow)
+        self.check_stretch_x = builder.get_object('check_stretch_x', self.mainwindow)
+        self.check_stretch_y = builder.get_object('check_stretch_y', self.mainwindow)
 
         # Command line
         self.command_line = builder.get_object('command_line', self.mainwindow)
@@ -296,6 +302,9 @@ class Application():
                                gui_references = grapher_callbacks(self)['gui_references'],
                                callbacks = grapher_callbacks(self)['callbacks']
                                )
+
+        # Switch off the GUI for Move and Stretch
+        self.auxilary_axes()
 
         # Configure Main Window
         #configure = Configure(self.eleana)
@@ -385,6 +394,55 @@ class Application():
             self.check_indexed_x.select()
         else:
             self.check_indexed_x.deselect()
+        if state.auxilary_x:
+            self.check_aux_x.select()
+        else:
+            self.check_move_x.deselect()
+        if state.auxilary_y:
+            self.check_aux_y.select()
+        else:
+            self.check_aux_y.deselect()
+        if state.move_x:
+            self.check_move_x.select()
+        else:
+            self.check_move_x.deselect()
+        if state.move_y:
+            self.check_move_y.select()
+        else:
+            self.check_move_y.deselect()
+        if state.stretch_x:
+            self.check_stretch_x.select()
+        else:
+            self.check_stretch_x.deselect()
+        if state.stretch_y:
+            self.check_stretch_y.select()
+        else:
+            self.check_stretch_y.deselect()
+
+    def auxilary_axes(self):
+        ''' Changes in status of auxilary axes '''
+        self.eleana.gui_state.auxilary_x = self.check_aux_x.get()
+        self.eleana.gui_state.auxilary_y = self.check_aux_y.get()
+        if self.eleana.gui_state.auxilary_x:
+            self.check_move_x.grid()
+            self.check_stretch_x.grid()
+        else:
+            self.check_move_x.grid_remove()
+            self.check_stretch_x.grid_remove()
+        if self.eleana.gui_state.auxilary_y:
+            self.check_move_y.grid()
+            self.check_stretch_y.grid()
+        else:
+            self.check_move_y.grid_remove()
+            self.check_stretch_y.grid_remove()
+
+        self.eleana.gui_state.move_x = self.check_move_x.get()
+        self.eleana.gui_state.move_y = self.check_move_y.get()
+        self.eleana.gui_state.stretch_y = self.check_stretch_y.get()
+        self.eleana.gui_state.stretch_x = self.check_stretch_x.get()
+
+        self.grapher.toggle_aux_axis()
+
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
@@ -471,13 +529,6 @@ class Application():
         self.panedwindow4.sashpos(0, 400)
         self.pane5.sashpos(0, 1100)
         self.mainwindow.update_idletasks()
-
-    # def center_window(self, window, width, height):
-    #     screen_width = window.winfo_screenwidth()
-    #     screen_height = window.winfo_screenheight()
-    #     x = (screen_width - width) // 2
-    #     y = (screen_height - height) // 2
-    #     window.geometry(f"{width}x{height}+{x}+{y}")
 
     def run(self):
         self.mainwindow.after(100, self.set_pane_height)
@@ -1477,6 +1528,7 @@ class Application():
         #self.integrate_region = IntegrateRegion(self, which = 'first')
         integrate_region = IntegrateRegion(self, which='first')
 
+
     def normalize(self):
         ''' Normalization of the amplitutes'''
         normalize = Normalize(self, which='first')
@@ -1663,7 +1715,6 @@ class Application():
             self.firstStkFrame.grid_remove()
             self.secondComplex.grid_remove()
             self.secondStkFrame.grid_remove()
-            #self.eleana.reset()
             self.eleana.dataset.clear()
             self.eleana.results_dataset.clear()
 

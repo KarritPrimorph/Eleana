@@ -72,6 +72,20 @@ class SubMethods_05:
             else:
                 self.data_label = None
 
+            # Check if window should be modal and remove icon from panel
+            modal = self.subprog_settings.get('modal', True)
+            if modal:
+                parent = self.__app().mainwindow
+                self.mainwindow.transient(parent)
+                self.mainwindow.grab_set()
+                self.mainwindow.focus_set()
+                try:
+                    self.mainwindow.attributes("-toolwindow", True)
+                except:
+                    pass
+
+
+
         # Set to which selection 'First' or 'Second'
         self.which = which
         # If self.app is defined, configure window, observer and grapher

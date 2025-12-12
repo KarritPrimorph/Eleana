@@ -23,6 +23,12 @@ class GuiState:
     indexed_x: bool
     cursor_mode: str
     inverted_x: bool
+    auxilary_x: bool
+    auxilary_y: bool
+    move_x: bool
+    move_y: bool
+    stretch_x: bool
+    stretch_y:bool
 
 @dataclass
 class Settings:
@@ -131,7 +137,6 @@ class Eleana:
         # {'subprog':'SUBPROG_PYTHON_FILENAME', 'content':[LIST_OF_DICTS_CONTAINING_STORAGE]}
 
 
-
         # Try loading saved settings
         self.settings = self.load_settings()
 
@@ -176,7 +181,7 @@ class Eleana:
             "color": "black"  # Font color
         }
 
-        # Create contener for guistate
+        # Create contener for gui state and set default
         self.gui_state = GuiState(autoscale_x=True,
                                   autoscale_y=True,
                                   log_x=False,
@@ -184,6 +189,12 @@ class Eleana:
                                   indexed_x=False,
                                   cursor_mode='None',
                                   inverted_x=False,
+                                  auxilary_x = False,
+                                  auxilary_y = False,
+                                  move_x = False,
+                                  move_y = False,
+                                  stretch_x = False,
+                                  stretch_y = False
                                   )
 
         # Create temporary storages

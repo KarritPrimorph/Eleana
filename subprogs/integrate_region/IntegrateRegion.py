@@ -88,7 +88,6 @@ CURSOR_OUTSIDE_TEXT = \
 #    END OF SUBPROG SETTINGS     #
 #  DO NOT MODIFY LINES BELOW     #
 ##################################'''
-from subprogs.general_methods.SubprogMethods2 import SubMethods_02
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
@@ -110,7 +109,7 @@ class IntegrateRegion(Methods, WindowGUI):
         if app and not commandline:
             # Initialize window if app is defined and not commandline
             WindowGUI.__init__(self, self.__app().mainwindow)
-            #|
+
         # Create settings for the subprog                                                           #|
         self.subprog_settings = {'folder':SUBPROG_FOLDER, 'title': TITLE, 'on_top': ON_TOP, 'data_label': DATA_LABEL, 'name_suffix': NAME_SUFFIX,
                                  'auto_calculate': AUTO_CALCULATE, 'result': RESULT_CREATE, 'result_ignore':RESULT_IGNORE,

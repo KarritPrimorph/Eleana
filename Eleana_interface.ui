@@ -1,10 +1,10 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.4" author="PygubuDesigner 0.41">
+<interface version="1.4" author="PygubuDesigner 0.40.2">
   <project>
     <settings />
     <customwidgets />
   </project>
-  <object class="tk.Toplevel" id="Eleana" named="True">
+  <object class="tk.Toplevel" id="EleanaWindow" named="True">
     <property name="geometry">1600x1300</property>
     <property name="height">600</property>
     <property name="overrideredirect">false</property>
@@ -1712,7 +1712,121 @@
                                         <property name="height">2</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
-                                          <property name="row">7</property>
+                                          <property name="columnspan">2</property>
+                                          <property name="row">8</property>
+                                          <property name="sticky">nsew</property>
+                                        </layout>
+                                        <containerlayout manager="grid">
+                                          <property type="col" id="0" name="weight">1</property>
+                                          <property type="col" id="1" name="weight">1</property>
+                                          <property type="col" id="2" name="weight">1</property>
+                                        </containerlayout>
+                                        <child>
+                                          <object class="customtkinter.CTkLabel" id="ctklabel2">
+                                            <property name="text" translatable="yes">Auxilary axes</property>
+                                            <layout manager="grid">
+                                              <property name="column">0</property>
+                                              <property name="row">0</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="check_auxilary_x" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">X</property>
+                                            <layout manager="grid">
+                                              <property name="column">0</property>
+                                              <property name="padx">5</property>
+                                              <property name="pady">5</property>
+                                              <property name="row">1</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="check_move_x" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">Move X</property>
+                                            <layout manager="grid">
+                                              <property name="column">1</property>
+                                              <property name="padx">5</property>
+                                              <property name="pady">5</property>
+                                              <property name="row">1</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="ctkcheckbox3" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">Stretch X</property>
+                                            <layout manager="grid">
+                                              <property name="column">2</property>
+                                              <property name="padx">5</property>
+                                              <property name="pady">5</property>
+                                              <property name="row">1</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="ctkcheckbox4" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">Y</property>
+                                            <layout manager="grid">
+                                              <property name="column">0</property>
+                                              <property name="padx">5</property>
+                                              <property name="row">2</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="ctkcheckbox5" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">Move Y</property>
+                                            <layout manager="grid">
+                                              <property name="column">1</property>
+                                              <property name="padx">5</property>
+                                              <property name="row">2</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                        <child>
+                                          <object class="customtkinter.CTkCheckBox" id="ctkcheckbox6" named="True">
+                                            <property name="border_width">2</property>
+                                            <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                            <property name="corner_radius">20</property>
+                                            <property name="text" translatable="yes">Stretch Y</property>
+                                            <layout manager="grid">
+                                              <property name="column">2</property>
+                                              <property name="padx">5</property>
+                                              <property name="row">2</property>
+                                              <property name="sticky">ew</property>
+                                            </layout>
+                                          </object>
+                                        </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="customtkinter.CTkFrame" id="ctkframe11">
+                                        <property name="height">2</property>
+                                        <layout manager="grid">
+                                          <property name="column">0</property>
+                                          <property name="row">9</property>
+                                          <property name="sticky">nsew</property>
                                         </layout>
                                       </object>
                                     </child>
@@ -1721,7 +1835,7 @@
                                         <property name="text" translatable="yes">Cursor</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
-                                          <property name="row">8</property>
+                                          <property name="row">10</property>
                                         </layout>
                                       </object>
                                     </child>
@@ -1730,8 +1844,9 @@
                                         <property name="command" type="command" cbtype="simple">sel_graph_cursor</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
+                                          <property name="columnspan">2</property>
                                           <property name="padx">5</property>
-                                          <property name="row">9</property>
+                                          <property name="row">11</property>
                                           <property name="sticky">ew</property>
                                         </layout>
                                       </object>
@@ -1743,9 +1858,10 @@
                                         <property name="text" translatable="yes">Clear cursors</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
+                                          <property name="columnspan">2</property>
                                           <property name="padx">5</property>
                                           <property name="pady">5</property>
-                                          <property name="row">10</property>
+                                          <property name="row">12</property>
                                           <property name="sticky">ew</property>
                                         </layout>
                                       </object>
@@ -1756,9 +1872,10 @@
                                         <property name="corner_radius">0</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
+                                          <property name="columnspan">2</property>
                                           <property name="padx">5</property>
                                           <property name="pady">5</property>
-                                          <property name="row">11</property>
+                                          <property name="row">13</property>
                                           <property name="sticky">nsew</property>
                                         </layout>
                                       </object>
@@ -1769,7 +1886,8 @@
                                         <property name="corner_radius">0</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
-                                          <property name="row">12</property>
+                                          <property name="columnspan">2</property>
+                                          <property name="row">14</property>
                                           <property name="sticky">nsew</property>
                                         </layout>
                                         <child>
@@ -1782,6 +1900,16 @@
                                             </layout>
                                           </object>
                                         </child>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="customtkinter.CTkFrame" id="ctkframe20">
+                                        <property name="height">2</property>
+                                        <layout manager="grid">
+                                          <property name="column">0</property>
+                                          <property name="row">7</property>
+                                          <property name="sticky">nsew</property>
+                                        </layout>
                                       </object>
                                     </child>
                                   </object>
