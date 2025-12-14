@@ -416,6 +416,7 @@ class Eleana:
         self.paths['last_export_dir'] = paths['last_export_dir']
 
         file_to_read.close()
+
         # Create last project list in the main menu
         last_projects = self.paths['last_projects']
         last_projects = [element for i, element in enumerate(last_projects) if i <= 10]

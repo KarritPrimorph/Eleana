@@ -421,14 +421,15 @@ class Application():
 
     def auxilary_axes(self):
         ''' Changes in status of auxilary axes '''
-        self.eleana.gui_state.auxilary_x = self.check_aux_x.get()
-        self.eleana.gui_state.auxilary_y = self.check_aux_y.get()
+        self.eleana.gui_state.auxilary_x = bool(self.check_aux_x.get())
+        self.eleana.gui_state.auxilary_y = bool(self.check_aux_y.get())
         if self.eleana.gui_state.auxilary_x:
             self.check_move_x.grid()
             self.check_stretch_x.grid()
         else:
             self.check_move_x.grid_remove()
             self.check_stretch_x.grid_remove()
+
         if self.eleana.gui_state.auxilary_y:
             self.check_move_y.grid()
             self.check_stretch_y.grid()
@@ -436,10 +437,10 @@ class Application():
             self.check_move_y.grid_remove()
             self.check_stretch_y.grid_remove()
 
-        self.eleana.gui_state.move_x = self.check_move_x.get()
-        self.eleana.gui_state.move_y = self.check_move_y.get()
-        self.eleana.gui_state.stretch_y = self.check_stretch_y.get()
-        self.eleana.gui_state.stretch_x = self.check_stretch_x.get()
+        self.eleana.gui_state.move_x = bool(self.check_move_x.get())
+        self.eleana.gui_state.move_y = bool(self.check_move_y.get())
+        self.eleana.gui_state.stretch_y = bool(self.check_stretch_y.get())
+        self.eleana.gui_state.stretch_x = bool(self.check_stretch_x.get())
 
         self.grapher.toggle_aux_axis()
 

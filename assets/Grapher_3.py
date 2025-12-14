@@ -66,6 +66,10 @@ class Grapher():
         self.ax = self.fig.add_subplot(111)
         self.aux_ax = None
 
+        # Add additional axes:
+        #self.aux_ax_y = None
+        #self.aux_ax_x = None
+
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graphFrame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
@@ -97,14 +101,78 @@ class Grapher():
         self.cursor_modes = self.eleana.settings.grapher['cursor_modes']
         self.current_cursor_mode = self.cursor_modes[0]
 
+
         # Create variable for storing min-max
         self.scale1 = {'x': [], 'y': []}
 
         # Clear some dirty annotations from the graphe
         self.clear_all_annotations()
 
+        # fLAGS FOR DRAGGING
+        self.dragging = False  # czy teraz przesuwamy oś
+        self.scaling = False  # czy teraz rozciągamy (stretch_x/y)
+        self.last_x = None  # pozycja X przy poprzednim evencie
+        self.last_y = None
+        self.cid_press = None
+        self.cid_release = None
+        self.cid_move = None
+
+    ''' Methods for handling auxilary axes '''
+
+
+    #
+    # plot_graph() needs fixing to move the second curve to the auxilary axes
+    #
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def remove_axis(self, ax):
+        """ Remove additional axis created  by twinx/twiny """
+        if ax is None:
+            return
+        self.fig.delaxes(ax)
+        try:
+            self.fig.axes.remove(ax)
+        except ValueError:
+            pass
+
+    def move_line_to_axis(self, line, new_ax):
+        """ Move existing line to the new axis """
+        if line is None:
+            return None
+
+        x = line.get_xdata()
+        y = line.get_ydata()
+        style = {
+            'color': line.get_color(),
+            'linewidth': line.get_linewidth(),
+            'linestyle': line.get_linestyle(),
+            'marker': line.get_marker(),
+        }
+
+        # nowa linia na new_ax
+        new_line, = new_ax.plot(x, y, **style)
+
+        # usuń starą linię
+        old_ax = line.axes
+        old_ax.lines.remove(line)
+        return new_line
+
     def toggle_aux_axis(self):
         """Switch auxiliary axis for second curve according to gui_state."""
+
         if self.eleana.gui_state.auxilary_y or self.eleana.gui_state.auxilary_x:
             if self.aux_ax is None:
                 # Utwórz niezależną oś pomocniczą dokładnie w tej samej pozycji co główna
@@ -124,6 +192,79 @@ class Grapher():
 
         # Odśwież wykres
         self.plot_graph()
+
+    def bind_mouse_events(self):
+        if self.cid_press is None:
+            self.cid_press = self.canvas.mpl_connect("button_press_event", self.on_press)
+        if self.cid_release is None:
+            self.cid_release = self.canvas.mpl_connect("button_release_event", self.on_release)
+        if self.cid_move is None:
+            self.cid_move = self.canvas.mpl_connect("motion_notify_event", self.on_move)
+
+    def unbind_mouse_events(self):
+        if self.cid_press is not None:
+            self.canvas.mpl_disconnect(self.cid_press)
+            self.cid_press = None
+
+        if self.cid_release is not None:
+            self.canvas.mpl_disconnect(self.cid_release)
+            self.cid_release = None
+
+        if self.cid_move is not None:
+            self.canvas.mpl_disconnect(self.cid_move)
+            self.cid_move = None
+
+    def on_press(self, event):
+        """Start dragging with middle mouse button."""
+        if event.button == 2:  # middle mouse pressed
+            self.dragging = True
+            self.last_xdata = event.xdata
+            self.last_ydata = event.ydata
+
+    def on_release(self, event):
+        """Stop dragging."""
+        if event.button == 2:
+            self.dragging = False
+            self.last_xdata = None
+            self.last_ydata = None
+
+    def on_move(self, event):
+        """Handle dragging to move the axes (panning)."""
+        if not self.dragging:
+            return
+
+        if event.xdata is None or event.ydata is None:
+            return  # mouse outside axes
+
+        dx = event.xdata - self.last_xdata if self.last_xdata is not None else 0
+        dy = event.ydata - self.last_ydata if self.last_ydata is not None else 0
+
+        self.last_xdata = event.xdata
+        self.last_ydata = event.ydata
+
+        # --- MOVE X ----------------------------------------------------
+        if self.eleana.gui_state.move_x:
+            x_min, x_max = self.ax.get_xlim()
+            span = x_max - x_min
+
+            self.ax.set_xlim(x_min - dx, x_max - dx)
+
+            # jeśli masz oś pomocniczą X, też ją przesuwamy
+            if hasattr(self, "ax2x") and self.ax2x is not None:
+                x2_min, x2_max = self.ax2x.get_xlim()
+                self.ax2x.set_xlim(x2_min - dx, x2_max - dx)
+
+        # --- MOVE Y ----------------------------------------------------
+        if self.eleana.gui_state.move_y:
+            y_min, y_max = self.ax.get_ylim()
+            self.ax.set_ylim(y_min - dy, y_max - dy)
+
+            # auxiliary Y axis?
+            if hasattr(self, "ax2") and self.ax2 is not None:
+                y2_min, y2_max = self.ax2.get_ylim()
+                self.ax2.set_ylim(y2_min - dy, y2_max - dy)
+
+        self.canvas.draw_idle()
 
     '''Methods for the Grapher class '''
 
@@ -268,12 +409,6 @@ class Grapher():
     def plot_graph(self):
         ''' This method plots the basic working plot with First,Second,Result'''
         self.ax.clear()
-
-        # --- CLEAR AUX AXIS COMPLETELY ---
-        if self.aux_ax is not None:
-            self.aux_ax.remove()
-            self.aux_ax = None
-
         # Add first
         data = self.data_for_plot('first')
         # If indexed is True replace X values with consecutive points
