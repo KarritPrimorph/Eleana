@@ -105,7 +105,7 @@ class Grapher():
 
     def toggle_aux_axis(self):
         """Switch auxiliary axis for second curve according to gui_state."""
-        if self.eleana.gui_state.auxilary_y or self.eleana.gui_state.auxilary_x:
+        if self.eleana.gui_state.auxilary_axes:
             if self.aux_ax is None:
                 # Utwórz niezależną oś pomocniczą dokładnie w tej samej pozycji co główna
                 pos = self.ax.get_position()
@@ -213,7 +213,7 @@ class Grapher():
         if index < 0:
             legend = ' '
             return legend
-        # 2. Chcek if "Show Checkbox" is True. If not then legend = "no plot" and return
+        # 2. Check if "Show Checkbox" is True. If not then legend = "no plot" and return
         if which == 'first':
             display = self.eleana.selections['f_dsp']
         elif which == 'second':
@@ -267,14 +267,23 @@ class Grapher():
 
     def plot_graph(self):
         ''' This method plots the basic working plot with First,Second,Result'''
-        self.ax.clear()
+        # Store currens scales' limits
+        self.eleana.gui_state.scales['xlim'] = self.ax.get_xlim()
+        self.eleana.gui_state.scales['ylim'] = self.ax.get_ylim()
+        if self.eleana.gui_state.auxilary_axes:
+            self.eleana.gui_state.scales['aux_xlim'] = self.aux_ax.get_xlim()
+            self.eleana.gui_state.scales['aux_ylim'] = self.aux_ax.get_ylim()
+        else:
+            self.eleana.gui_state.scales['aux_xlim'] = None
+            self.eleana.gui_state.scales['aux_ylim'] = None
 
-        # --- CLEAR AUX AXIS COMPLETELY ---
+        # Clear scales
+        self.ax.clear()
         if self.aux_ax is not None:
             self.aux_ax.remove()
             self.aux_ax = None
 
-        # Add first
+        # ----------- Add first ------------
         data = self.data_for_plot('first')
         # If indexed is True replace X values with consecutive points
         if self.eleana.gui_state.indexed_x:
@@ -316,22 +325,23 @@ class Grapher():
         legend = self.create_legend('second')
         second_shown = True if len(data['x']) > 0 else False
 
-        # Tworzymy niezależną oś pomocniczą (X2/Y2)
-        if self.eleana.gui_state.auxilary_y or self.eleana.gui_state.auxilary_x:
+        # Create independent auxilary axees (X2/Y2)
+        if self.eleana.gui_state.auxilary_axes or self.eleana.gui_state.auxilary_axes:
             if self.aux_ax is None:
-                pos = self.ax.get_position()  # zachowujemy pozycję głównej osi
+                pos = self.ax.get_position()  # Keep position of main scale
                 self.aux_ax = self.fig.add_axes(pos, sharex=None, sharey=None)
-                # Ustawienia osi pomocniczej
+                # Settings for auxilary axes
                 self.aux_ax.xaxis.set_label_position('top')
                 self.aux_ax.xaxis.tick_top()
                 self.aux_ax.yaxis.set_label_position('right')
                 self.aux_ax.yaxis.tick_right()
                 self.aux_ax.patch.set_alpha(0.0)
+                self.aux_ax.set_navigate(False) # Keep navigation on the main axes
             target_ax = self.aux_ax
         else:
-            target_ax = self.ax  # fallback: główna oś
+            target_ax = self.ax  # fallback: the auxilary axes will not be used.
 
-        # Rysujemy drugą krzywą
+        # Plot second curve
         if data['complex'] and self.eleana.selections['s_cpl'] == 'cpl':
             if self.style_second['plot_type'] == 'line':
                 target_ax.plot(data['x'], data['re_y'], label=legend,
@@ -366,7 +376,7 @@ class Grapher():
                                   color=self.style_second['color_re'], s=self.style_second['s'],
                                   marker=self.style_second['marker'])
 
-        # Zachowujemy referencję do linii 2
+        # Keep reference for line 2
         if target_ax.lines:
             self.line2 = target_ax.lines[-1]
         else:
@@ -377,10 +387,17 @@ class Grapher():
             target_ax.set_xlim(self.ax.get_xlim())
             target_ax.set_ylim(self.ax.get_ylim())
 
-        # Ustaw etykiety osi pomocniczej
+        # Set labels for auxilary axes
         if self.aux_ax is not None:
-            self.aux_ax.set_xlabel("X2")
-            self.aux_ax.set_ylabel("Y2")
+            axis_title = self.axis_title('second')
+            color = self.eleana.settings.grapher['style_second']['color_re']
+            self.aux_ax.set_xlabel(f'{axis_title['x_title']}', color = color)
+            self.aux_ax.set_ylabel(f'{axis_title['y_title']}', color = color)
+
+            axis_title = self.axis_title('first')
+            color = self.eleana.settings.grapher['style_first']['color_re']
+            self.ax.set_xlabel(f'{axis_title['x_title']}', color=color)
+            self.ax.set_ylabel(f'{axis_title['y_title']}', color=color)
 
         # Add result
         data = self.data_for_plot('result')

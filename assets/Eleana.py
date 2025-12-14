@@ -23,12 +23,8 @@ class GuiState:
     indexed_x: bool
     cursor_mode: str
     inverted_x: bool
-    auxilary_x: bool
-    auxilary_y: bool
-    move_x: bool
-    move_y: bool
-    stretch_x: bool
-    stretch_y:bool
+    auxilary_axes: bool
+    scales: dict
 
 @dataclass
 class Settings:
@@ -189,12 +185,12 @@ class Eleana:
                                   indexed_x=False,
                                   cursor_mode='None',
                                   inverted_x=False,
-                                  auxilary_x = False,
-                                  auxilary_y = False,
-                                  move_x = False,
-                                  move_y = False,
-                                  stretch_x = False,
-                                  stretch_y = False
+                                  auxilary_axes = False,
+                                  scales = {'xlim': (0,0),
+                                            'ylim': (0,0),
+                                            'aux_xlim': (0,0),
+                                            'aux_ylim': (0,0),
+                                            }
                                   )
 
         # Create temporary storages
@@ -437,19 +433,6 @@ class Eleana:
             print(e)
             self.set_default_settings()
             return None
-
-    #
-    # Operations on dataset
-    #
-
-    # def name_nr_to_index(self, selected_value_text):
-    #     ''' Returns index of Eleana.dataset which name_nr attribute is equal to argument: selected_value_text'''
-    #     numbered_names = []
-    #     for each in self.dataset:
-    #         numbered_names.append(each.name_nr)
-    #     if selected_value_text in numbered_names:
-    #         index = numbered_names.index(selected_value_text)
-    #         return index
 
     def create_missing_id(self):
         """Scan dataset and check if ID is created. If not, create unique ID."""

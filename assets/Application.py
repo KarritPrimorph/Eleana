@@ -226,12 +226,9 @@ class Application():
         self.infoframe.grid_remove()
         self.btn_clear_cursors.grid_remove()
         self.annotationsFrame.grid_remove()
-        self.check_aux_x = builder.get_object('check_aux_x', self.mainwindow)
-        self.check_aux_y = builder.get_object('check_aux_y', self.mainwindow)
-        self.check_move_x = builder.get_object('check_move_x', self.mainwindow)
-        self.check_move_y = builder.get_object('check_move_y', self.mainwindow)
-        self.check_stretch_x = builder.get_object('check_stretch_x', self.mainwindow)
-        self.check_stretch_y = builder.get_object('check_stretch_y', self.mainwindow)
+        self.check_auxilary_axes = builder.get_object('check_auxilary_axes', self.mainwindow)
+        self.btn_reses_auxilary_axes = builder.get_object('btn_reset_aux', self.mainwindow)
+        self.btn_reses_auxilary_axes.grid_remove()
 
         # Command line
         self.command_line = builder.get_object('command_line', self.mainwindow)
@@ -394,56 +391,19 @@ class Application():
             self.check_indexed_x.select()
         else:
             self.check_indexed_x.deselect()
-        if state.auxilary_x:
-            self.check_aux_x.select()
-        else:
-            self.check_move_x.deselect()
-        if state.auxilary_y:
-            self.check_aux_y.select()
-        else:
-            self.check_aux_y.deselect()
-        if state.move_x:
-            self.check_move_x.select()
-        else:
-            self.check_move_x.deselect()
-        if state.move_y:
-            self.check_move_y.select()
-        else:
-            self.check_move_y.deselect()
-        if state.stretch_x:
-            self.check_stretch_x.select()
-        else:
-            self.check_stretch_x.deselect()
-        if state.stretch_y:
-            self.check_stretch_y.select()
-        else:
-            self.check_stretch_y.deselect()
-
+        #
     def auxilary_axes(self):
         ''' Changes in status of auxilary axes '''
-        self.eleana.gui_state.auxilary_x = bool(self.check_aux_x.get())
-        self.eleana.gui_state.auxilary_y = bool(self.check_aux_y.get())
-        if self.eleana.gui_state.auxilary_x:
-            self.check_move_x.grid()
-            self.check_stretch_x.grid()
+        self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
+        if self.eleana.gui_state.auxilary_axes:
+            self.btn_reses_auxilary_axes.grid()
         else:
-            self.check_move_x.grid_remove()
-            self.check_stretch_x.grid_remove()
-
-        if self.eleana.gui_state.auxilary_y:
-            self.check_move_y.grid()
-            self.check_stretch_y.grid()
-        else:
-            self.check_move_y.grid_remove()
-            self.check_stretch_y.grid_remove()
-
-        self.eleana.gui_state.move_x = bool(self.check_move_x.get())
-        self.eleana.gui_state.move_y = bool(self.check_move_y.get())
-        self.eleana.gui_state.stretch_y = bool(self.check_stretch_y.get())
-        self.eleana.gui_state.stretch_x = bool(self.check_stretch_x.get())
-
+            self.btn_reses_auxilary_axes.grid_remove()
         self.grapher.toggle_aux_axis()
 
+    def reset_auxilary_axes(self):
+        ''' Set scales in auxilary to main axes'''
+        self.grapher.plot_graph()
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
