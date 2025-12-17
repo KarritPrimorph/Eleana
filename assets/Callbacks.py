@@ -114,6 +114,8 @@ def grapher_callbacks(inst):
                     'check_autoscale_x': inst.check_autoscale_x,
                     'check_autoscale_y': inst.check_autoscale_y,
                     'check_indexed_x':inst.check_indexed_x,
+                    'entry_scaling_x':inst.entry_scaling_x,
+                    'entry_scaling_y':inst.entry_scaling_y
                 },
             'callbacks':
                 {

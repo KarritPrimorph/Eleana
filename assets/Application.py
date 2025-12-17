@@ -226,9 +226,13 @@ class Application():
         self.infoframe.grid_remove()
         self.btn_clear_cursors.grid_remove()
         self.annotationsFrame.grid_remove()
+
+        # Auxilary axes
         self.check_auxilary_axes = builder.get_object('check_auxilary_axes', self.mainwindow)
-        self.btn_reses_auxilary_axes = builder.get_object('btn_reset_aux', self.mainwindow)
-        self.btn_reses_auxilary_axes.grid_remove()
+        self.aux_reset_frame = builder.get_object('aux_reset_frame', self.mainwindow)
+        self.entry_scaling_x = builder.get_object('entry_scaling_x', self.mainwindow)
+        self.entry_scaling_y = builder.get_object('entry_scaling_y', self.mainwindow)
+
 
         # Command line
         self.command_line = builder.get_object('command_line', self.mainwindow)
@@ -394,16 +398,38 @@ class Application():
         #
     def auxilary_axes(self):
         ''' Changes in status of auxilary axes '''
-        self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
-        if self.eleana.gui_state.auxilary_axes:
-            self.btn_reses_auxilary_axes.grid()
+        second = False if self.eleana.selections['second'] < 0 else True
+        is_on = bool(self.eleana.selections['s_dsp'])
+        if second and is_on:
+            self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
         else:
-            self.btn_reses_auxilary_axes.grid_remove()
+            self.eleana.gui_state.auxilary_axes = False
+
+        if self.eleana.gui_state.auxilary_axes:
+            self.aux_reset_frame.grid()
+        else:
+            self.aux_reset_frame.grid_remove()
         self.grapher.toggle_aux_axis()
+
 
     def reset_auxilary_axes(self):
         ''' Set scales in auxilary to main axes'''
         self.grapher.plot_graph()
+        self.grapher.on_mouse_release()
+
+    def reset_auxilary_x(self):
+        ''' Set x axis in auxilary scale the sami as in main'''
+        x_lim = self.grapher.aux_ax.get_xlim()
+        self.grapher.ax.set_xlim(x_lim)
+        self.grapher.canvas.draw_idle()
+        self.grapher.on_mouse_release()
+
+    def reset_auxilary_y(self):
+        ''' Set y axis in auxilary scale the sami as in main'''
+        y_lim = self.grapher.aux_ax.get_ylim()
+        self.grapher.ax.set_ylim(y_lim)
+        self.grapher.canvas.draw_idle()
+        self.grapher.on_mouse_release()
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
@@ -1021,6 +1047,7 @@ class Application():
         if selection == 'None':
             return
         self.second_selected(selection)
+        self.auxilary_axes()
 
     #@check_busy
     def second_selected(self, selected_value_text):
@@ -2392,17 +2419,19 @@ class Application():
         self.grapher.plot_graph()
 
     def set_log_scale_x(self):
+        self.eleana.gui_state.log_x = bool(self.check_log_x.get())
         self.grapher.plot_graph()
 
     def set_log_scale_y(self):
+        self.eleana.gui_state.log_y = bool(self.check_log_y.get())
         self.grapher.plot_graph()
 
     def indexed_x(self):
-        self.grapher.indexed_x = bool(self.check_indexed_x.get())
+        self.eleana.gui_state.indexed_x = bool(self.check_indexed_x.get())
         self.grapher.plot_graph()
 
     def invert_x_axis(self):
-        self.grapher.inverted_x_axis = bool(self.check_invert_x.get())
+        self.eleana.gui_state.inverted_x_axis = bool(self.check_invert_x.get())
         self.grapher.plot_graph()
 
     '''***********************************************

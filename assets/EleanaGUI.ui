@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.4" author="PygubuDesigner 0.41.4">
+<interface version="1.4" author="PygubuDesigner 0.40.2">
   <project>
     <settings />
     <customwidgets />
@@ -1709,6 +1709,7 @@
                                     </child>
                                     <child>
                                       <object class="customtkinter.CTkFrame" id="ctkframe6">
+                                        <property name="border_width">1</property>
                                         <property name="height">2</property>
                                         <layout manager="grid">
                                           <property name="column">0</property>
@@ -1726,6 +1727,9 @@
                                             <property name="text" translatable="yes">Auxilary axes (for second)</property>
                                             <layout manager="grid">
                                               <property name="column">0</property>
+                                              <property name="columnspan">3</property>
+                                              <property name="padx">3</property>
+                                              <property name="pady">3</property>
                                               <property name="row">0</property>
                                               <property name="sticky">w</property>
                                             </layout>
@@ -1737,6 +1741,7 @@
                                             <property name="command" type="command" cbtype="simple">auxilary_axes</property>
                                             <property name="corner_radius">20</property>
                                             <property name="text" translatable="yes"> </property>
+                                            <property name="width">20</property>
                                             <layout manager="grid">
                                               <property name="column">0</property>
                                               <property name="padx">5</property>
@@ -1747,14 +1752,131 @@
                                           </object>
                                         </child>
                                         <child>
-                                          <object class="customtkinter.CTkButton" id="btn_reset_aux" named="True">
-                                            <property name="command" type="command" cbtype="simple">reset_auxilary_axes</property>
-                                            <property name="text" translatable="yes">Reset scales</property>
+                                          <object class="customtkinter.CTkFrame" id="aux_reset_frame" named="True">
                                             <layout manager="grid">
                                               <property name="column">1</property>
+                                              <property name="columnspan">2</property>
+                                              <property name="padx">3</property>
+                                              <property name="pady">3</property>
                                               <property name="row">1</property>
-                                              <property name="sticky">w</property>
+                                              <property name="sticky">nsew</property>
                                             </layout>
+                                            <containerlayout manager="grid">
+                                              <property type="col" id="0" name="weight">1</property>
+                                              <property type="col" id="1" name="weight">1</property>
+                                              <property type="col" id="2" name="weight">1</property>
+                                            </containerlayout>
+                                            <child>
+                                              <object class="customtkinter.CTkButton" id="btn_reset_aux" named="True">
+                                                <property name="command" type="command" cbtype="simple">reset_auxilary_axes</property>
+                                                <property name="text" translatable="yes">Reset scales</property>
+                                                <property name="width">70</property>
+                                                <layout manager="grid">
+                                                  <property name="column">0</property>
+                                                  <property name="padx">2</property>
+                                                  <property name="row">0</property>
+                                                  <property name="sticky">w</property>
+                                                </layout>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="customtkinter.CTkButton" id="btn_reset_x" named="True">
+                                                <property name="command" type="command" cbtype="simple">reset_auxilary_x</property>
+                                                <property name="text" translatable="yes">Reset X</property>
+                                                <property name="width">50</property>
+                                                <layout manager="grid">
+                                                  <property name="column">1</property>
+                                                  <property name="padx">2</property>
+                                                  <property name="row">0</property>
+                                                </layout>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="customtkinter.CTkButton" id="btn_reset_y" named="True">
+                                                <property name="command" type="command" cbtype="simple">reset_auxilary_y</property>
+                                                <property name="text" translatable="yes">Reset Y</property>
+                                                <property name="width">50</property>
+                                                <layout manager="grid">
+                                                  <property name="column">2</property>
+                                                  <property name="padx">2</property>
+                                                  <property name="row">0</property>
+                                                </layout>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="customtkinter.CTkFrame" id="ctkframe22">
+                                                <layout manager="grid">
+                                                  <property name="column">0</property>
+                                                  <property name="columnspan">3</property>
+                                                  <property name="padx">3</property>
+                                                  <property name="pady">4</property>
+                                                  <property name="row">1</property>
+                                                  <property name="sticky">nsew</property>
+                                                </layout>
+                                                <containerlayout manager="grid">
+                                                  <property type="col" id="1" name="weight">1</property>
+                                                </containerlayout>
+                                                <child>
+                                                  <object class="customtkinter.CTkLabel" id="ctklabel3">
+                                                    <property name="text" translatable="yes">Scaling factor for X</property>
+                                                    <layout manager="grid">
+                                                      <property name="column">0</property>
+                                                      <property name="padx">5</property>
+                                                      <property name="row">0</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="customtkinter.CTkEntry" id="entry_scaling_x" named="True">
+                                                    <property name="text" translatable="yes"> </property>
+                                                    <layout manager="grid">
+                                                      <property name="column">1</property>
+                                                      <property name="columnspan">2</property>
+                                                      <property name="padx">5</property>
+                                                      <property name="pady">3</property>
+                                                      <property name="row">0</property>
+                                                      <property name="sticky">ew</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="customtkinter.CTkLabel" id="ctklabel5">
+                                                    <property name="text" translatable="yes">Scaling factor for Y</property>
+                                                    <layout manager="grid">
+                                                      <property name="column">0</property>
+                                                      <property name="row">1</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="customtkinter.CTkEntry" id="entry_scaling_y" named="True">
+                                                    <property name="text" translatable="yes"> </property>
+                                                    <layout manager="grid">
+                                                      <property name="column">1</property>
+                                                      <property name="columnspan">2</property>
+                                                      <property name="padx">5</property>
+                                                      <property name="pady">2</property>
+                                                      <property name="row">1</property>
+                                                      <property name="sticky">ew</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                                <child>
+                                                  <object class="customtkinter.CTkButton" id="ctkbutton1">
+                                                    <property name="command" type="command" cbtype="simple">apply_scaling</property>
+                                                    <property name="text" translatable="yes">Apply scaling</property>
+                                                    <layout manager="grid">
+                                                      <property name="column">1</property>
+                                                      <property name="columnspan">2</property>
+                                                      <property name="padx">5</property>
+                                                      <property name="pady">2</property>
+                                                      <property name="row">2</property>
+                                                      <property name="sticky">ew</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
                                           </object>
                                         </child>
                                       </object>

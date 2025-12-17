@@ -38,6 +38,8 @@ class Grapher():
         self.check_autoscale_x = gui_references['check_autoscale_x']
         self.check_autoscale_y = gui_references['check_autoscale_y']
         self.check_indexed_x = gui_references['check_indexed_x']
+        self.entry_scaling_x = gui_references['entry_scaling_x']
+        self.entry_scaling_y = gui_references['entry_scaling_y']
 
         self.annotationlist = CTkListbox(self.annotationsFrame, command=self.annotationlist_clicked,
                                          multiple_selection=True, height=300, text_color = '#eaeaea',
@@ -69,6 +71,8 @@ class Grapher():
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.graphFrame)
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
+
+        self.canvas.mpl_connect('button_release_event', self.on_mouse_release)
 
         # Connect callbacks
         self.ax.callbacks.connect('ylim_changed', self.on_ylim_changed)
@@ -102,6 +106,33 @@ class Grapher():
 
         # Clear some dirty annotations from the graphe
         self.clear_all_annotations()
+
+    def on_mouse_release(self, event = None):
+        ''' When mouse button is released on the plot '''
+
+        # Calculate scaling factor if auxilary if on
+        if self.eleana.gui_state.auxilary_axes:
+            main_xlim = self.ax.get_xlim()
+            main_ylim = self.ax.get_ylim()
+            aux_xlim  = self.aux_ax.get_xlim()
+            aux_ylim  = self.aux_ax.get_ylim()
+
+            self.entry_scaling_x.configure(state='normal')
+            delta_x_main = (main_xlim[1] - main_xlim[0])
+            delta_x_aux = (aux_xlim[1] - aux_xlim[0])
+            factor_x = str(delta_x_aux/delta_x_main)
+            self.entry_scaling_x.delete(0, 'end')
+            self.entry_scaling_x.insert(0, factor_x)
+            self.entry_scaling_x.configure(state='disabled')
+
+            self.entry_scaling_y.configure(state='normal')
+            delta_y_main = (main_ylim[1] - main_ylim[0])
+            delta_y_aux = (aux_ylim[1] - aux_ylim[0])
+            factor_y = str(delta_y_aux / delta_y_main)
+            self.entry_scaling_y.delete(0, 'end')
+            self.entry_scaling_y.insert(0, factor_y)
+            self.entry_scaling_y.configure(state='disabled')
+
 
     def toggle_aux_axis(self):
         """Switch auxiliary axis for second curve according to gui_state."""
@@ -384,8 +415,17 @@ class Grapher():
 
         # --- Synchronize initial limits with main axis ---
         if target_ax is not self.ax:
-            target_ax.set_xlim(self.ax.get_xlim())
-            target_ax.set_ylim(self.ax.get_ylim())
+            sec_x_lim = self.aux_ax.get_xlim()
+            sec_y_lim = self.aux_ax.get_ylim()
+            main_x_lim = self.ax.get_xlim()
+            main_y_lim = self.ax.get_ylim()
+
+            x_scale = (min(sec_x_lim[0], main_x_lim[0]), max(sec_x_lim[1], main_x_lim[1]))
+            y_scale = (min(sec_y_lim[0], main_y_lim[0]), max(sec_y_lim[1], main_y_lim[1]))
+            self.ax.set_xlim(x_scale)
+            self.ax.set_ylim(y_scale)
+            target_ax.set_xlim(x_scale)
+            target_ax.set_ylim(y_scale)
 
         # Set labels for auxilary axes
         if self.aux_ax is not None:
