@@ -431,6 +431,10 @@ class Application():
         self.grapher.canvas.draw_idle()
         self.grapher.on_mouse_release()
 
+    def apply_scaling(self):
+        ''' Multiply scales in selected data according to the scaling factor '''
+        print('Skalowanie')
+
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
             If the folder does not exist it will be created.'''
