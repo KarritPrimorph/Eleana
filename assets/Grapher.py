@@ -153,8 +153,9 @@ class Grapher():
                 self.fig.delaxes(self.aux_ax)
                 self.aux_ax = None
 
-        # Odśwież wykres
+        # Refresh grapher
         self.plot_graph()
+        self.on_mouse_release()
 
     '''Methods for the Grapher class '''
 
