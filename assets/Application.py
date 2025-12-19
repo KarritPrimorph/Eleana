@@ -433,7 +433,35 @@ class Application():
 
     def apply_scaling(self):
         ''' Multiply scales in selected data according to the scaling factor '''
-        print('Skalowanie')
+        index = self.eleana.selections['first']
+        if index < 0:
+            return
+        data = copy.deepcopy(self.eleana.dataset[index])
+        main_x_scale = self.grapher.ax.get_xlim()
+        auxi_x_scale = self. grapher.aux_ax.get_xlim()
+
+        main_y_scale = self.grapher.ax.get_ylim()
+        auxi_y_scale = self. grapher.aux_ax.get_ylim()
+
+        factor_y = (auxi_y_scale[1] - auxi_y_scale[0]) / (main_y_scale[1] - main_y_scale[0])
+        delta_y = main_y_scale[0] * factor_y - auxi_y_scale[0]
+        data.y = data.y * factor_y
+        data.y = data.y - delta_y
+
+        factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
+        delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
+
+        data.x = data.x * factor_x
+        data.x = data.x - delta_x
+
+        data.name = data.name + ':RESCALED'
+
+        self.eleana.results_dataset.append(data)
+        self.update.dataset_list()
+        self.update.all_lists()
+
+        self.result_selected(data.name)
+        self.sel_result.set(data.name)
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
