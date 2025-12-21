@@ -438,13 +438,23 @@ class Eleana:
         """Scan dataset and check if ID is created. If not, create unique ID."""
         for data in self.dataset:
             if not hasattr(data, "id") or data.id is None:
-                id_dec_str = datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
-                    str(random.randint(0, 9)) for _ in range(10)
-                )
-                id_hex = hex(int(id_dec_str))
-                data.id = format(int(id_dec_str), 'x')
+                # id_dec_str = datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
+                #     str(random.randint(0, 9)) for _ in range(10)
+                # )
+                # id_hex = hex(int(id_dec_str))
+                # data.id = format(int(id_dec_str), 'x')
+                self.create_new_id(data)
 
-    def data_index__by_id(self, id):
+    def create_new_id(self, data):
+        id_dec_str = datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
+            str(random.randint(0, 9)) for _ in range(10)
+        )
+        id_hex = hex(int(id_dec_str))
+        data_id = format(int(id_dec_str), 'x')
+        data.id = data_id
+
+
+    def data_index_by_id(self, id):
         ''' Find index of dataset by id '''
         for index, data in enumerate(self.dataset):
             if data.id == id:

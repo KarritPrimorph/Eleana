@@ -4,9 +4,11 @@ from tkinterdnd2 import DND_FILES, TkinterDnD
 class FileDropWindow:
     def __init__(self, master, callbacks):
         self.master = master
-        self.master.iconify()
         self.callbacks = callbacks
         self.files = []
+        self.master.iconify()
+        self.master.withdraw()
+
 
         # Create window TkinterDnD
         self.root = TkinterDnD.Tk()
@@ -51,20 +53,42 @@ class FileDropWindow:
     def drop(self, event):
         ''' Trigger this when you drop file on the window '''
         new_files = self.root.tk.splitlist(event.data)
+        loaded_any = False
         for file in new_files:
             type_ = file[-3:].lower()
-            if type_ == 'dta':
+            if type_ == 'dta' or type_ == 'dsc':
                 method = 'import_elexsys'
             elif type_ == 'ele':
                 method = 'load_project'
             elif type_ == 'spc':
                 method = 'import_EMX'
+            elif type_ == 'spe':
+                method = 'import_magnettech1'
+            elif type_ == 'lsx':
+                method = 'import_excel'
+            else:
+                continue
 
             # Run function to import
-            callback_func = self.callbacks.get(method)
+            callback_func = self.callbacks.get(method) if self.callbacks else None
             if callback_func and callable(callback_func):
-                callback_func(filename = file)
+                callback_func(filename=file)
+                loaded_any = True
+
+        # Go to animation
+        if loaded_any:
+            self.flash_label()
+
+    def flash_label(self):
+        """ Flash after loading"""
+        original_color = "#3c3c3c"
+        flash_color = "#4caf50"  # delikatna zieleń
+        self.label.configure(fg_color=flash_color)
+        self.root.after(200, lambda: self.label.configure(fg_color=original_color))
 
     def close_window(self):
         self.master.deiconify()
         self.root.destroy()
+
+if __name__ == '__main__':
+    drop_app = FileDropWindow(master=None, callbacks=None)

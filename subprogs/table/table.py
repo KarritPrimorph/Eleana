@@ -250,7 +250,7 @@ class CreateFromTable:
 
     def generate_table(self, df=None, list2D=None):
         if df is not None:
-            self.table = Sheet(self.tableFrame)
+            self.table = Sheet(parent = self.tableFrame, total_rows=1024)
             column_names = df.columns.tolist()
             table_data =  df.values.tolist()
             self.table.set_sheet_data(table_data)
@@ -264,20 +264,44 @@ class CreateFromTable:
             return
 
     def get_data_from_column(self, column_name):
-        index = self.sel_x_axis._values.index(column_name)
-        if index < 0:
-            return
-        column_data = self.table.get_column_data(index - 1)
-        filtered_data = [x.strip() if isinstance(x, str) else x for x in column_data]
-        floats_data = []
-        for each in filtered_data:
+        # index = self.sel_x_axis._values.index(column_name)
+        # if index < 0:
+        #     return
+        # column_data = self.table.get_column_data(index - 1)
+        # filtered_data = [x.strip() if isinstance(x, str) else x for x in column_data]
+        # floats_data = []
+        # for each in filtered_data:
+        #     if each == "":
+        #         continue
+        #     try:
+        #         floats_data.append(float(each))
+        #     except ValueError:
+        #         error = f"There is non-numeric value: {each} in the table."
+        #         return error
+        # column_data = np.array(floats_data)
+        # return column_data
+
+        try:
+            col_index = self.sel_x_axis._values.index(column_name)
+        except ValueError:
+            raise KeyError(f"Column '{column_name}' not found")
+
+        values = self.table.get_column_data(col_index - 1)
+
+        result = []
+        for v in values:
+            if v is None:
+                continue
+            if isinstance(v, str):
+                v = v.strip()
+                if not v:
+                    continue
             try:
-                floats_data.append(float(each))
-            except ValueError:
-                error = f"There is non-numeric value: {each} in the table."
-                return error
-        column_data = np.array(floats_data)
-        return column_data
+                result.append(float(v))
+            except (TypeError, ValueError):
+                raise ValueError(f"Non-numeric value in column '{column_name}': {v}")
+        return np.array(result)
+
 
     def paste_event(self, event):
         data = self.mainwindow.clipboard_get()

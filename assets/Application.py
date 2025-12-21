@@ -1223,7 +1223,10 @@ class Application():
         list_of_results = []
         try:
             for each in self.eleana.results_dataset:
+                new_id = each.create_new_id()
+                each.id = new_id
                 list_of_results.append(each.name)
+
         except:
             pass
         name__ = self.generate_name_suffix(spectrum.name, list_of_results)
@@ -1369,6 +1372,7 @@ class Application():
             return
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
+            self.eleana.create_new_id(result)
             result.groups = [self.sel_group.get()]
             self.eleana.dataset.append(result)
         self.update.dataset_list()
@@ -1385,6 +1389,7 @@ class Application():
             return
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
+            self.eleana.create_new_id(result)
             result.groups = [self.sel_group.get()]
             self.eleana.dataset.append(result)
         self.update.dataset_list()
@@ -1409,6 +1414,7 @@ class Application():
         index = self.eleana.selections['result']
         index_first = self.eleana.selections['first']
         result = copy.deepcopy(self.eleana.results_dataset[index])
+        self.eleana.create_new_id(result)
         result.groups = [self.sel_group.get()]
         self.eleana.dataset.pop(index_first)
         self.eleana.dataset.insert(index_first, result)
@@ -1438,6 +1444,7 @@ class Application():
             return
         index = self.eleana.selections['result']
         result = copy.deepcopy(self.eleana.results_dataset[index])
+        self.eleana.create_new_id(result)
         result.groups = [self.sel_group.get()]
         self.eleana.dataset.append(result)
         self.update.dataset_list()
@@ -1471,6 +1478,7 @@ class Application():
         index = self.eleana.get_index_by_name(current)
         spectrum = copy.deepcopy(self.eleana.dataset[index])
         # Check the name if the same already exists in eleana.result_dataset
+
         list_of_results = []
         try:
             for each in self.eleana.results_dataset:
@@ -1857,9 +1865,9 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading EMX file.", info=e)
 
-    def import_magnettech1(self):
+    def import_magnettech1(self, filename = None):
         try:
-            self.load.loadMagnettech(1)
+            self.load.loadMagnettech(mscope = 1)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
@@ -1869,7 +1877,7 @@ class Application():
 
     def import_magnettech2(self):
         try:
-            self.load.loadMagnettech(2)
+            self.load.loadMagnettech(mscope = 2)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
@@ -2259,8 +2267,14 @@ class Application():
         self.update.list_in_combobox('sel_group')
 
     def create_from_table(self):
-        headers = ['A', 'B', 'C']
-        data = [['', '', ''],['', '', ''],['', '', ''],['', '', ''],['', '', ''],['', '', '']]
+        headers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+
+        value = ""
+        cols = 10
+        rows = 4096
+        # Generate empty table
+        data = [[value for _ in range(cols)] for _ in range(rows)]
+
         df = pandas.DataFrame(columns=headers, data=data)
         name = 'new'
         spreadsheet = CreateFromTable(eleana = self.eleana,

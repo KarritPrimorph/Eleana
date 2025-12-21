@@ -19,6 +19,8 @@ class IconToWidget:
     @staticmethod
     def eleana(application, iconset = 'default'):
         app = weakref.proxy(application)
+         # Here you define which widget gets icon. This is static
+         #
          #          PYGUBU ID                   PNG FILE (no suffix)                SIZE
          #          ----------------------      --------------------------          ------------
         items = (( 'btn_swap'                  ,'btn_swap',                        (30,20)),
