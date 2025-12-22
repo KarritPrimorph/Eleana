@@ -665,6 +665,9 @@ class CurveFit(Methods, WindowGUI):
     def table_changed(self, widget = None, parameter=None):
         ''' Called when function values, parameters or anything in GUI changes'''
 
+        if self.eleana.selections['first'] < 0:
+            return
+
         if widget == 'name':
             self.function_definition.name = self.widget_name.get()
         elif widget == 'equation_text' or widget == 'variable':
@@ -679,6 +682,8 @@ class CurveFit(Methods, WindowGUI):
 
     def create_preview(self, x_vals):
         ''' Create temporary plot showing function defined in self.function_definition '''
+
+
         self.collect_values_from_table()
         x = np.asarray(x_vals)
         y = self.function_definition.evaluate(x_vals=x)
@@ -793,6 +798,10 @@ class CurveFit(Methods, WindowGUI):
         if not self.function_definition.validated:
             Error.show(title = " ", info = "Please validate function first.")
             return
+        if self.eleana.selections['first'] < 0:
+            Error.show(info = 'Please select data for fitting.')
+            self.tab_window.set('Define Function')
+            return
         self.tab_window.set("Fitting")
 
     def go_to_define_function_clicked(self):
@@ -847,6 +856,7 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
+
         self.function_definition.fit_results = {}
         self.collect_values_from_table()
 
@@ -896,8 +906,6 @@ class CurveFit(Methods, WindowGUI):
         # Calculate confidence intervals
         #ci = result.conf_interval(sigmas=[1, 2, 3])
 
-
-
         # Print best fit
         best_fit = result.best_fit.copy()
         self.function_definition.fit_results['best_fit'] = best_fit
@@ -907,8 +915,6 @@ class CurveFit(Methods, WindowGUI):
         self.function_definition.fit_results['report_txt'] = result.fit_report()
         #self.function_definition.fit_results['ci_txt'] = self.function_definition.ci_to_text(ci)
         self.data_for_calculations[0]['y'] = best_fit
-
-
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
@@ -923,14 +929,12 @@ class CurveFit(Methods, WindowGUI):
         self.textReport.delete("0.0", "end")
         self.textReport.insert("0.0", log_report)
 
-
         # Draw residuals
-
         self.draw_results()
 
         # Add to additional plots
-        #self.clear_additional_plots()
-        #self.add_to_additional_plots(x = x1_orig, y = poly_curve, clear=True)
+        self.clear_additional_plots()
+        #self.add_to_additional_plots(x = x1, y = best_fit, clear=True)
 
         # Send calculated values to result (if needed). This will be sent to command line
         result = None # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE

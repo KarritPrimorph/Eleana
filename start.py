@@ -62,7 +62,7 @@ if __name__ == "__main__":
     update_progress()
 
     # Set splash screen time in seconds
-    splash_duration = 3.5  # seconds
+    splash_duration = 3  # seconds
 
     # Close after completion
     app.mainwindow.after(int(splash_duration * 1000), app.mainwindow.destroy)

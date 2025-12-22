@@ -342,7 +342,7 @@ class Function:
                 params[p].max = _safe_float(self.maximum.get(p), np.inf)
 
             # ----- Non-negative -----
-            if p in self.non_negative and self.non_negative[p] is True:
+            if p in self.non_negative:
                 params[p].min = max(params[p].min, 0)
 
             # ----- Constant parameter -----
@@ -353,7 +353,7 @@ class Function:
             elif p in self.fit_parameters:
                 params[p].vary = self.fit_parameters[p]
         return model, params
-        pass
+
 
     def generate_eleana_parameters(self, experimental_data):
         ''' Generate parameters to store in parameters in eleana_dataset'''
@@ -460,7 +460,55 @@ class BuiltInFunctions:
          'Validated': True
          },
 
+        {'Name': "Lorentz",
+         'Equation_text': 'a/@PI*(0.5*width)/((x-center)^2+(0.5*width)^2)',
+         'Variable': 'x',
+         'Parameters': ['a', 'center', 'width'],
+         'InitVals': {'a': 1, 'center': 0, 'width': 1},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
+        {'Name': "Pseudo Voigt",
+         'Equation_text': 'ag/(wg*sqrt(2*@PI))*exp(-((x-center)^2)/(2*wg^2))+al/@PI*(0.5*wl)/((x-center)^2+(0.5*wl)^2)',
+         'Variable': 'x',
+         'Parameters': ['ag', 'al', 'wg', 'wl', 'center'],
+         'InitVals': {'ag': 1, 'al' : 1, 'wg': 1, 'wl': 1, 'center': 0},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
+
+        {'Name': "Lorentz Derivative",
+         'Equation_text': 'a/@PI*(0.5*width)*(2*center-2*x)/(((x-center)^2+(0.5*width)^2))^2',
+         'Variable': 'x',
+         'Parameters': ['a', 'center', 'width'],
+         'InitVals': {'a': 1, 'center': 0, 'width': 1},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
+
+        {'Name': "Gauss Derivative",
+         'Equation_text': 'a*(2*center-2*x)/(2*width^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*width^2))',
+         'Variable': 'x',
+         'Parameters': ['a', 'center', 'width'],
+         'InitVals': {'a': 1, 'center': 0, 'width': 1},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
+
+        {'Name': "Pseudo Voigt Derivative",
+         'Equation_text': 'ag*(2*center-2*x)/(2*wg^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*wg^2))+al*(2*center-2*x)/(2*wl^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*wl^2))',
+         'Variable': 'x',
+         'Parameters': ['ag', 'al', 'wg', 'wl', 'center'],
+         'InitVals': {'ag': 1, 'al' : 1, 'wg': 1, 'wl': 1, 'center': 0},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
 
     ]
 
