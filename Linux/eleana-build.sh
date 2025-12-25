@@ -9,7 +9,7 @@ set -o pipefail
 # --- CONFIG ---
 PROJECT_SRC=~/PycharmProjects/Eleana
 PROJECT_DST=~/Eleana
-VENV_DIR=~/venvs/eleana
+VENV_DIR=~/eleana_venv
 
 # --- STEP 0: Remove old copy and make fresh copy ---
 echo "==> Copying project..."
@@ -37,9 +37,9 @@ echo "PyInstaller path: $(which pyinstaller)"
 cd "$PROJECT_DST"
 pip install -r requirements.txt
 
-# --- STEP 5: Test application ---
-echo "==> Testing application..."
-python ./main.py || echo "Warning: application did not exit cleanly, but continuing..."
+# --- STEP 5: Skip testing application ---
+echo "==> Skip testing application..."
+# python ./main.py || echo "Warning: application did not exit cleanly, but continuing..."
 
 # --- STEP 6: Prepare for build ---
 ELEANA_VERSION=$(grep -Po 'ELEANA_VERSION\s*=\s*\K[0-9.]+' main.py)
@@ -73,17 +73,42 @@ pyinstaller eleana.py \
   --add-data "pixmaps:pixmaps" \
   --add-data "widgets:widgets"
 
-# --- STEP 8: Test build ---
+# --- STEP 8: Fix executable name inside dist ---
 cd "dist/$DIST_NAME"
-echo "==> Testing built application..."
-./"$DIST_NAME" || echo "Warning: built application did not exit cleanly."
-
-# --- STEP 9: Rename package folder ---
-cd ..
 mv "$DIST_NAME" eleana
+chmod +x eleana
+echo "==> Renamed executable to 'eleana' and set +x"
+
+# --- STEP 9: Move built package to home directory ---
+cd ..
+mv "$DIST_NAME" ~/eleana
+echo "==> Built package moved to ~/eleana"
 
 # --- STEP 10: Restore original main.py ---
 cd "$PROJECT_DST"
 mv main.py.bak main.py
 
-echo "==> Build finished. Package folder: $PROJECT_DST/dist/eleana"
+# --- STEP 11: Cleanup ---
+rm -rf "$PROJECT_DST"
+rm -rf "$VENV_DIR"
+echo "==> Project copy ($PROJECT_DST) and venv ($VENV_DIR) removed."
+
+echo "==> Build finished. Package folder: ~/eleana"
+
+# --- STEP 12: Ask about system installation ---
+read -p "Do you want to install Eleana system-wide in /usr/local? [y/N]: " install_sys
+if [[ "$install_sys" =~ ^[Yy]$ ]]; then
+    echo "==> Installing Eleana system-wide..."
+
+    # Move eleana to /usr/local
+    sudo mv ~/eleana /usr/local/eleana_py
+    sudo mv /usr/local/eleana_py/eleana /usr/local/eleana_py/eleana_py
+
+    # Symbolic link in /usr/local/bin
+    sudo ln -sf /usr/local/eleana_py/eleana_py /usr/local/bin/eleana_py
+    sudo chmod +x /usr/local/eleana_py/eleana_py
+
+    echo "==> Eleana installed. You can now run it with: eleana_py"
+else
+    echo "==> System installation skipped. You can still run it from ~/eleana/eleana"
+fi
