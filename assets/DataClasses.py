@@ -4,7 +4,7 @@ from modules.ShimadzuSPC.shimadzu_spc import load_shimadzu_spc
 from modules.Magnettech.magnettech import load_magnettech
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Literal
-from Error import Error
+from assets.Error import Error
 from datetime import datetime
 import random
 from subprogs.user_input.single_dialog import SingleDialog

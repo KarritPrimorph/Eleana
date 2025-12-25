@@ -1,11 +1,9 @@
-import gc
 from pathlib import Path
 import sys
 import copy
 import io
 import re
 from functools import wraps
-import customtkinter as ctk
 import numpy as np
 import pandas
 import pygubu
@@ -13,9 +11,8 @@ import tkinter as tk
 import pickle
 import time
 import csv
-from multiprocessing import Process, Queue
 import customtkinter as ctk
-from tkinterdnd2 import TkinterDnD, DND_FILES
+
 
 from tkinter import filedialog
 
@@ -26,21 +23,20 @@ from assets.Menu import ContextMenu
 # Import modules from "/modules" folder
 from modules.CTkListbox import CTkListbox
 from modules.CTkMessagebox import CTkMessagebox
-from widgets.CTkSpinbox import CTkSpinbox
+from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
 # Import Eleana specific classes
-from Staticplotwindow import Staticplotwindow
-from Menu import MainMenu
-from Callbacks import main_menubar_callbacks, contextmenu_callbacks, grapher_callbacks
-from Callbacks import update_callbacks, loadsave_callbacks
+from assets.Menu import MainMenu
+from assets.Callbacks import main_menubar_callbacks, contextmenu_callbacks, grapher_callbacks
+from assets.Callbacks import update_callbacks, loadsave_callbacks
 
-from Grapher import Grapher
-from IconToWidget import IconToWidget
-from LoadSave import Load, Save, Export
-from Update import Update
-from DataClasses import BaseDataModel
-from Error import Error
-from Dropfiles import FileDropWindow
+from assets.Grapher import Grapher
+from assets.IconToWidget import IconToWidget
+from assets.LoadSave import Load, Save, Export
+from assets.Update import Update
+from assets.DataClasses import BaseDataModel
+from assets.Error import Error
+from assets.Dropfiles import FileDropWindow
 
 ''' SUBPROGS '''
 from subprogs.filter_fft.fft_filter import FFTFilter
@@ -112,6 +108,7 @@ class Application():
 
         # # START PYGUBU BUILDER
         self.builder = builder = pygubu.Builder()
+
         self.builder.add_resource_path(PROJECT_PATH)
         self.builder.add_from_file(PROJECT_UI)
 

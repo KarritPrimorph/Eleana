@@ -6,8 +6,7 @@ import weakref
 import numpy as np
 import importlib
 from modules.tkdial.tkdial import Dial
-from scipy.interpolate import CubicSpline, PchipInterpolator, Akima1DInterpolator, BarycentricInterpolator
-import gc
+from scipy.interpolate import CubicSpline, PchipInterpolator
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -207,7 +206,7 @@ if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 else:
-    module_path = f"{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
+    module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
@@ -284,7 +283,7 @@ class SpectraSubtraction(Methods, WindowGUI):
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from widgets.CTkSpinbox import CTkSpinbox
+        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
         self.second_on_copy = copy(self.eleana.selections['s_dsp'])
         #

@@ -5,7 +5,7 @@ import tempfile
 from dataclasses import dataclass, field
 from typing import Dict, Any
 import pickle
-from Error import Error
+from assets.Error import Error
 import shutil
 import json
 from tkinter.filedialog import asksaveasfile, askopenfilename

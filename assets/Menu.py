@@ -1,6 +1,6 @@
 import tkinter as tk
 from pathlib import Path
-from LoadSave import Save
+from assets.LoadSave import Save
 
 class MainMenu:
     def __init__(self, master, pixmap_folder, callbacks, eleana):

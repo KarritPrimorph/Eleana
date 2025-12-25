@@ -4,7 +4,7 @@
 import numpy as np
 import weakref
 from subprogs.integrate_region.IntegrateRegion import RESULT_CREATE
-from CTkSpinbox import CTkSpinbox
+from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
 # General setting of the application. Here is an example
 # File/Path/Class settings
@@ -83,7 +83,7 @@ cmd_to_import = GUI_FILE[:-3] + ' import ' + GUI_CLASS + ' as WindowGUI'        
 if __name__ == "__main__":                                                                          #|
     cmd_to_import = 'from ' + cmd_to_import                                                         #|
 else:                                                                                               #|
-    cmd_to_import = 'from ' + SUBPROG_FOLDER + '.' + cmd_to_import                                  #|
+    cmd_to_import = 'from subprogs.' + SUBPROG_FOLDER + '.' + cmd_to_import                                  #|
 exec(cmd_to_import)                                                                                 #|
 from subprogs.general_methods.SubprogMethods5 import SubMethods_05 as Methods
 class Normalize(Methods, WindowGUI):

@@ -11,7 +11,7 @@ from tkinter import filedialog
 from modules.tksheet import Sheet
 import copy
 from subprogs.edit_parameters.edit_parameters import EditParameters
-from pandastable import MultipleValDialog
+from modules.pandastable import MultipleValDialog
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "table.ui"

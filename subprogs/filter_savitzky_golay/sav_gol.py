@@ -201,9 +201,8 @@ CURSOR_OUTSIDE_TEXT: str = 'One or more selected points are outside the (x, y) r
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
-    from assets.Eleana import Eleana
 else:
-    module_path = f"{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
+    module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
@@ -321,7 +320,7 @@ l calculations are finished and main window
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from widgets.CTkSpinbox import CTkSpinbox
+        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
         self.windowFrame = self.builder.get_object('windowFrame', self.mainwindow)
         self.polynomFrame = self.builder.get_object('polynomFrame', self.mainwindow)
 

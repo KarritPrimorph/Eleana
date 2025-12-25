@@ -3,10 +3,9 @@ import pathlib
 import pygubu
 import customtkinter
 import copy
-import matplotlib.pyplot as plt
 
-from CTkColorPicker import AskColor
-from CTkSpinbox import CTkSpinbox
+from modules.CTkColorPicker import AskColor
+from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "preferences.ui"

@@ -3,9 +3,9 @@ from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import matplotlib
-import mplcursors
+import modules.mplcursors._mplcursors as mplcursors
 import copy
-from CTkListbox import CTkListbox
+from modules.CTkListbox import CTkListbox
 import numpy as np
 
 matplotlib.use('TkAgg')

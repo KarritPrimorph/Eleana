@@ -203,7 +203,7 @@ if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 else:
-    module_path = f"{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
+    module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)

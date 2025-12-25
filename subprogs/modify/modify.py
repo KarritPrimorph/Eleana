@@ -3,15 +3,14 @@ import copy
 import pathlib
 import pygubu
 import tkinter as tk
-from assets.Observer import Observer
 from modules.CTkMessagebox import CTkMessagebox
 from assets.Sounds import Sound
-from CTkSpinbox import CTkSpinbox
+from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 #from subprogs.progress_bar.progress_bar import ProgressBar
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "modify.ui"
 
-from Observer import Observer
+from assets.Observer import Observer
 
 class ModifyData:
     def __init__(self, references, which = 'first'): # instances master, eleana=None, grapher=None, app=None ):

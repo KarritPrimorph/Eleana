@@ -885,7 +885,7 @@
                           </object>
                         </child>
                         <child>
-                          <object class="customtkinter.CTkCheckBox" id="default_settings_btn" named="True">
+                          <object class="customtkinter.CTkCheckBox" id="use_default_check" named="True">
                             <property name="command" type="command" cbtype="simple">default_settings_clicked</property>
                             <property name="text" translatable="yes">Use default</property>
                             <layout manager="grid">

@@ -1,15 +1,19 @@
+import os
 import sys
-import tkinter as tk
+
+# ======================================================
+# Fix working directory for PyInstaller
+# ======================================================
+if hasattr(sys, "_MEIPASS"):
+    os.chdir(sys._MEIPASS)
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 1              # Set the Eleana version. This will be stored in self.eleana.version
-INTERPRETER = sys.executable    # Defines python version
-DEVEL = True                    # For final product set to False - no errors will be displayed or print commands
-                                # For development set to True. This is stored in self.eleana.devel_mode
+ELEANA_VERSION = 1  # Set the Eleana version. This will be stored in self.eleana.version
+INTERPRETER = sys.executable  # Defines python version
+DEVEL = True  # For final product set to False
 
 # Import basic modules and add ./modules to sys.path
 from pathlib import Path
-import os
 import ctypes
 
 # Set paths for assets, modules, subprogs and widgets
@@ -21,10 +25,10 @@ SUBPROGS = PROJECT_PATH / "subprogs"
 WIDGETS = PROJECT_PATH / "widgets"
 PIXMAPS = PROJECT_PATH / "pixmaps"
 
-sys.path.insert(0, str(MODULES))
-sys.path.insert(0, str(ASSETS))
-sys.path.insert(0, str(SUBPROGS))
-sys.path.insert(0,str(WIDGETS))
+# sys.path.insert(0, str(MODULES))
+# sys.path.insert(0, str(ASSETS))
+# sys.path.insert(0, str(SUBPROGS))
+# sys.path.insert(0,str(WIDGETS))
 
 from assets.Eleana import Eleana
 from assets.CommandProcessor import CommandProcessor
@@ -34,14 +38,10 @@ import numpy as np
 
 # Import modules from ./modules folder
 from assets.Application import Application
-from CTkListbox import CTkListbox
-from CTkMessagebox import CTkMessagebox
-from CTkScrollableDropdown import CTkScrollableDropdown
-
+from modules.CTkMessagebox import CTkMessagebox
 
 # Import Eleana specific classes
 # Widgets used by main application
-from widgets.CTkHorizontalSlider import CTkHorizontalSlider
 
 ''' STARTING THE APPLICATION '''
 #
@@ -55,6 +55,7 @@ if not DEVEL:
 
     # Switch off nupy RankWarnings in Numpy
     import warnings
+
     warnings.simplefilter('ignore', np.exceptions.RankWarning)
 
 # Run
@@ -72,7 +73,8 @@ if __name__ == "__main__":
 
     # When root privileges detected, display warning
     if disp_warn:
-        msg = CTkMessagebox(title="Warning!", message="For safety reasons, this program should not be run with administrator privileges.",
+        msg = CTkMessagebox(title="Warning!",
+                            message="For safety reasons, this program should not be run with administrator privileges.",
                             icon="warning", option_1="Quit", option_2="Ignore")
         if msg.get() == "Quit":
             sys.exit()
@@ -91,11 +93,11 @@ if __name__ == "__main__":
 
     ''' Create Main instances '''
     eleana = Eleana(version=ELEANA_VERSION, devel=DEVEL)
-    #sound = Sound()
+    # sound = Sound()
     cmd = CommandProcessor()
 
     # Create application instance
-    app = Application(eleana, cmd, master = None)  # This is GUI
+    app = Application(eleana, cmd, master=None)  # This is GUI
 
     # Start application
     app.run()

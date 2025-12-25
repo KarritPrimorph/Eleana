@@ -3,9 +3,19 @@ import pathlib
 import tkinter as tk
 import pygubu
 
+
+from assets.ResourcePath import resource_path
+from pathlib import Path
+
+# PROJECT_UI zawsze w tym samym katalogu co fft_filterUI.py#
+PROJECT_UI = resource_path(Path(__file__).parent / "fft_filter.ui")
+
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "fft_filter.ui"
 RESOURCE_PATHS = [PROJECT_PATH]
+
+
+
 
 
 class FFTFilterUI:

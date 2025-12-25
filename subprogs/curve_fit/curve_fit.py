@@ -1,15 +1,13 @@
 #!/usr/bin/python3
 # IMPORT MODULES NEEDED
-# -- Here is an example --
 import customtkinter as ctk
 
 from modules.CTkMessagebox import CTkMessagebox
-from widgets.CTkSpinbox import CTkSpinbox
+from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 import numpy as np
 import importlib
 import weakref
-from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-from scipy.interpolate import CubicSpline, PchipInterpolator, Akima1DInterpolator, BarycentricInterpolator
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 from modules.CTkListbox.ctk_listbox import CTkListbox
@@ -18,7 +16,6 @@ import copy
 from assets.Error import Error
 from subprogs.notepad.notepad import Notepad
 from subprogs.user_input.single_dialog import SingleDialog
-from lmfit import conf_interval, printfuncs
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -217,7 +214,7 @@ if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 else:
-    module_path = f"{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
+    module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
@@ -333,6 +330,7 @@ class CurveFit(Methods, WindowGUI):
         self.show_original_curve_checkbox = self.builder.get_object('show_original_curve_checkbox', self.mainwindow)
         self.show_resid_checkbox = self.builder.get_object('show_resid_checkbox', self.mainwindow)
 
+        self.use_default_check = self.builder.get_object('use_default_check', self.mainwindow)
         # TAB: FIT
         #
         self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.mainwindow)
@@ -994,10 +992,17 @@ class CurveFit(Methods, WindowGUI):
              'replace_table_check': self.replace_table_chceck.get(),
              'show_original_curve_checkbox': self.show_original_curve_checkbox.get(),
              'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get(),
-             'show_resid': self.show_resid_checkbox.get()
+             'show_resid': self.show_resid_checkbox.get(),
+             'use_default_check': self.use_default_check.get()
              }]
 
     def restore_settings(self):
+        val = self.restore('use_default_check')
+        if val is True or val is None:
+            self.use_default_check.select()
+        else:
+            self.use_default_check.deselect()
+
         val = self.restore('algorithms')
         if val:
             self.sel_algorithm.set(val)
@@ -1051,6 +1056,8 @@ class CurveFit(Methods, WindowGUI):
             self.show_resid_checkbox.select()
         else:
             self.show_resid_checkbox.deselect()
+
+
 
 if __name__ == "__main__":
     tester = TemplateClass()

@@ -1,0 +1,74 @@
+# ============================================
+# Eleana build instructions - Linux version
+# ============================================
+
+# Create venv for Eleana outside the project folder
+
+# Make a copy of the Eleana project
+$ rm -rf ~/Eleana
+$ cp -R ~/PycharmProjects/Eleana ~/Eleana
+
+# Create venv for Eleana if not exists
+
+$ python3.12 -m venv venvs/eleana
+
+$ source venvs/eleana/bin/activate
+
+$ which python
+
+# Then you should see something like this:
+# /home/<user_name>/venvs/eleana/bin/python
+
+$ pip install pyinstaller
+
+$ which pyinstaller
+
+# You should get something like this:
+/home/<user_name>/venvs/eleana/bin/pyinstaller
+
+$ cd ~/Eleana
+$ pip install -r requirements.txt
+
+# Check if the application starts
+python ./main.py
+
+# BUILD PACKAGE
+
+#  --- Read eleana version
+
+$ ELEANA_VERSION=$(grep -Po 'ELEANA_VERSION\s*=\s*\K[0-9.]+' main.py)
+$ DIST_NAME="Eleana_${ELEANA_VERSION}"
+
+# --- clean --
+rm -rf build dist *.spec
+
+# Set the DEVEL variable to False before building
+sed -i 's/DEVEL = True/DEVEL = False/' main.py
+
+# Rename exacutable file to eleana
+$ mv main.py eleana.py
+
+# Run pyinstaller. Set the folder name according to the version number
+$ pyinstaller eleana.py \
+  --name $DIST_NAME \
+  --clean \
+  --noconfirm \
+  --onedir \
+  --hidden-import=customtkinter \
+  --hidden-import=pygubu.plugins.customtkinter \
+  --hidden-import=PIL._tkinter_finder \
+  --add-data "assets:assets" \
+  --add-data "modules:modules" \
+  --add-data "subprogs:subprogs" \
+  --add-data "pixmaps:pixmaps" \
+  --add-data "widgets:widgets"
+
+# Go to the package:
+$ cd dist/Eleana_*
+
+# Test if it works:
+$ ./Eleana_*
+
+# Rename the package:
+$ mv Eleana_* eleana
+

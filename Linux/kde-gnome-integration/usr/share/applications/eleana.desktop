@@ -1,0 +1,12 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=Eleana
+Comment=EPR spectra analysis and manipulation tool
+MimeType=application/x-bruker-dta;application/eleana-eld;application/bruker-spc;
+Icon=eleana.png
+Exec=/usr/local/bin/eleana
+Terminal=0
+Type=Application
+Categories=Office;Science;Math;GTK;GNOME;Education;
+
+
