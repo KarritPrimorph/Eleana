@@ -6,6 +6,32 @@ set -o pipefail
 # Eleana build script - Linux version
 # ============================================
 
+# --- Python version check ---
+PYTHON_BIN=$(command -v python3)
+
+if [ -z "$PYTHON_BIN" ]; then
+    echo "ERROR: python3 not found"
+    exit 1
+fi
+
+PY_VERSION=$($PYTHON_BIN - <<'EOF'
+import sys
+print(f"{sys.version_info.major}.{sys.version_info.minor}")
+EOF
+)
+
+REQUIRED_MIN="3.11"
+
+verlte() { printf '%s\n%s' "$1" "$2" | sort -V | head -n1; }
+
+if [ "$(verlte "$PY_VERSION" "$REQUIRED_MIN")" != "$REQUIRED_MIN" ]; then
+    echo "ERROR: Python >= $REQUIRED_MIN required, found $PY_VERSION"
+    exit 1
+fi
+
+echo "==> Using Python $PY_VERSION at $PYTHON_BIN"
+
+
 # --- CONFIG ---
 PROJECT_SRC=~/PycharmProjects/Eleana
 PROJECT_DST=~/Eleana
@@ -19,7 +45,7 @@ cp -R "$PROJECT_SRC" "$PROJECT_DST"
 # --- STEP 1: Create venv if not exists ---
 if [ ! -d "$VENV_DIR" ]; then
     echo "==> Creating virtual environment..."
-    python3.12 -m venv "$VENV_DIR"
+    "$PYTHON_BIN" -m venv "$VENV_DIR"
 fi
 
 # --- STEP 2: Activate venv ---
@@ -64,6 +90,8 @@ pyinstaller eleana.py \
   --clean \
   --noconfirm \
   --onedir \
+  --collect-submodules modules \
+  --collect-submodules subprogs \
   --hidden-import=customtkinter \
   --hidden-import=pygubu.plugins.customtkinter \
   --hidden-import=PIL._tkinter_finder \
@@ -72,6 +100,7 @@ pyinstaller eleana.py \
   --add-data "subprogs:subprogs" \
   --add-data "pixmaps:pixmaps" \
   --add-data "widgets:widgets"
+
 
 # --- STEP 8: Fix executable name inside dist ---
 cd "dist/$DIST_NAME"
