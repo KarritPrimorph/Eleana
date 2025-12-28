@@ -8,7 +8,7 @@ if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 1  # Set the Eleana version. This will be stored in self.eleana.version
+ELEANA_VERSION = 0.1  # Set the Eleana version. This will be stored in self.eleana.version
 INTERPRETER = sys.executable  # Defines python version
 DEVEL = True  # For final product set to False
 
