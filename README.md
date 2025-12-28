@@ -11,7 +11,45 @@ The software is freely available for scientific and educational use, while comme
 - [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3123/)
 - **pip** or **pipenv**
 
-### Setup
+### Install for Linux (recommended)
+1. Clone the **Eleana** repository:
+    ```bash
+    git clone https://github.com/KarritPrimorph/Eleana
+    ``` 
+2. Navigate into **Eleana/Linux** directory:
+
+    ```bash
+    cd Eleana/Linux
+    ```
+
+3. Build package:
+    ```bash
+   ./build_package.sh
+   ```
+
+4. For Debian-based distro create DEB package and install it:
+    ```bash
+   ./create_deb.sh
+   ```
+   ```bash
+   sudo dpkg -i eleanapy_* 
+   ```
+
+5. For non-DEB-based distros you may install Eleana to /usr/local:
+    ```bash
+    ./install_generic.sh
+    ```
+6. Remove necessary files:
+    ```bash
+    rm -rf ~/eleanapy
+    ```
+
+7. Run Eleana:
+    ```bash
+    eleanapy
+    ```
+
+### Setup for developement
 1. Clone the **Eleana** repository:
     ```bash
     git clone https://github.com/KarritPrimorph/Eleana
