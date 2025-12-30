@@ -10,8 +10,6 @@ APP_NAME="eleanapy"
 SRC_DIR="$HOME/eleanapy"
 MAIN_PY="../main.py"
 
-LINUX_USR_DIR="usr"
-
 # --- STEP 0: Check if build exists ---
 if [ ! -d "$SRC_DIR" ] || [ ! -x "$SRC_DIR/$APP_NAME" ]; then
     echo "WARNING: Directory $SRC_DIR or executable $APP_NAME not found."
@@ -53,102 +51,39 @@ PKGROOT="$(pwd)/${APP_NAME}-deb"
 rm -rf "$PKGROOT"
 mkdir -p "$PKGROOT"/{DEBIAN,usr/lib/$APP_NAME,usr/bin}
 
-# --- STEP 3: Copy application ---
-echo "==> Copying Eleana application"
+# --- STEP 3: Copy entire application dynamically ---
 cp -r "$SRC_DIR"/* "$PKGROOT/usr/lib/$APP_NAME/"
 
-# --- STEP 4: Binary symlink ---
+# --- STEP 4: Create symlink to binary ---
 ln -sf /usr/lib/$APP_NAME/$APP_NAME "$PKGROOT/usr/bin/$APP_NAME"
 
-# --- STEP 5: Copy Linux/usr payload (icons + desktop) ---
-if [ -d "$LINUX_USR_DIR" ]; then
-    echo "==> Installing icons and desktop entry"
-    cp -r "$LINUX_USR_DIR"/* "$PKGROOT/usr/"
-else
-    echo "WARNING: usr/ directory not found — icons and menu entry will NOT be installed"
-fi
-
-# --- STEP 6: DEBIAN/control ---
+# --- STEP 5: Create DEBIAN/control file ---
 cat > "$PKGROOT/DEBIAN/control" <<EOF
 Package: $APP_NAME
 Version: $ELEANA_VERSION
 Section: science
 Priority: optional
 Architecture: amd64
-Depends: libc6, libx11-6, libglib2.0-0, hicolor-icon-theme
-Maintainer: Marcin Sarewicz <marcin.sarewicz@gmail.com>
+Depends: libc6, libx11-6, libglib2.0-0
+Maintainer: Your Name <you@email>
 Description: Eleana - EPR data analysis tool
  Scientific application for EPR data analysis and simulation.
 EOF
 
-# --- STEP 7: postinst (update icon & desktop cache) ---
-cat > "$PKGROOT/DEBIAN/postinst" <<'EOF'
-#!/bin/sh
-set -e
-
-# Update desktop database (GNOME, others)
-if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-
-# Update icon cache
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f -t /usr/share/icons/hicolor || true
-fi
-
-# KDE menu cache
-if command -v kbuildsycoca6 >/dev/null 2>&1; then
-    kbuildsycoca6 --noincremental || true
-elif command -v kbuildsycoca5 >/dev/null 2>&1; then
-    kbuildsycoca5 || true
-fi
-
-exit 0
-EOF
-# --- STEP 7b: postrm (cleanup desktop cache on removal) ---
-cat > "$PKGROOT/DEBIAN/postrm" <<'EOF'
-#!/bin/sh
-set -e
-
-if command -v update-desktop-database >/dev/null 2>&1; then
-    update-desktop-database /usr/share/applications || true
-fi
-
-if command -v gtk-update-icon-cache >/dev/null 2>&1; then
-    gtk-update-icon-cache -f /usr/share/icons/hicolor || true
-fi
-
-exit 0
-EOF
-
-# --- STEP 8: Permissions ---
+# --- STEP 6: Set permissions ---
 chmod 755 "$PKGROOT/DEBIAN"
 chmod 644 "$PKGROOT/DEBIAN/control"
-chmod 755 "$PKGROOT/DEBIAN/postinst"
-chmod 755 "$PKGROOT/DEBIAN/postrm"
-
-
+chmod -R 755 "$PKGROOT/usr"
 chmod +x "$PKGROOT/usr/lib/$APP_NAME/$APP_NAME"
 
-# Directories: 755
-find "$PKGROOT/usr" -type d -exec chmod 755 {} \;
-
-# Files: 644
-find "$PKGROOT/usr" -type f -exec chmod 644 {} \;
-
-# Main executable
-chmod +x "$PKGROOT/usr/lib/$APP_NAME/$APP_NAME"
-
-
-if [ -f "$PKGROOT/usr/share/applications/eleanapy.desktop" ]; then
-    chmod 644 "$PKGROOT/usr/share/applications/eleanapy.desktop"
-fi
-
-# --- STEP 9: Build DEB ---
+# --- STEP 7: Build DEB package ---
 dpkg-deb --build "$PKGROOT"
 DEB_NAME="${APP_NAME}_${ELEANA_VERSION}_amd64.deb"
 mv "$PKGROOT.deb" "$DEB_NAME"
-rm -rf "$PKGROOT"
+rm -rf eleanapy-deb
 
 echo "==> DEB package created: $DEB_NAME"
-echo "==> Install with: sudo dpkg -i $DEB_NAME"
+echo "You can install it with: sudo dpkg -i $DEB_NAME"
+echo "To remove pyinstaller package type:"
+echo "rm -rf ~/eleanapy"
+
