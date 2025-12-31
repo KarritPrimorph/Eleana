@@ -1,7 +1,7 @@
 import os
 import sys
 import customtkinter as ctk
-from PIL import Image, ImageTk
+from PIL import Image
 
 # BASIC CONFIGURATION
 ELEANA_VERSION = 5.01  # Set the Eleana version. This will be stored in self.eleana.version
@@ -9,9 +9,11 @@ DATE = "31/12/2025"
 INTERPRETER = sys.executable  # Defines python version
 DEVEL = True  # For final product set to False
 
+
 # ======================================================
 # Setup working directory for PyInstaller
 # ======================================================
+
 if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
 
@@ -50,11 +52,6 @@ x = (screen_w - w) // 2
 y = (screen_h - h) // 2
 splash.geometry(f"{w}x{h}+{x}+{y}")
 splash.update()
-
-# BASIC CONFIGURATION
-# ELEANA_VERSION = 0.1  # Set the Eleana version. This will be stored in self.eleana.version
-# INTERPRETER = sys.executable  # Defines python version
-# DEVEL = True  # For final product set to False
 
 # Import basic modules and add ./modules to sys.path
 from pathlib import Path
@@ -95,7 +92,6 @@ if not DEVEL:
     import warnings
     warnings.simplefilter('ignore', np.exceptions.RankWarning)
 
-
 # Run the application
 if __name__ == "__main__":
     # Check if the program is started with root privileges:
@@ -129,8 +125,6 @@ if __name__ == "__main__":
 
         warnings.simplefilter('ignore', np.exceptions.RankWarning)
 
-
-
     ''' Create Main instances '''
     eleana = Eleana(version=ELEANA_VERSION, devel=DEVEL)
     # sound = Sound()
@@ -141,7 +135,6 @@ if __name__ == "__main__":
 
     # Start application and close splash
     app.run(splash = splash)
-
     try:
         root.destroy()
     except:
