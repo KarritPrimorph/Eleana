@@ -345,9 +345,13 @@ class Application():
             r = requests.get(url, timeout=timeout)
             r.raise_for_status()
             text = r.text.strip()
-            current_release = json.loads(text)
-            if self.eleana.version < float(current_release):
-                Error.show(title='Update info')
+            online_info = json.loads(text)
+
+            current_build = float(online_info.get('LATEST_BUILD', 0))
+            if self.eleana.version < current_build:
+                update_show = CTkMessagebox(icon = 'check', title='Update info',
+                                message = f'The newer version of Eleana ({current_build}, release date: {online_info.get('BUILD_DATE', '')}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
+
 
         except Exception as e:
             print("Nie udało się sprawdzić wersji:", e)
