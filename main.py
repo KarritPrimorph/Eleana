@@ -4,7 +4,7 @@ import customtkinter as ctk
 from PIL import Image, ImageTk
 
 # ======================================================
-# Fix working directory for PyInstaller
+# Setup working directory for PyInstaller
 # ======================================================
 if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
@@ -19,10 +19,24 @@ splash = ctk.CTkToplevel(root)
 splash.overrideredirect(True)
 
 img = Image.open("./pixmaps/splash.png")
-photo = ImageTk.PhotoImage(img)
 
-bg_label = ctk.CTkLabel(splash, image=photo, text="")
+# --- CTkImage ---
+ctk_img = ctk.CTkImage(
+    light_image=img,
+    dark_image=img,
+    size=(700, 352)
+)
+
+# --- Label with the picture ---
+bg_label = ctk.CTkLabel(
+    splash,
+    image=ctk_img,
+    text="",
+    fg_color="transparent",
+    corner_radius=0
+)
 bg_label.pack(fill="both", expand=True)
+
 
 # Set the splash to the center
 w, h = img.width, img.height
