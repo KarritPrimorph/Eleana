@@ -344,10 +344,13 @@ class Application():
         try:
             r = requests.get(url, timeout=timeout)
             r.raise_for_status()
-            return r.text.strip()
+            current_release = r.text.strip()
         except Exception as e:
             print("Nie udało się sprawdzić wersji:", e)
+            current_release = ''
             return None
+        print(current_release)
+
 
     def configure_main_application_window(self):
         width = self.mainwindow.winfo_screenwidth()  # Get screen width
