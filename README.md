@@ -11,6 +11,18 @@ The software is freely available for scientific and educational use, while comme
 - [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/release/python-3123/)
 - **pip** or **pipenv**
 
+### Install for Windows (recommended)
+1. Download the zip file containing Eleana source files
+   ``` aiignore
+   https://github.com/KarritPrimorph/Eleana/archive/refs/heads/master.zip
+   ```
+
+2. Unzip the project
+
+3. Go to <Eleana_Project>/Windows folder
+
+4. See Readme.txt for detailed instructions.
+
 ### Install for Linux (recommended)
 1. Clone the **Eleana** repository:
     ```bash
