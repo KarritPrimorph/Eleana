@@ -361,15 +361,8 @@ class Application():
             if self.eleana.version < current_build:
                 update_show = CTkMessagebox(icon = 'check', title='Update info',
                                 message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
-
         except Exception as e:
             print("Unable to download online info", e)
-            text = ''
-
-
-
-
-
 
 
     def configure_main_application_window(self):
