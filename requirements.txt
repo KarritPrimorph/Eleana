@@ -22,3 +22,4 @@ colour==0.1.5
 sympy >= 1.14.0
 lmfit >= 1.3.4
 tkinterdnd2 >= 0.4.3
+requests >= 2.32.5

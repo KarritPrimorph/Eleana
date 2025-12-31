@@ -12,7 +12,7 @@ import pickle
 import time
 import csv
 import customtkinter as ctk
-
+import requests
 
 from tkinter import filedialog
 
@@ -333,9 +333,21 @@ class Application():
         # Create Recent projects menu
         self.main_menubar.last_projects_menu()
 
+        # Check for update
+        self.check_for_updates(timeout = 5)
     ''' 
      ----------    METHODS   -------------
     '''
+
+    def check_for_updates(self, timeout=3):
+        url = "https://raw.githubusercontent.com/KarritPrimorph/Eleana/master/current_release.txt"
+        try:
+            r = requests.get(url, timeout=timeout)
+            r.raise_for_status()
+            return r.text.strip()
+        except Exception as e:
+            print("Nie udało się sprawdzić wersji:", e)
+            return None
 
     def configure_main_application_window(self):
         width = self.mainwindow.winfo_screenwidth()  # Get screen width
