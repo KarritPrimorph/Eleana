@@ -340,25 +340,32 @@ class Application():
     '''
 
     def check_for_updates(self, timeout=3):
-        url = "https://raw.githubusercontent.com/KarritPrimorph/Eleana/master/current_release.txt"
+        ''' Check if update is available. '''
+        url = "https://raw.githubusercontent.com/KarritPrimorph/Eleana/refs/heads/master/current_release.txt"
         try:
             r = requests.get(url, timeout=timeout)
             r.raise_for_status()
             text = r.text.strip()
             online_info = json.loads(text)
 
-            current_build = float(online_info.get('LATEST_BUILD', 0))
-            build_date = online_info.get('BUILD_DATE', '')
+            if sys.platform == 'linux':
+                BUILD = 'LINUX_BUILD'
+                DATE = 'LINUX_DATE'
+            else:
+                BUILD = 'WINDOWS_BUILD'
+                DATE = 'WINDWOS_DATE'
+
+            current_build = float(online_info.get(BUILD, 0))
+            build_date = online_info.get(DATE, '')
 
             if self.eleana.version < current_build:
                 update_show = CTkMessagebox(icon = 'check', title='Update info',
                                 message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
 
-
         except Exception as e:
-            print("Nie udało się sprawdzić wersji:", e)
+            print("Unable to download online info", e)
             text = ''
-            return None
+
 
 
 

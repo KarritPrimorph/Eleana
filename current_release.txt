@@ -1,2 +1,6 @@
-{"LATEST_BUILD" : 0.2,
-"BUILD_DATE" : "31/12/2025"}
+{
+"LINUX_BUILD"  :    0.2,
+"LINUX_DATE"    :   "31/12/2025",
+"WINDOWS_BUILD" :   0.2,
+"WINDOWS_DATE"  :   "31/12/2025"
+}
