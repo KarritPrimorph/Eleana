@@ -3,6 +3,12 @@ import sys
 import customtkinter as ctk
 from PIL import Image, ImageTk
 
+# BASIC CONFIGURATION
+ELEANA_VERSION = 5.01  # Set the Eleana version. This will be stored in self.eleana.version
+DATE = "31/12/2025"
+INTERPRETER = sys.executable  # Defines python version
+DEVEL = True  # For final product set to False
+
 # ======================================================
 # Setup working directory for PyInstaller
 # ======================================================
@@ -19,21 +25,19 @@ splash = ctk.CTkToplevel(root)
 splash.overrideredirect(True)
 
 img = Image.open("./pixmaps/splash.png")
-
-# --- CTkImage ---
 ctk_img = ctk.CTkImage(
     light_image=img,
     dark_image=img,
     size=(700, 352)
 )
 
-# --- Label with the picture ---
 bg_label = ctk.CTkLabel(
     splash,
     image=ctk_img,
-    text="",
+    text=f"\t\t\t\t\t\t\t\tVersion: {ELEANA_VERSION}\n\t\t\t\t\t\t\t\tReleased: {DATE}\n\t\t\t\t\t\t\t\tMarcin Sarewicz",
     fg_color="transparent",
-    corner_radius=0
+    corner_radius=0,
+    text_color="#aaaaaa"
 )
 bg_label.pack(fill="both", expand=True)
 
@@ -48,9 +52,9 @@ splash.geometry(f"{w}x{h}+{x}+{y}")
 splash.update()
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 0.1  # Set the Eleana version. This will be stored in self.eleana.version
-INTERPRETER = sys.executable  # Defines python version
-DEVEL = True  # For final product set to False
+# ELEANA_VERSION = 0.1  # Set the Eleana version. This will be stored in self.eleana.version
+# INTERPRETER = sys.executable  # Defines python version
+# DEVEL = True  # For final product set to False
 
 # Import basic modules and add ./modules to sys.path
 from pathlib import Path
@@ -137,3 +141,8 @@ if __name__ == "__main__":
 
     # Start application and close splash
     app.run(splash = splash)
+
+    try:
+        root.destroy()
+    except:
+        pass
