@@ -4,6 +4,8 @@ import copy
 import io
 import re
 from functools import wraps
+
+import customtkinter
 import numpy as np
 import pandas
 import pygubu
@@ -98,9 +100,9 @@ PROJECT_PATH = Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "EleanaGUI.ui"
 
 class Application():
-    def __init__(self, eleana_instance, command_processor, master=None):
+    def __init__(self, eleana_instance, command_processor, root=None, splash=None):
 
-        self.root = master
+        self.root = root
         # Create reference to eleana and commandprocessor
         self.eleana = eleana_instance
         self.notify = self.eleana.notify_on
@@ -113,12 +115,11 @@ class Application():
         self.builder.add_from_file(PROJECT_UI)
 
         # Main widget
+        self.mainwindow = builder.get_object("EleanaWindow", self.root)
 
-        self.mainwindow = builder.get_object("EleanaWindow", master)
         self.mainwindow.iconify()
         self.mainwindow.withdraw()
         self.builder.connect_callbacks(self)
-
 
         # Create references to Widgets and Frames
         self.switch_comparison = builder.get_object("switch_comp_view", self.mainwindow)
@@ -332,6 +333,10 @@ class Application():
 
         # Create Recent projects menu
         self.main_menubar.last_projects_menu()
+
+        # Close splash
+        if splash is not None:
+            splash.destroy()
 
         # Check for update
         self.check_for_updates(timeout = 5)
@@ -564,8 +569,6 @@ class Application():
             self.sel_group.set(selection)
         self.mainwindow.focus_set()
 
-    # def create_f_stk(self):
-    #     self.builder.connect_callbacks()
 
     def set_pane_height(self):
         self.mainwindow.update_idletasks()
@@ -574,9 +577,11 @@ class Application():
         self.pane5.sashpos(0, 1100)
         self.mainwindow.update_idletasks()
 
-    def run(self):
+    def run(self, splash=None):
         self.mainwindow.after(100, self.set_pane_height)
         self.mainwindow.deiconify()
+        if splash is not None:
+            splash.destroy()
         self.mainwindow.mainloop()
 
     def after_gui_action(self, by_method = None):
@@ -2139,6 +2144,8 @@ class Application():
                     except:
                         print("Error: " + close_cmd)
             self.mainwindow.destroy()
+            if self.root is not None:
+                self.root.destroy()
 
     def edit_values_in_table(self, which ='first'):
         if which == 'first' or which == 'second':
