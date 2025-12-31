@@ -348,9 +348,11 @@ class Application():
             online_info = json.loads(text)
 
             current_build = float(online_info.get('LATEST_BUILD', 0))
+            build_date = online_info.get('BUILD_DATE', '')
+
             if self.eleana.version < current_build:
                 update_show = CTkMessagebox(icon = 'check', title='Update info',
-                                message = f'The newer version of Eleana ({current_build}, release date: {online_info.get('BUILD_DATE', '')}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
+                                message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
 
 
         except Exception as e:
