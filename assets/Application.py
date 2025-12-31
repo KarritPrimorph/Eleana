@@ -13,7 +13,7 @@ import time
 import csv
 import customtkinter as ctk
 import requests
-
+import json
 from tkinter import filedialog
 
 from assets.Menu import ContextMenu
@@ -344,12 +344,19 @@ class Application():
         try:
             r = requests.get(url, timeout=timeout)
             r.raise_for_status()
-            current_release = r.text.strip()
+            text = r.text.strip()
+            current_release = json.loads(text)
+            if self.eleana.version < float(current_release):
+                Error.show(title='Update info')
+
         except Exception as e:
             print("Nie udało się sprawdzić wersji:", e)
-            current_release = ''
+            text = ''
             return None
-        print(current_release)
+
+
+
+
 
 
     def configure_main_application_window(self):
