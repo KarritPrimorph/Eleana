@@ -67,6 +67,7 @@ from subprogs.group_edit.move_to_group import MoveToGroup
 from subprogs.preferences.preferences import PreferencesApp
 from subprogs.group_edit.stack_to_group import StackToGroup
 from subprogs.curve_fit.curve_fit import CurveFit
+from subprogs.simple_arithmetics.simple_arithmetics import SimpleArithmetics
 
 # Widgets used by main application
 from widgets.CTkHorizontalSlider import CTkHorizontalSlider
@@ -703,7 +704,7 @@ class Application():
             self.comparison_settings['indexes'] = ()
             self.grapher.clear_plot()
 
-    # Handling the FIRST MODIFICATION PANNEL
+    # Handling the FIRST MODIFICATION PANEL
     # --------------------------------------------
 
     def toggle_first_mod_panel(self):
@@ -1398,6 +1399,7 @@ class Application():
 
     #@check_busy
     def all_results_to_current_group(self):
+        print("All to current group")
         if len(self.eleana.results_dataset) == 0:
             return
         for each in self.eleana.results_dataset:
@@ -1415,13 +1417,19 @@ class Application():
 
     #@check_busy
     def all_results_to_new_group(self):
+
         if len(self.eleana.results_dataset) == 0:
             return
+        # Overrirde chan
+        group_assign = Groupassign(master=self.mainwindow, eleana=self.eleana, which='first', select_only = True)
+        response = group_assign.get()
+        groups = copy.copy(response)
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
+            result.groups = groups
             self.eleana.create_new_id(result)
-            result.groups = [self.sel_group.get()]
             self.eleana.dataset.append(result)
+        self.update.group_list()
         self.update.dataset_list()
         self.update.all_lists()
         added_item = self.eleana.dataset[-1].name_nr
@@ -2290,7 +2298,6 @@ class Application():
         select_data = SelectItems(master=self.mainwindow, title='Select data',
                                  items=av_data)
         response = select_data.get()
-        print(response)
 
     def create_new_group(self):
         raise Exception("Application.py: create_new_group - needs ")
@@ -2436,6 +2443,16 @@ class Application():
 
     def spectra_subtraction(self):
         subprog_spectra_subtraction = SpectraSubtraction(self, which = 'first')
+
+    def simple_arithmetics(self, operation):
+        simarith = SimpleArithmetics(master = self.mainwindow,operation=operation, eleana=self.eleana)
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+        # Set the position to the last added item
+        list_of_results = self.sel_result._values
+        position = list_of_results[-1]
+        self.sel_result.set(position)
+        self.result_selected(position)
 
     def complex_modifications(self, operation, which = None):
         refresh_first = None

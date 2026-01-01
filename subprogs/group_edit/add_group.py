@@ -29,8 +29,8 @@ class Groupcreate:
         self.master.update()
         self.mainwindow.attributes('-topmost', True)  # Always on top
         self.mainwindow.title('Create new group')
+        self.group_name_entry.focus_set()
 
-        #self.group_name_entry.focus_set()
         # Define keyboard bindings
         self.mainwindow.bind('<Return>', lambda event: self.btn_create.invoke())
         self.mainwindow.bind("<Escape>", self.cancel)

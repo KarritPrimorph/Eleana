@@ -2,7 +2,7 @@ from modules.CTkMessagebox.ctkmessagebox import CTkMessagebox
 
 class Error:
     @staticmethod
-    def show(info = '', details = '', title = '', master = None):
+    def show(info = '', details = '', title = '', master = None, wait = False):
         if details:
             message = info + f'\n\nDetails:\n{details}'
         else:
@@ -10,6 +10,8 @@ class Error:
         if not title:
             title = 'Error'
         error = CTkMessagebox(title=title, message=message, icon='cancel', master = master)
+        if wait:
+            error.get()
 
     @staticmethod
     def ask_for_option(option, info = '', details = '', title = '', option_2 = 'OK'):

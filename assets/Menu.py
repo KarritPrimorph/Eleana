@@ -332,8 +332,18 @@ class MainMenu:
         self.menu_modifications.add_separator()
         #
         # - Spectra subtraction
-        self.menu_modifications.add_command(label="Spectra subtraction", command=self.callbacks.get('spectra_subtraction'),
+        self.menu_modifications.add_command(label="Interactive spectra arithmetics", command=self.callbacks.get('spectra_subtraction'),
                                            image=self.icon_spectrasubtract, compound="left")
+
+        # - Multiply Y
+        self.menu_modifications.add_command(label="Multiply Y by constant",
+                                            image=self.icon_spectrasubtract, compound="left",
+                                            command = lambda x='multiply': self.callbacks.get("simple_arithmetics")(operation=x))
+
+        self.menu_modifications.add_command(label="Divide Y by constant",
+                                            image=self.icon_spectrasubtract, compound="left",
+                                            command=lambda x='divide': self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
 
         self.menu_modifications.add_separator()
 
@@ -588,6 +598,19 @@ class ContextMenu:
         self.context_menu_group.add_command(label="Delete data assigned to the group",  command=self.callbacks.get('delete_data_from_group'))
         self.context_menu_group.add_command(label ="Convert whole group to a stack", command=lambda: self.callbacks.get('convert_group_to_stack')(all = True))
         self.context_menu_group.add_command(label="Convert selected to a stack", command=lambda: self.callbacks.get('convert_group_to_stack')(all = False))
+        self.context_menu_group.add_separator()
+        self.context_menu_group.add_command(label="Multiply Y by constant",
+                                            command=lambda x=('group', '*'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_group.add_command(label="Divide Y by constant",
+                                            command=lambda x=('group', '/'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_group.add_command(label="Add constant to Y",
+                                            command=lambda x=('group', '+'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_group.add_command(label="Subtract constant from Y",
+                                            command=lambda x=('group', '-'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
 
     def build_menu_first(self):
         '''This creates positions for FIRST context menu '''
@@ -599,6 +622,15 @@ class ContextMenu:
         self.context_menu_first.add_separator()
         self.context_menu_first.add_command(label="Assign to group", command=self.callbacks.get('first_to_group'))
         self.context_menu_first.add_command(label="Convert stack to group", command=lambda: self.callbacks.get('stack_to_group')('first'))
+
+
+        self.context_menu_first.add_separator()
+        self.context_menu_first.add_command(label="Multiply Y by constant", command=lambda x=('first', '*'): self.callbacks.get("simple_arithmetics")(operation=x))
+        self.context_menu_first.add_command(label="Divide Y by constant", command=lambda x=('first', '/'): self.callbacks.get("simple_arithmetics")(operation=x))
+        self.context_menu_first.add_command(label="Add constant to Y", command=lambda x=('first', '+'): self.callbacks.get("simple_arithmetics")(operation=x))
+        self.context_menu_first.add_command(label="Subtract constant from Y", command=lambda x=('first', '-'): self.callbacks.get("simple_arithmetics")(operation=x))
+
+
         self.context_menu_first.add_separator()
         self.context_menu_first.add_command(label="Drop imaginary part", command=lambda: self.callbacks.get("complex_modifications")(operation = 'Drop imaginary part', which = 'first'))
         self.context_menu_first.add_command(label="Drop real part", command=lambda: self.callbacks.get("complex_modifications")(operation='Drop real part', which='first'))
@@ -622,6 +654,21 @@ class ContextMenu:
         self.context_menu_second.add_separator()
         self.context_menu_second.add_command(label="Assign to group", command=self.callbacks.get('second_to_group'))
         self.context_menu_second.add_command(label="Convert stack to group", command=lambda: self.callbacks.get('stack_to_group')('second'))
+
+        self.context_menu_second.add_separator()
+        self.context_menu_second.add_command(label="Multiply Y by constant",
+                                            command=lambda x=('second', '*'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_second.add_command(label="Divide Y by constant",
+                                            command=lambda x=('second', '/'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_second.add_command(label="Add constant to Y",
+                                            command=lambda x=('second', '+'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+        self.context_menu_second.add_command(label="Subtract constant from Y",
+                                            command=lambda x=('second', '-'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+
         self.context_menu_second.add_separator()
         self.context_menu_second.add_command(label="Drop imaginary part",
                                             command=lambda: self.callbacks.get("complex_modifications")(

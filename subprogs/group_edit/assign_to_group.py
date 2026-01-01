@@ -11,7 +11,8 @@ PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "assign_to_group.ui"
 
 class Groupassign:
-    def __init__(self, master, eleana, which = 'first', window_title = "Add new group"):
+    def __init__(self, master, eleana, which = 'first', window_title = "Add new group", select_only = False):
+        self.select_only = select_only          # If True, then selected groups will only be returned but original data will not be changed
         self.builder = builder = pygubu.Builder()
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
@@ -41,6 +42,7 @@ class Groupassign:
 
         # Check if
         self.index = self.eleana.selections[self.which]
+        self.copy_original_groups = copy.copy(self.eleana.dataset[self.index].groups)
 
         asToGr = self.eleana.assignmentToGroups
         del asToGr['<group-list/>']
@@ -74,8 +76,9 @@ class Groupassign:
         self.mainwindow.grab_set()
         self.mainwindow.attributes('-topmost', True)
 
-
     def cancel(self, event: Event = None):
+        if self.select_only == True:
+            self.eleana.dataset[self.index].groups = self.copy_original_groups
         self.mainwindow.destroy()
 
     def write_assignment_to_data(self, new_group):

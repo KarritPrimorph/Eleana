@@ -99,6 +99,8 @@ def contextmenu_callbacks(inst):
                     "edit_parameters": inst.edit_parameters,
                     "delete_single_stk_data": inst.delete_single_stk_data,
                     "complex_modifications": inst.complex_modifications,
+                    "simple_arithmetics": inst.simple_arithmetics
+
                 }
             }
 
