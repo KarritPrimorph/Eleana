@@ -2,6 +2,7 @@ import os
 import sys
 import customtkinter as ctk
 from PIL import Image
+from tkinterdnd2 import TkinterDnD
 
 # BASIC CONFIGURATION
 ELEANA_VERSION = 5.01   # Set the Eleana version. This will be stored in self.eleana.version
@@ -17,7 +18,8 @@ if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
 
 ''' Create ROOT window '''
-root = ctk.CTk()
+#root = ctk.CTk()
+root = TkinterDnD.Tk()
 root.withdraw()
 root.overrideredirect(True)
 

@@ -32,7 +32,9 @@ class CreateFromTable:
                  x_name=None,
                  y_unit=None,
                  y_name=None,
-                 set_parameters=None):
+                 set_parameters=None,
+                 excelfile=None
+                 ):
         self.master = master
         self.eleana = eleana
         self.builder = builder = pygubu.Builder()
@@ -95,20 +97,23 @@ class CreateFromTable:
         self.mainwindow.bind("<Escape>", self.cancel)
         self.table.bind("<<Paste>>", self.paste_event)
         if loadOnStart == 'excel':
-            dialog = self.loadExcel()
+            dialog = self.loadExcel(excelfile = excelfile)
             if dialog == 'cancel':
                 self.cancel
         self.mainwindow.attributes('-topmost', True)
 
-    def loadExcel(self):
+    def loadExcel(self, excelfile = None):
         self.mainwindow.iconify()
-        filename = filedialog.askopenfilename(parent=self.mainwindow,
+        if excelfile is None:
+            filename = filedialog.askopenfilename(parent=self.mainwindow,
                                               defaultextension='.xls',
                                               title = "Import Excel/LibreOffice Calc",
                                               filetypes=[("xlsx", "*.xlsx"),
                                                          ("xls", "*.xls"),
                                                          ("ods", "*.ods"),
                                                          ("All files", "*.*")])
+        else:
+            filename = excelfile
         if len(filename) == 0:
             self.cancel()
             return 'cancel'

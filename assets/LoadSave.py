@@ -195,13 +195,14 @@ class Load:
         self.eleana.paths['last_import_dir'] = last_import_dir
         return
 
-    def loadShimadzuSPC(self):
+    def loadShimadzuSPC(self, filenames = None):
         path = self.eleana.paths['last_import_dir']
         filetypes = (
             ('Shimadzu', '*.spc'),
             ('All files', '*.*')
         )
-        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+        if filenames is None:
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
         if len(filenames) == 0:
             return
         for file in filenames:
@@ -211,7 +212,7 @@ class Load:
         self.eleana.paths['last_import_dir'] = last_import_dir
         return
 
-    def loadAscii(self, master, clipboard = None):
+    def loadAscii(self, master, clipboard = None, filename = None):
         def _create_headers(amount):
             alphabet = list(string.ascii_uppercase)
             current_len = len(alphabet)
@@ -239,7 +240,9 @@ class Load:
                 ('Data file', '*.dat'),
                 ('Text file', '*.txt'),
                 ('All files', '*.*'),)
-            filename = filedialog.askopenfilename(initialdir=path, filetypes=filetypes)
+            if filename == None:
+                filename = filedialog.askopenfilename(initialdir=path, filetypes=filetypes)
+
             if not filename:
                 return
             preview = AsciFilePreview(master = master, filename=filename, eleana = self.eleana)

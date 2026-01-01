@@ -3,9 +3,9 @@ import sys
 import copy
 import io
 import re
+import shlex
 from functools import wraps
 
-import customtkinter
 import numpy as np
 import pandas
 import pygubu
@@ -17,7 +17,7 @@ import customtkinter as ctk
 import requests
 import json
 from tkinter import filedialog
-
+from tkinterdnd2 import DND_FILES
 from assets.Menu import ContextMenu
 
 
@@ -341,9 +341,45 @@ class Application():
 
         # Check for update
         self.check_for_updates(timeout = 5)
+
+        # Add Drag and Drop functionality
+        self.mainwindow.drop_target_register(DND_FILES)
+        self.mainwindow.dnd_bind("<<Drop>>", self._on_drop_files)
     ''' 
      ----------    METHODS   -------------
     '''
+    def _on_drop_files(self, event):
+        ''' After dropping the file into the Window'''
+        accept = False
+        spc_type = ''
+        files = shlex.split(event.data)
+        for file in files:
+            file_type = file[-3:].lower()
+            if file_type == 'dta' or file_type == 'dsc':
+                self.import_elexsys(filename = file)
+            elif file_type == 'ele':
+                self.load_project(filename = file)
+            elif file_type == 'par':
+                self.import_EMX(filename = file)
+            elif file_type == 'spc':
+                if not accept:
+                    ask = CTkMessagebox(title='Importing SPC', message = 'Choose the file type of SPC', option_1 = 'Shimadzu', option_2 = 'Bruker')
+                    spc_type = ask.get()
+                    accept = True
+                if spc_type == 'Bruker':
+                    self.import_EMX(filename = file)
+                else:
+                    self.import_shimadzu_spc(filename = file)
+            elif file_type == 'lsx':
+                if len(files) > 1:
+                    Error.show(title = "", info = "Please upload files one at a time")
+                    return
+                self.import_excel(filename = file)
+            elif file_type == 'txt' or file_type == 'dta' or file_type == 'csv':
+                if len(files) > 1:
+                    Error.show(title = "", info = "Please upload files one at a time")
+                    return
+                self.import_ascii(filename = file)
 
     def check_for_updates(self, timeout=3):
         ''' Check if update is available. '''
@@ -1947,9 +1983,9 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Adani dat file.", info=e)
 
-    def import_shimadzu_spc(self):
+    def import_shimadzu_spc(self, filename = None):
         try:
-            self.load.loadShimadzuSPC()
+            self.load.loadShimadzuSPC(filenames = [filename])
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
@@ -1957,9 +1993,9 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Shimadzu spc file.", info=e)
 
-    def import_ascii(self, clipboard=None):
+    def import_ascii(self, clipboard=None, filename = None):
         try:
-            self.load.loadAscii(master = self.mainwindow, clipboard = clipboard)
+            self.load.loadAscii(master = self.mainwindow, clipboard = clipboard, filename = filename)
             self.update.dataset_list()
             self.update.group_list()
             self.update.all_lists()
@@ -1968,13 +2004,12 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Ascii file.", info=e)
 
-
-    def import_excel(self):
+    def import_excel(self, filename = None):
         try:
             x = [['', ''], ['', '']]
             headers = ['A', 'B']
             empty = pandas.DataFrame(x, columns=headers)
-            table = CreateFromTable(eleana=self.eleana, master=self.mainwindow, df=empty, loadOnStart='excel')
+            table = CreateFromTable(eleana=self.eleana, master=self.mainwindow, df=empty, loadOnStart='excel', excelfile = filename)
             response = table.get()
             self.update.dataset_list()
             self.update.group_list()
