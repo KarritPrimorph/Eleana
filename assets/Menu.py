@@ -80,6 +80,11 @@ class MainMenu:
         self.icon_magnitude = self.prepare_icon('magnitude.png')
         self.icon_swap_re_im = self.prepare_icon('swap_re_im.png')
         self.icon_drag_file = self.prepare_icon('drag_file.png')
+        self.icon_multiply_y = self.prepare_icon('multiply_y.png')
+        self.icon_divide_y = self.prepare_icon('divide_y.png')
+        self.icon_subtract_y = self.prepare_icon('subtract_y.png')
+        self.icon_add_y =self.prepare_icon('add_y.png')
+        self.icon_simpl_arithm = self.prepare_icon('simpl_arithm.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -335,14 +340,30 @@ class MainMenu:
         self.menu_modifications.add_command(label="Interactive spectra arithmetics", command=self.callbacks.get('spectra_subtraction'),
                                            image=self.icon_spectrasubtract, compound="left")
 
-        # - Multiply Y
-        self.menu_modifications.add_command(label="Multiply Y by constant",
-                                            image=self.icon_spectrasubtract, compound="left",
-                                            command = lambda x='multiply': self.callbacks.get("simple_arithmetics")(operation=x))
+        # - Simple arithmetics
+        self.menu_simpl_arith = tk.Menu(self.menu_modifications, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
+                                    activebackground=self.activebg, activeforeground=self.activefg,
+                                    borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
 
-        self.menu_modifications.add_command(label="Divide Y by constant",
-                                            image=self.icon_spectrasubtract, compound="left",
-                                            command=lambda x='divide': self.callbacks.get("simple_arithmetics")(
+        self.menu_modifications.add_cascade(label = "Constant operations on group", menu = self.menu_simpl_arith, image =self.icon_simpl_arithm, compound='left')
+
+        self.menu_simpl_arith.add_command(label="Multiply Y by constant",
+                                            image=self.icon_multiply_y, compound="left",
+                                            command = lambda x=('group', '*'): self.callbacks.get("simple_arithmetics")(operation=x))
+
+        self.menu_simpl_arith.add_command(label="Divide Y by constant",
+                                            image=self.icon_divide_y, compound="left",
+                                            command=lambda x=('group', '/'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+
+        self.menu_simpl_arith.add_command(label="Add constant to Y",
+                                            image=self.icon_add_y, compound="left",
+                                            command=lambda x=('group', '+'): self.callbacks.get("simple_arithmetics")(
+                                                operation=x))
+
+        self.menu_simpl_arith.add_command(label="Subtract constant from Y",
+                                            image=self.icon_subtract_y, compound="left",
+                                            command=lambda x=('group', '-'): self.callbacks.get("simple_arithmetics")(
                                                 operation=x))
 
         self.menu_modifications.add_separator()

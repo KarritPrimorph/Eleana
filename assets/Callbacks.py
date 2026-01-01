@@ -53,6 +53,7 @@ def main_menubar_callbacks(inst):
              "pseudomodulation": inst.pseudomodulation,
              "fast_fourier_transform": inst.fast_fourier_transform,
              "complex_modifications": inst.complex_modifications,
+             "simple_arithmetics": inst.simple_arithmetics,
 
              # EPR
              "epr_b_to_g": inst.epr_b_to_g,
