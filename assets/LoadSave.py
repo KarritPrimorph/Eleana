@@ -270,6 +270,8 @@ class Load:
         else:
             separator = r_sep
 
+
+        #PONIŻEJ GDZIEŚ JEST BŁĄD ZWIĄZANY Z IMPORTEM PLIKÓW ASCII
         try:
             text = response['text']
             text_trimmed = text.strip()

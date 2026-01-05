@@ -123,14 +123,24 @@ class AsciFilePreview:
         text = self.response['text']
         lines = text.splitlines()
         data = []
+
         try:
             for line in lines:
-                if line:
-                    column = line.split(sep = separator)
-                    numbers = [float(i) for i in column]
+                if line.strip():
+                    if separator == ' ':
+                        column = line.split()  # dzieli po wszystkich białych znakach
+                    else:
+                        column = line.split(sep=separator)
+
+                    column = [float(s.replace(',', '.').strip()) for s in column if s.strip()]
+
                     data.append(column)
         except ValueError:
-            info = CTkMessagebox(title='Error', message='One of the values could not be converted to a float. Make sure the text contains valid numbers and that the separator is correct.', icon="cancel")
+            info = CTkMessagebox(
+                title='Error',
+                message='One of the values could not be converted to a float. Make sure the text contains valid numbers and that the separator is correct.',
+                icon="cancel"
+            )
             return False
 
         if all(len(row) == len(data[0]) for row in data):
@@ -187,7 +197,11 @@ class AsciFilePreview:
     def show_preview(self, event=None, position = 'first'):
         n_first_lines = int(self.first_lines.get())
         n_last_lines = int(self.last_lines.get())
-        text = self.file_content.split('\n')
+        if self.clipboard is not None:
+            text = copy.copy(self.clipboard)
+            text = text.splitlines()
+        else:
+            text = self.file_content.splitlines()
         if n_last_lines > 0:
             text = text[:-n_last_lines]
 
