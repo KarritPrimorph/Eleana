@@ -12,7 +12,7 @@ import pandas
 import numpy as np
 from modules.CTkMessagebox.ctkmessagebox import CTkMessagebox
 from assets.DataClasses import createFromElexsys, createFromEMX, createFromShimadzuSPC, createFromMagnettech, \
-    createFromAdaniDat, createFrombk3a, BaseDataModel
+    createFromAdaniDat, createFrombk3a, createFrombka
 from assets.Error import Error
 from subprogs.ascii_file_preview.ascii_file_preview import AsciFilePreview
 from subprogs.table.table import CreateFromTable

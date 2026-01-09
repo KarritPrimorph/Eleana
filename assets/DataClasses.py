@@ -575,6 +575,9 @@ def createFrombk3a(filename):
                         )
     return biokine_data
 
+def createFrombka(filename):
+    print(filename)
+
 def parse_biokine_header(header):
     header_lines = header.splitlines()
     parsed_header = {}
