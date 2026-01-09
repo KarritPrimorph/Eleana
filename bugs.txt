@@ -1,0 +1,4 @@
+1. Nie działa zaznaczanie Range select w Trim data i integrate regions. Trzeba sprawdzić funkcjonalność tego range select
+
+2. Podczas edycji danych Edit data in table przy ununięciu danych np. na początku pojawia się błąd
+    że liczba nie jest float nale w rzędzie (linii) które już nie ma bo kończą się dane wcześniej

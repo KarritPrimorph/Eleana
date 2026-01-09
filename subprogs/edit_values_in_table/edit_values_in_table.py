@@ -101,8 +101,10 @@ class EditValuesInTable:
         self.mainwindow.destroy()
 
     def prepare_results(self):
-        row_counts = self.row_counts
-        column_counts = self.column_counts
+        row_counts = self.table.get_total_rows(include_index=False)
+        #row_counts = (self.row_counts)
+        #column_counts = self.column_counts
+        column_counts = self.table.get_total_columns(include_header=False)
         data = []
         for n in range(row_counts):
             row_data = []
@@ -116,6 +118,7 @@ class EditValuesInTable:
                         # The value is not complex
                         row_data.append(float(cell_value))
                 except ValueError:
+                    continue
                     Error.show(info = f'Could not convert entry "{cell_value}" to float. See column {m}, row {n+1}.')
                     return None
             data.append(row_data)

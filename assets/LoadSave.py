@@ -326,22 +326,29 @@ class Load:
         error = CTkMessagebox(title='Error',
                               message=f"Cannot load data from {list}.", icon="cancel")
 
-    def loadbiokine(self):
+    def loadbiokine(self, filename, skip_messeges):
         path = self.eleana.paths['last_import_dir']
         filetypes = (
                     ('3D Data', '*.bk3a'),
                     ('Slice', '*.bka'),
                     ('All files' '*.*')
                 )
-        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+
+        if filename != None:
+            filenames = [filename]
+        else:
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
         if len(filenames) == 0:
             return
         elif len(filenames) > 1:
-            response = CTkMessagebox(title="Import Biokine", message="Biokine 3D files can be very large. Loading multiple files at once is not recommended. Continue?",
+            if not skip_messeges:
+                response = CTkMessagebox(title="Import Biokine", message="Biokine 3D files can be very large. Loading multiple files at once is not recommended. Continue?",
                         icon="question", option_1="Yes", option_2="No")
+            else:
+                response = "Yes"
+
             if response == 'No':
                 return
-
 
         error_list = []
         for filename in filenames:

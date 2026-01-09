@@ -353,6 +353,7 @@ class Application():
         accept = False
         spc_type = ''
         files = shlex.split(event.data)
+        skip_messeges = False
         for file in files:
             file_type = file[-3:].lower()
             if file_type == 'dta' or file_type == 'dsc':
@@ -380,6 +381,9 @@ class Application():
                     Error.show(title = "", info = "Please upload files one at a time")
                     return
                 self.import_ascii(filename = file)
+            elif file_type == 'bka':
+                self.import_biokine(filename = file, skip_messeges = skip_messeges)
+                skip_messeges = True
 
     def check_for_updates(self, timeout=3):
         ''' Check if update is available. '''
@@ -1959,10 +1963,10 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Magnettech file.", info=e)
 
-    def import_biokine(self):
+    def import_biokine(self, filename = None, skip_messeges = False):
         self.mainwindow.config(cursor = "watch")
         try:
-            self.load.loadbiokine()
+            self.load.loadbiokine(filename = filename, skip_messeges = skip_messeges)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()
@@ -1971,7 +1975,7 @@ class Application():
             self.mainwindow.config(cursor="arrow")
         except Exception as e:
             self.mainwindow.config(cursor="arrow")
-            Error.show(title="Error loading Biokine file.", info=e)
+            Error.show(title="Error loading BioKine file.", info=e)
 
     def import_adani_dat(self):
         try:

@@ -987,13 +987,13 @@ class CurveFit(Methods, WindowGUI):
             {'algorithms': self.sel_algorithm.get(),
              'category': self.list_category.get(),
              'list_function': self.list_function.get(),
-             'preview': self.preview_checkbox.get(),
-             'extrapolate': self.extrapolate_checkbox.get(),
-             'replace_table_check': self.replace_table_chceck.get(),
-             'show_original_curve_checkbox': self.show_original_curve_checkbox.get(),
-             'show_fitted_curve_checkbox': self.show_fitted_curve_checkbox.get(),
-             'show_resid': self.show_resid_checkbox.get(),
-             'use_default_check': self.use_default_check.get()
+             'preview': bool(self.preview_checkbox.get()),
+             'extrapolate': bool(self.extrapolate_checkbox.get()),
+             'replace_table_check': bool(self.replace_table_chceck.get()),
+             'show_original_curve_checkbox': bool(self.show_original_curve_checkbox.get()),
+             'show_fitted_curve_checkbox': bool(self.show_fitted_curve_checkbox.get()),
+             'show_resid': bool(self.show_resid_checkbox.get()),
+             'use_default_check': bool(self.use_default_check.get())
              }]
 
     def restore_settings(self):
