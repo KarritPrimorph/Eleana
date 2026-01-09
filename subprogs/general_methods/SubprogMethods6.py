@@ -135,8 +135,8 @@ class SubMethods_06:
             modal = self.subprog_settings.get('modal', True)
             if modal:
                 parent = self.__app().mainwindow
-                self.mainwindow.transient(parent)
-                self.mainwindow.grab_set()
+                #self.mainwindow.transient(parent)
+                #self.mainwindow.grab_set()
                 self.mainwindow.focus_set()
                 try:
                     self.mainwindow.attributes("-toolwindow", True)
