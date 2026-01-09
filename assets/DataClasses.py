@@ -576,7 +576,66 @@ def createFrombk3a(filename):
     return biokine_data
 
 def createFrombka(filename):
-    print(filename)
+    try:
+        with open(filename, 'r', encoding='ascii', errors='ignore') as file:
+            bka = file.read()
+    except Exception as e:
+        return
+    bka_splited = bka.split('"_DATA"')
+    header_text = bka_splited[0]
+    data = bka_splited[1].strip()
+    data = data.replace(',', '.')
+
+    data_numeric = np.array([
+        list(map(float, line.split()))
+        for line in data.strip().splitlines()
+    ])
+
+    col_1 = data_numeric[:, 0]
+    col_2 = data_numeric[:, 1]
+
+    # Parse Header Lines:
+    parsed_header = parse_biokine_header(header=header_text)
+
+    if parsed_header.get('_UNITX', '')[0] == 'nm':
+        name_x = 'Wavelength'
+        unit_x = 'nm'
+        name_y = parsed_header.get('_UNITY', '')[0]
+        if name_y == 'AU':
+            name_y = 'Absorbance'
+            unit_y = 'OD'
+        elif name_y == 'Counts':
+            name_y = 'Counts'
+            unit_y = ''
+
+    else:
+        name_x = 'Time'
+        unit_x = parsed_header.get('_UNITX', '')[0]
+        name_y = parsed_header.get('_UNITY', '')[0]
+        if name_y == 'AU':
+            name_y = 'Absorbance'
+            unit_y = 'OD'
+        elif name_y == 'Counts':
+            name_y = 'Counts'
+            unit_y = ''
+
+    eleana_parameters = {
+            'name_x': name_x,
+            'name_y': name_y,
+            'unit_x': unit_x,
+            'unit_y': unit_y
+            }
+
+    biokine_data = BaseDataModel(
+        x=np.array(col_1),
+        y=np.array(col_2),
+        name=Path(filename).stem,
+        parameters = eleana_parameters,
+        complex=False,
+        type='single 2D',
+        groups=['All', 'Biokine'],
+    )
+    return biokine_data
 
 def parse_biokine_header(header):
     header_lines = header.splitlines()
