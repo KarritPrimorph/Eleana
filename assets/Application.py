@@ -397,6 +397,9 @@ class Application():
             elif file_type == 'bka':
                 self.import_biokine(filename = file, skip_messeges = skip_messeges)
                 skip_messeges = True
+            elif file_type == 'spe':
+                self.import_magnettech1(filename = file)
+
 
     def check_for_updates(self, timeout=3):
         ''' Check if update is available. '''
@@ -1958,7 +1961,7 @@ class Application():
 
     def import_magnettech1(self, filename = None):
         try:
-            self.load.loadMagnettech(mscope = 1)
+            self.load.loadMagnettech(mscope = 1, filename = filename)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()

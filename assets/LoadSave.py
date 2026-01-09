@@ -192,13 +192,16 @@ class Load:
         self.eleana.paths['last_import_dir'] = last_import_dir
         return
 
-    def loadMagnettech(self, mscope):
+    def loadMagnettech(self, mscope, filename= None):
         path = self.eleana.paths['last_import_dir']
         filetypes = (
             ('Magnettech 1', '*.spe'),
             ('All files', '*.*')
         )
-        filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+        if filename != None:
+            filenames = [filename]
+        else:
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
         if len(filenames) == 0:
             return
         for file in filenames:
