@@ -10,11 +10,12 @@ from tkinter import ttk
 import customtkinter as ctk
 import copy
 class AsciFilePreview:
-    def __init__(self, master=None, filename = None, clipboard = None, eleana = None):
+    def __init__(self, master=None, filename = None, clipboard = None, eleana = None, auto = False):
         self.builder = builder = pygubu.Builder()
         self.master = master
         self.eleana = eleana
         self.subprog_storage_data = []
+        self.auto = auto
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
         # Main widget
@@ -74,6 +75,9 @@ class AsciFilePreview:
 
         self.center_window(self.mainwindow,  700, 500)
         self.restore_settings()
+
+        if self.auto:
+            self.ok()
 
     ''' DO NOT REMOVE GET AND RUN FUNCTIONS'''
     def get(self):

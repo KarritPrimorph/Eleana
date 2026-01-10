@@ -33,13 +33,15 @@ class CreateFromTable:
                  y_unit=None,
                  y_name=None,
                  set_parameters=None,
-                 excelfile=None
-                 ):
+                 excelfile=None,
+                 auto = False):
+        self.auto = auto
         self.master = master
         self.eleana = eleana
         self.builder = builder = pygubu.Builder()
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
+
 
         # Main widget
         self.mainwindow = builder.get_object("toplevel1", master)
@@ -101,6 +103,9 @@ class CreateFromTable:
             if dialog == 'cancel':
                 self.cancel
         self.mainwindow.attributes('-topmost', True)
+
+        if self.auto:
+            self.ok()
 
     def loadExcel(self, excelfile = None):
         self.mainwindow.iconify()

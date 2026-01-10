@@ -6,7 +6,7 @@ PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "select_items.ui"
 
 class SelectItems:
-    def __init__(self, master=None, title=None, items=None):
+    def __init__(self, master=None, title=None, items=None, multiple_selections = True):
         self.items = items
         self.master = master
         if title == None:
@@ -20,7 +20,7 @@ class SelectItems:
         builder.connect_callbacks(self)
 
         self.listFrame = builder.get_object("listFrame", master)
-        self.selection_list = CTkListbox(self.listFrame, multiple_selection=True)
+        self.selection_list = CTkListbox(self.listFrame, multiple_selection=multiple_selections)
         self.selection_list.pack(fill="both", expand=True, padx=10, pady=10)
         #self.selection_list.component('listbox').bind('<MouseWheel>', self.on_mousewheel)
 

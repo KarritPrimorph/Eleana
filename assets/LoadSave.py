@@ -11,7 +11,6 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
 
-from email.utils import collapse_rfc2231_value
 from pathlib import Path
 import string
 import copy
@@ -25,7 +24,7 @@ import pandas
 import numpy as np
 from modules.CTkMessagebox.ctkmessagebox import CTkMessagebox
 from assets.DataClasses import createFromElexsys, createFromEMX, createFromShimadzuSPC, createFromMagnettech, \
-    createFromAdaniDat, createFrombk3a, createFrombka
+    createFromAdaniDat, createFrombk3a, createFrombka, createFromOther
 from assets.Error import Error
 from subprogs.ascii_file_preview.ascii_file_preview import AsciFilePreview
 from subprogs.table.table import CreateFromTable
@@ -228,7 +227,7 @@ class Load:
         self.eleana.paths['last_import_dir'] = last_import_dir
         return
 
-    def loadAscii(self, master, clipboard = None, filename = None):
+    def loadAscii(self, master, clipboard = None, filename = None, auto = False):
         def _create_headers(amount):
             alphabet = list(string.ascii_uppercase)
             current_len = len(alphabet)
@@ -261,12 +260,12 @@ class Load:
 
             if not filename:
                 return
-            preview = AsciFilePreview(master = master, filename=filename, eleana = self.eleana)
+            preview = AsciFilePreview(master = master, filename=filename, eleana = self.eleana, auto = auto)
             response = preview.get()
             last_import_dir = Path(filename).parent
             self.eleana.paths['last_import_dir'] = last_import_dir
         else:
-            preview = AsciFilePreview(master=master, filename=None, clipboard = clipboard, eleana = self.eleana)
+            preview = AsciFilePreview(master=master, filename=None, clipboard = clipboard, eleana = self.eleana, auto = auto)
             response = preview.get()
             filename = None
 
@@ -286,8 +285,6 @@ class Load:
         else:
             separator = r_sep
 
-
-        #PONIŻEJ GDZIEŚ JEST BŁĄD ZWIĄZANY Z IMPORTEM PLIKÓW ASCII
         try:
             text = response['text']
             text_trimmed = text.strip()
@@ -315,7 +312,7 @@ class Load:
                 name = Path(filename).name
             else:
                 name = ''
-        spreadsheet = CreateFromTable(self.eleana, master, df=df, name=name, group = self.eleana.selections['group'])
+        spreadsheet = CreateFromTable(self.eleana, master, df=df, name=name, group = self.eleana.selections['group'], auto = auto)
         response = spreadsheet.get()
 
     def loadAdaniDat(self):
@@ -386,7 +383,29 @@ class Load:
         error = CTkMessagebox(title='Error',
                               message=f"Cannot load data from {list}.", icon="cancel")
 
+    def loadOther(self, type, filename = None):
+        path = self.eleana.paths['last_import_dir']
+        if type == 'flasher':
+            filetypes = (
+            ('Flasher project', '*.ele'),
+            ('All files', '*.*')
+            )
 
+        else:
+            return
+
+
+        if filename is None:
+            filenames = filedialog.askopenfilenames(initialdir=path, filetypes=filetypes)
+        else:
+            filenames = [filename]
+        if len(filenames) == 0:
+            return
+        for file in filenames:
+            spectrum = createFromOther(eleana = self.eleana, filename = file, type = type)
+        last_import_dir = Path(filenames[-1]).parent
+        self.eleana.paths['last_import_dir'] = last_import_dir
+        return
 
 class Save:
     def __init__(self, eleana):

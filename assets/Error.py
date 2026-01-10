@@ -24,7 +24,7 @@ class Error:
             message = info
         if not title:
             title = 'Error'
-        error = CTkMessagebox(title=title, message=message, icon='cancel', master = master)
+        error = CTkMessagebox(master = master, title=title, message=message, icon='cancel')
         if wait:
             error.get()
 

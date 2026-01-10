@@ -21,7 +21,13 @@ from typing import List, Optional, Dict, Literal
 from assets.Error import Error
 from datetime import datetime
 import random
+import re
 from subprogs.user_input.single_dialog import SingleDialog
+
+
+
+
+
 # how bruker Elexsys parameters are mapped to eleana parameters
 # If you want eleana to extract more parameters from dsc
 # just add them here
@@ -832,3 +838,111 @@ def createFromAdaniDat(filename: str | Path):
             continue
 
     return SpectrumEPR.from_adani(filepath.name, data, parameters)
+
+def createFromOther(eleana, filename: str | Path, type):
+    def split_by_markers(text, markers):
+        pattern = "(" + "|".join(map(re.escape, markers)) + ")"
+        parts = re.split(pattern, text)
+
+        sections = {}
+        for i in range(1, len(parts), 2):
+            sections[parts[i]] = parts[i + 1].strip()
+
+        return sections
+
+    #------------------------------
+
+    try:
+        with open(filename, 'r', encoding='ascii', errors='ignore') as file:
+            content = file.read()
+    except Exception as e:
+        return
+
+    if type == 'flasher':
+        if '### ELEANA project file ###' in content:
+            markers = {"<>CWORDINATE",
+                       "<>CWFREQUENCY",
+                       "<>CWDESC",
+                       "<>CWLEN",
+                       "<>CWOPT",
+                        "<>NOTES",
+                       "<#>"
+                       }
+        else:
+            Error.show(info = f'File "{filename.name}" does not look like Flasher ELE file')
+
+        sections = split_by_markers(content, markers)
+        # Get all names in the project
+        names = sections.get('<>CWDESC', None)
+        if names is None:
+            return False
+        names = names.split('\t')
+
+        # Get the 2D array of all amplitudes
+        y_data = sections.get('<>CWORDINATE', None)
+        if names is None:
+            return False
+        y_data = y_data.replace(',', '.')
+        y_lines = y_data.split('\n')
+        y_array = []
+        try:
+            for line in y_lines:
+                y_string = line.split('\t')
+                y_numbers = [float(i) for i in y_string]
+                y_array.append(y_numbers)
+        except Exception as e:
+            print(e)
+            return False
+
+        # Get all the parameters for each data
+        parameters_text = sections.get('<>CWOPT', None)
+        if parameters_text is None:
+            return False
+        parameters_text = parameters_text.split('\n\n')
+        markers = {'XMIN:',
+                   'XPTS:',
+                   'XWID:',
+                   'XNAM:',
+                   'XUNI:',
+                   'YNAM:',
+                   'YUNI:'}
+
+        parameters = []
+        x_array = []
+        parameters_text = parameters_text[::2]
+        parameters_text = parameters_text[:-1]
+        for line in parameters_text:
+            sections_in_par = split_by_markers(line, markers)
+            eleana_parameters = {
+                'name_x': sections_in_par.get('XNAM:', '').strip(),
+                'name_y': sections_in_par.get('YNAM:', '').strip(),
+                'unit_x': sections_in_par.get('XUNI:', '').strip(),
+                'unit_y': sections_in_par.get('YUNI:', '').strip(),
+            }
+            x_min = float(sections_in_par.get('XMIN:', 0).replace(',', '.'))
+            x_pts = int(float(sections_in_par.get('XPTS:', 1024).replace(',', '.')))
+            x_wid = float(sections_in_par.get('XWID:', 0).replace(',', '.'))
+
+            parameters.append(eleana_parameters)
+            delta_x = x_wid / x_pts
+            x = [x_min + i * delta_x for i in range(x_pts)]
+            x_array.append(x)
+
+        # Build Models
+        i = 0
+        for name in names:
+            y_arr = y_array[i]
+            y_arr = y_arr[:len(x_array[i])]
+            data = BaseDataModel(
+                name = name,
+                x = np.array(x_array[i]),
+                y = np.array(y_arr),
+                complex = False,
+                parameters = parameters[i],
+                type = 'single 2D',
+                origin = 'flasher',
+                )
+
+            eleana.dataset.append(data)
+            i += 1
+        return True

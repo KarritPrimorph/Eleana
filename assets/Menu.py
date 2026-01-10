@@ -99,6 +99,7 @@ class MainMenu:
         self.icon_subtract_y = self.prepare_icon('subtract_y.png')
         self.icon_add_y =self.prepare_icon('add_y.png')
         self.icon_simpl_arithm = self.prepare_icon('simpl_arithm.png')
+        self.icon_box = self.prepare_icon('box.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -162,6 +163,12 @@ class MainMenu:
         # ------------ Excel
         self.menu_import.add_command(label="MS Excel/LibreOffice Calc", command = self.callbacks.get("import_excel"), image = self.icon_import_excel, compound='left')
         #
+
+        self.menu_import.add_separator()
+
+        # ----------- More
+        self.menu_import.add_command(label = "More formats", command = self.callbacks.get('import_more_formats') , image = self.icon_box, compound='left')
+
 
         # - Drag & Drop Loader
 

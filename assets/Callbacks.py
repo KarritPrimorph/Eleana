@@ -28,6 +28,7 @@ def main_menubar_callbacks(inst):
              "import_biokine": inst.import_biokine,
              "import_ascii": inst.import_ascii,
              "import_excel": inst.import_excel,
+             "import_more_formats": inst.import_more_formats,
              "export_first": inst.export_first,
              "export_group": inst.export_group,
              "export_spreadsheet": inst.export_spreadsheet,

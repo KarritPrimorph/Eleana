@@ -367,11 +367,13 @@ class Application():
         spc_type = ''
         files = shlex.split(event.data)
         skip_messeges = False
+        auto = False
         for file in files:
             file_type = file[-3:].lower()
             if file_type == 'dta' or file_type == 'dsc':
                 self.import_elexsys(filename = file)
             elif file_type == 'ele':
+
                 self.load_project(filename = file)
             elif file_type == 'par':
                 self.import_EMX(filename = file)
@@ -399,6 +401,18 @@ class Application():
                 skip_messeges = True
             elif file_type == 'spe':
                 self.import_magnettech1(filename = file)
+            elif file_type == 'dat' or file_type == 'txt':
+                self.import_ascii(filename = file, auto = auto)
+                if auto is False:
+                    dialog = CTkMessagebox(master = self.mainwindow,
+                                           message = 'Do you want to automatically load the rest of the files using the same import parameters?',
+                                           option_1 = 'Yes',
+                                           option_2 = 'No')
+                    response = dialog.get()
+                    if response == 'Yes':
+                        auto = True
+                    else:
+                        auto = False
 
 
     def check_for_updates(self, timeout=3):
@@ -1937,6 +1951,33 @@ class Application():
         ''' Display drag and drop window for files'''
         files = FileDropWindow(master = self.mainwindow, callbacks = main_menubar_callbacks(self))
 
+    def import_more_formats(self, filename = None, type = None):
+        if type is None:
+            items = ['1. Flasher UJ (*.ele)',
+                     #'2. Low-temperature UV spectrophotometer UJ',
+                     #'3. SR curve (Pulse Spectrometer UJ)',
+                     #'4. Low-temperature UV spectrophotometer UJ',
+                     ]
+            dialog = SelectItems(master = self.mainwindow,
+                                 title = "Select appropriate file format",
+                                 items = items, multiple_selections=False )
+            response = dialog.get()
+            response = response.split('.')[0]
+        if response == '1':
+            type = 'flasher'
+        else:
+            Error.show(master = self.mainwindow, info = 'Not implemented yet')
+            return
+
+        self.load.loadOther(filename=filename, type = type)
+        self.update.dataset_list()
+        self.update.all_lists()
+        self.eleana.save_paths()
+        last_in_list = self.sel_first._values
+        self.first_selected(last_in_list[-1])
+
+
+
     def import_elexsys(self, filename = None):
         ''' Open window that loads the spectra '''
         try:
@@ -2013,9 +2054,9 @@ class Application():
         except Exception as e:
             Error.show(title="Error loading Shimadzu spc file.", info=e)
 
-    def import_ascii(self, clipboard=None, filename = None):
+    def import_ascii(self, clipboard=None, filename = None, auto = False):
         try:
-            self.load.loadAscii(master = self.mainwindow, clipboard = clipboard, filename = filename)
+            self.load.loadAscii(master = self.mainwindow, clipboard = clipboard, filename = filename, auto = auto)
             self.update.dataset_list()
             self.update.group_list()
             self.update.all_lists()
