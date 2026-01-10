@@ -1,2 +1,6 @@
-1. Nie działa zaznaczanie Range select w Trim data i integrate regions. Trzeba sprawdzić funkcjonalność tego range select
+1. Problem z działaniem klikania na wykresie i kursorami. Generalnie przy standardowym mplcurosrs
+   nie kasują się, generalnie mikusje się szerge usawień Tzreba znaowu sprawdzić co tak się dzieje z tymi kursorami
+
+2. Przy zaznaczeniu Range Selection w Curve Fit nie wyświetla się po kliknięciu, ale przy fitowaniu już się pojawia i dziaa
+   Trzeba sprawdzić, dlaczego nie działa wyswietlanie wprost
 

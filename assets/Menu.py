@@ -100,6 +100,7 @@ class MainMenu:
         self.icon_add_y =self.prepare_icon('add_y.png')
         self.icon_simpl_arithm = self.prepare_icon('simpl_arithm.png')
         self.icon_box = self.prepare_icon('box.png')
+        self.icon_set_zero = self.prepare_icon('set_zero.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -344,6 +345,12 @@ class MainMenu:
         # - Trim data
         self.menu_modifications.add_command(label="Trim data", command=self.callbacks.get('trim_data'),
                                             image=self.icon_trimdata, compound="left")
+
+        # - Set zero
+        self.menu_modifications.add_command(label="Select Zero on X axis", command=self.callbacks.get('set_zero_on_x_axis'),
+                                            image=self.icon_set_zero, compound="left")
+
+
 
         self.menu_modifications.add_separator()
 

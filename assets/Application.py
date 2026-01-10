@@ -81,6 +81,7 @@ from subprogs.preferences.preferences import PreferencesApp
 from subprogs.group_edit.stack_to_group import StackToGroup
 from subprogs.curve_fit.curve_fit import CurveFit
 from subprogs.simple_arithmetics.simple_arithmetics import SimpleArithmetics
+from subprogs.set_zero_on_x_axis.set_zero_on_x_axis import SetZeroOnX
 
 # Widgets used by main application
 from widgets.CTkHorizontalSlider import CTkHorizontalSlider
@@ -2519,6 +2520,9 @@ class Application():
     def trim_data(self):
         subprog_trim_data = TrimData(self, which="first")
 
+    def set_zero_on_x_axis(self):
+        subprog_set_zero = SetZeroOnX(self, which='first')
+
     def polynomial_baseline(self):
         subprog_polynomial_baseline = PolynomialBaseline(self, which='first')
 
@@ -2598,6 +2602,9 @@ class Application():
 
     def epr_b_to_g(self):
         subprog_epr_b_to_g = EPR_B_to_g(self)
+
+    def not_implemented_yet(self):
+        message = CTkMessagebox(master = self.mainwindow, message = 'This function is not implemented yet.', title='Application')
 
     '''***********************************************
     *           GRAPH SWITCHES AND BUTTONS           *

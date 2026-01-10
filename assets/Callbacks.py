@@ -61,6 +61,7 @@ def main_menubar_callbacks(inst):
              "normalize": inst.normalize,
              "spectra_subtraction": inst.spectra_subtraction,
              "trim_data": inst.trim_data,
+             "set_zero_on_x_axis": inst.set_zero_on_x_axis,
              "polynomial_baseline": inst.polynomial_baseline,
              "spline_baseline": inst.spline_baseline,
              "filter_savitzky_golay": inst.filter_savitzky_golay,

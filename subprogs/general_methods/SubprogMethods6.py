@@ -330,6 +330,25 @@ class SubMethods_06:
         ''' Activate get_data when selection changed.
             This is triggered by the Observer.   '''
 
+        if self.subprog_settings.get('data_label', None) is not None:
+            index = self.eleana.selections[self.which]
+            if index >= 0:
+                data = self.eleana.dataset[index]
+                if data.type == 'stack 2D':
+                    if self.which == 'second':
+                        var = 's_stk'
+                    else:
+                        var = 'f_stk'
+                    idx_stk = self.eleana.selections[var]
+                    stk_name = " | " + self.eleana.dataset[index].stk_names[idx_stk]
+                else:
+                    stk_name = ""
+                name = data.name_nr + stk_name
+            else:
+                name = ''
+            self.data_label.configure(text=name)
+
+
         collect_custom_annotations = copy.copy(self.eleana.settings.grapher['custom_annotations'])
         if variable == "first" and value is None:
             self.app.mainwindow.configure(cursor="")
