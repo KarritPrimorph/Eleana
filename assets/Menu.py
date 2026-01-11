@@ -101,6 +101,7 @@ class MainMenu:
         self.icon_simpl_arithm = self.prepare_icon('simpl_arithm.png')
         self.icon_box = self.prepare_icon('box.png')
         self.icon_set_zero = self.prepare_icon('set_zero.png')
+        self.icon_offset_corr = self.prepare_icon('offset_correction.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -350,8 +351,12 @@ class MainMenu:
         self.menu_modifications.add_command(label="Select Zero on X axis", command=self.callbacks.get('set_zero_on_x_axis'),
                                             image=self.icon_set_zero, compound="left")
 
+        # - Offset correction
+        self.menu_modifications.add_command(label="Offset correction",
+                                            command=self.callbacks.get('offset_correction'),
+                                            image=self.icon_offset_corr, compound="left")
 
-
+        # ---------------------------------------
         self.menu_modifications.add_separator()
 
         # - Subtract Polynomial baseline
