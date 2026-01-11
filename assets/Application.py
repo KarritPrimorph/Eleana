@@ -1767,6 +1767,9 @@ class Application():
             self.resultFrame.grid_remove()
             self.grapher.plot_graph()
 
+    def clear_all_annotations(self):
+        self.grapher.clear_all_annotations()
+
     def gui_to_selections(self):
         ''' Get values from self.eleana.selections
             and update gui buttons accordingly'''

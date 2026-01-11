@@ -74,7 +74,7 @@ REGIONS_FROM: str = 'none'        # 'none' - do not extract
 # This is very useful if something must be calculated on selected fragments and then results
 # should be applied on the original, not extracted, data.
 # self.regions['orig_in_odd_idx'] <-- this will keep 0 or 1
-ORIG_IN_ODD_IDX: bool = True
+ORIG_IN_ODD_IDX: bool = False
 
 # If both First and Second data are needed for calculation set this True
 # self.use_second
@@ -101,8 +101,8 @@ RESULT_IGNORE: bool = True
 # Define if processed data should be created, added or replaced
 # self.subprog_settings['result']
 #RESULT_CREATE: str = ''            # Do not create any result dataset
-RESULT_CREATE: str = 'add'         # Add created results to the result_dataset
-#RESULT_CREATE: str = 'replace'      # Replace the data in result with new results
+#RESULT_CREATE: str = 'add'         # Add created results to the result_dataset
+RESULT_CREATE: str = 'replace'      # Replace the data in result with new results
 #RESULT_CREATE: str = 'dataset'      # Processed data will replace the original data in dataset without creating results
 
 ''' REPORT SETTINGS '''
@@ -199,7 +199,7 @@ CURSOR_REQUIRED: int = 1
 # A text string to show in a pop-up window, if number of cursors is less than required for calculations
 # Leave this empty if no error should be displayed
 # self.subprog_cursor['cursor_req_text']
-CURSOR_REQ_TEXT: str = f'You must define at least {CURSOR_REQUIRED} annotations.'
+CURSOR_REQ_TEXT: str = f'You must define {CURSOR_REQUIRED} point on the curve.'
 
 # Enable checking if all cursor annotations are between Xmin and Xmax of data_dor_calculations
 # self.subprog_cursor['cursor_outside_x']
@@ -260,6 +260,7 @@ class SetZeroOnX(Methods, WindowGUI):
     def after_calculations(self):
         ''' This method is called after single calculations
             and just before showing the report. '''
+        self.__app().clear_all_annotations()
 
     def after_result_show_on_graph(self):
         ''' This method is called immediately when results
@@ -296,7 +297,11 @@ class SetZeroOnX(Methods, WindowGUI):
 
 
     def set_direct(self):
-        print('set direct')
+        selection = bool(self.check_direct.get())
+        if selection:
+            self.subprog_settings['result'] = 'dataset'
+        else:
+            self.subprog_settings['result'] = 'replace'
 
     def calculate_stack(self, commandline = False):
         ''' If STACK_SEP is False it means that data in stack should
@@ -333,6 +338,20 @@ class SetZeroOnX(Methods, WindowGUI):
             comment2 = self.data_for_calculations[1]['comment']
             parameters2 = self.data_for_calculations[1]['parameters']
         # ------------------------------------------
+
+        annotations = self.eleana.settings.grapher['custom_annotations']
+        if not annotations:
+            return None
+        zero_point = annotations[0]['point'][0]
+        self.data_for_calculations[0]['x'] = x1 - zero_point
+
+        # Send calculated values to result (if needed). This will be sent to command line
+        result = None  # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE
+
+        # Create summary row to add to the report. The values must match the column names in REPORT_HEADERS
+        row_to_report = None
+
+        return row_to_report
 
     def calculate(self, commandline = False):
         ''' The algorithm for calculations on single x,y,z data.
@@ -374,9 +393,12 @@ class SetZeroOnX(Methods, WindowGUI):
             parameters2 = self.data_for_calculations[1+sft]['parameters']
         # ------------------------------------------
 
-        # Add to additional plots
-        #self.clear_additional_plots()
-        #self.add_to_additional_plots(x = x1, y = best_fit, clear=True)
+        annotations = self.eleana.settings.grapher['custom_annotations']
+        if not annotations:
+            return None
+        zero_point = annotations[0]['point'][0]
+        self.data_for_calculations[0]['x'] = x1 - zero_point
+
 
         # Send calculated values to result (if needed). This will be sent to command line
         result = None # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE
@@ -402,10 +424,10 @@ class SetZeroOnX(Methods, WindowGUI):
         val = self.restore('check_direct')
         if val is True:
             self.check_direct.select()
-            self.subprog_settings['result'] = 'replace'
+            self.subprog_settings['result'] = 'dataset'
         else:
             self.check_direct.deselect()
-            self.subprog_settings['result'] = 'dataset'
+            self.subprog_settings['result'] = 'replace'
 
 
 if __name__ == "__main__":

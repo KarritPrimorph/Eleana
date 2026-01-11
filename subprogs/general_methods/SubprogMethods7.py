@@ -600,7 +600,7 @@ class SubMethods_07:
         else:
             if len(self.eleana.results_dataset) == 0:
                 self.after_calculations()
-                if self.stk_index == -1 and self.report['report_skip_for_single']:
+                if self.stk_index == -1 and self.report['report_skip_for_stk']:
                     return True
                 self.show_report()
                 return True
@@ -645,7 +645,7 @@ class SubMethods_07:
             self.eleana.selections['first'] = each
             status1 = self.get_data(group_processing = True)
             if status1:
-                status2 = self.perform_single_calculations(group_processing=True)
+                status2 = self.perform_single_calculations(calculate = True, group_processing=True)
                 if not status2:
                     self.eleana.selections = copy_selections
                     self.subprog_settings = copy_of_subprog_settings
@@ -1234,8 +1234,9 @@ class SubMethods_07:
     def create_result(self):
         ''' Create new result entry in result_dataset '''
         result_create = copy.deepcopy(self.subprog_settings.get('result'))
-        if result_create not in ['add', 'replace']:
+        if result_create not in ['add', 'replace', 'dataset']:
             return  # Do nothing if result should not be created
+
 
         # Calculate index where spectrum must be inserted:
         results_dataset = self.eleana.results_dataset
@@ -1283,6 +1284,12 @@ class SubMethods_07:
 
         new_result = None
         gc.collect()
+
+        # If operation should be performed on the dataset directly
+        if result_create == 'dataset':
+            self.show_results_matching_first()
+            self.__app().replace_first(ask =False)
+            self.__app().clear_results(skip_question = True)
         return
 
     def update_results_list(self, results):
