@@ -2637,7 +2637,7 @@ class Application():
     ***********************************************'''
     def sel_graph_cursor(self, value, clear_annotations=True):
         if clear_annotations:
-            self.grapher.clear_all_annotations(True)
+            self.grapher.clear_all_annotations(skip = True)
         self.grapher.current_cursor_mode['label'] = value
         self.sel_cursor_mode.set(value)
         self.eleana.gui_state.cursor_mode = copy.copy(value)

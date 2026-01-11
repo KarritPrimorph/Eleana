@@ -102,13 +102,22 @@ class AskColor(customtkinter.CTkToplevel):
                 
         self.after(150, lambda: self.label.focus())
                 
-        self.grab_set()
-        
+        self.update()
+        self.deiconify()
+        self.lift()
+        self.focus_force()
+
+    def _ok_event(self):
+        self.selected_color = self.rgb_color
+        self.destroy()
+    def get(self):
+        return self.selected_color
+
     def get(self):
         self._color = self.label._fg_color
         self.master.wait_window(self)
         return self._color
-    
+
     def _ok_event(self, event=None):
         self._color = self.label._fg_color
         self.grab_release()
@@ -117,7 +126,7 @@ class AskColor(customtkinter.CTkToplevel):
         del self.img2
         del self.wheel
         del self.target
-        
+
     def _on_closing(self):
         self._color = None
         self.grab_release()

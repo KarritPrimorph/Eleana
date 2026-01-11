@@ -7,6 +7,7 @@ import copy
 from modules.CTkColorPicker import AskColor
 from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
+
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "preferences.ui"
 
@@ -314,15 +315,29 @@ class PreferencesApp:
         self.style_result['color_im'] = color
         self.grapher.plot_graph()
 
+    # def select_color(self):
+    #     """
+    #     Opens the dialog window of color picker
+    #     """
+    #     print("master:", self.master)
+    #     print("winfo_viewable:", self.master.winfo_viewable())
+    #     self.mainwindow.attributes('-topmost', False)
+    #     ask_color = AskColor(master=self.master)
+    #     selected_color = ask_color.get()
+    #     self.mainwindow.attributes('-topmost', True)
+    #     return selected_color
+
     def select_color(self):
         """
         Opens the dialog window of color picker
         """
-        self.mainwindow.attributes('-topmost', False)
-        ask_color = AskColor(self.mainwindow)
+        # Tworzymy AskColor jako Toplevel
+        ask_color = AskColor(master=self.mainwindow)
         selected_color = ask_color.get()
-        self.mainwindow.attributes('-topmost', True)
+
+
         return selected_color
+
 
     def appearence(self, value):
         style = self.matplotlib_styles[value]
