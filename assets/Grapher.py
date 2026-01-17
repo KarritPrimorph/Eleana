@@ -674,7 +674,6 @@ class Grapher():
             self.annotationsFrame.grid()
             self.info.grid()
 
-        print('Potencjalny problem z pętlą przy włączaniu/wyłączniu kursora')
         self.clear_all_annotations(skip=True)
 
         self.free_move_binding_id = None

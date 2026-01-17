@@ -270,7 +270,6 @@ class CreateFromTable:
             self.table.change_theme(ctk.get_appearance_mode())
             self.table.enable_bindings( "ctrl_select", "all", "right_click_popup_menu")
         elif list2D:
-            print('table.py - generate_table')
             return
 
     def get_data_from_column(self, column_name):

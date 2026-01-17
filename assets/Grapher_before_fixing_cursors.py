@@ -794,13 +794,6 @@ class Grapher():
                              textcoords = self.style_of_annotation['textcoords'],
                              )
 
-            print('Diagnostyka adnotacji')
-            # print("xy:", ann.xy)  # punkt docelowy
-            # print("xycoords:", ann.xycoords)  # system współrzędnych punktu
-            # print("xytext:", ann._text)  # pozycja tekstu (uwaga: prywatny atrybut)
-            # print("textcoords:", ann.textcoords)  # system współrzędnych tekstu
-            # print("text:", ann.get_text())
-
             self.canvas.draw()
             self.eleana.set_selections(variable='grapher_action', value='point_selected')
 
