@@ -870,6 +870,7 @@ def createFromOther(eleana, filename: str | Path, type):
                        }
         else:
             Error.show(info = f'File "{filename}" does not look like Flasher ELE file')
+            return
 
         sections = split_by_markers(content, markers)
         # Get all names in the project
