@@ -89,9 +89,20 @@ pyinstaller eleana.py \
   --clean \
   --noconfirm \
   --onedir \
+  \
+  --collect-all numpy \
+  --collect-all scipy \
+  --collect-all lmfit \
+  --collect-all pygubu \
+  \
+  --hidden-import=scipy.special._cdflib \
   --hidden-import=customtkinter \
   --hidden-import=pygubu.plugins.customtkinter \
+  --hidden-import=pygubu.plugins.pygubu.flodgauge_bo \
   --hidden-import=PIL._tkinter_finder \
+  --hidden-import=numexpr \
+  --hidden-import=sympy.utilities.lambdify \
+  \
   --add-data "assets:assets" \
   --add-data "modules:modules" \
   --add-data "subprogs:subprogs" \

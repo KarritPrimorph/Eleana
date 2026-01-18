@@ -32,5 +32,10 @@ parameter_dictionary = {
     "Compl": "If true the amplitude of the spectrum is complex",
     "origin": 'The source of the data. It is "@result" for data created by Eleana as a result.',
     "MmFreq": "Microwave frequency in GHz",
-    "ShotRepTime": "Shot repetition time (SRT) in us"
+    "ShotRepTime": "Shot repetition time (SRT) in us",
+    "Target Curve ID": "ID of experimental curve used for fitting",
+    "Target Curve Name": "Name of experimental curve used for fitting",
+    "Fit Results": "Results of fitting",
+    "B_zero": "Static magnetic field position"
+
 }

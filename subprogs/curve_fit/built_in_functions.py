@@ -97,16 +97,39 @@ class Function:
         self.fit_results = fit_results
 
     def ci_to_text(self, ci):
-        ''' Convert CI to text '''
+        """Convert lmfit CI dict to readable text"""
         lines = []
-        for parname, sigma_dict in ci.items():
-            lines.append(f"Parameter: {parname}")
-            # sigma_dict = {sigma_value: (lower, upper)}
-            for sigma, (lower, upper) in sigma_dict.items():
-                lines.append(f"  {sigma}σ :  lower = {lower:.6g},  upper = {upper:.6g}")
-            lines.append("")  # empty line between params
-        return "\n".join(lines)
 
+        for parname, points in ci.items():
+            lines.append(f"Parameter: {parname}")
+
+            best = None
+            intervals = {}
+
+            for sigma, value in points:
+                if sigma == 0.0:
+                    best = value
+                else:
+                    intervals.setdefault(sigma, []).append(value)
+
+            if best is not None:
+                lines.append(f"  best value = {best:.6g}")
+
+            for sigma in sorted(intervals):
+                vals = intervals[sigma]
+                if len(vals) == 2:
+                    lo, hi = min(vals), max(vals)
+                    lines.append(
+                        f"  {sigma:.2f} :  lower = {lo:.6g},  upper = {hi:.6g}"
+                    )
+                else:
+                    lines.append(
+                        f"  {sigma:.2f} :  incomplete CI"
+                    )
+
+            lines.append("")
+
+        return "\n".join(lines)
 
     def sort_parameters(self, reverse = False):
         self.parameters.sort(key=str.lower, reverse=reverse)

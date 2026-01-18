@@ -2399,14 +2399,49 @@ class Application():
         select_data = SelectItems(master=self.mainwindow, title='Select data',
                                  items=av_data)
         response = select_data.get()
+        if response:
+            dialog = CTkMessagebox(title ='', message = "Delete selected data or extract", option_1 = 'Extract', option_2 = "Delete")
+            oper = dialog.get()
+            idxs = []
+            for i in response:
+                if i in av_data:
+                    index = av_data.index(i)
+                    idxs.append(index)
+            idxs.sort(reverse=True)
+            extracted = copy.deepcopy(data)
+            if oper == 'Delete':
+                # Delete
+               for i in idxs:
+                    extracted.y = np.delete(extracted.y, i, axis = 0)
+                    extracted.stk_names.pop(i)
 
-    def create_new_group(self):
-        raise Exception("Application.py: create_new_group - needs ")
-        group_create = Groupcreate(self.mainwindow, eleana)
-        response = group_create.get()
-        self.update.list_in_combobox('sel_group')
+            else:
+                # Extract
+                extracted.y = extracted.y[idxs]
+                stk_names = []
+                for i in idxs:
+                    stk_names.append(extracted.stk_names[i])
+                extracted.stk_names = stk_names
+                if len(extracted.stk_names) == 1:
+                    extracted.name = extracted.name + '/' + stk_names[0]
+                    extracted.stk_names = []
+                    extracted.type = 'single 2D'
+                    extracted.y = extracted.y.ravel()
+
+            self.eleana.results_dataset.append(extracted)
+            self.update.list_in_combobox('sel_result')
+            self.update.list_in_combobox('r_stk')
+            # Set the position to the last added item
+            list_of_results = self.sel_result._values
+            position = list_of_results[-1]
+            self.sel_result.set(position)
+            self.result_selected(position)
+
+
+
 
     def create_from_table(self):
+        length_of_data = len(self.eleana.dataset)
         headers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
 
         value = ""
@@ -2426,6 +2461,10 @@ class Application():
         self.update.group_list()
         self.update.dataset_list()
         self.update.all_lists()
+        after_addition = len(self.eleana.dataset)
+        if after_addition > length_of_data:
+            self.eleana.selections['first'] = after_addition -1
+            self.gui_to_selections()
 
     def first_to_group(self):
         if self.eleana.selections['first'] < 0:
@@ -2680,7 +2719,7 @@ class Application():
         if not data.type == 'stack 2D':
             CTkMessagebox(master = self.mainwindow, title="Conversion to group", message="The data you selected is not a 2D stack")
         else:
-            convert_stack_to_group = StackToGroup(master = self.mainwindow, eleana = self.eleana, which = which)
+            convert_stack_to_group = StackToGroup(master = self.mainwindow, eleana = self.eleana, index = index)
             response = convert_stack_to_group.get()
             if response == None:
                  return
@@ -2773,6 +2812,7 @@ class Application():
 
         if response:
             self.eleana.dataset[idx].parameters = response
+            self.grapher.plot_graph()
         else:
             return
 

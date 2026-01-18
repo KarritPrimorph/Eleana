@@ -14,8 +14,8 @@ from modules.CTkListbox.ctk_listbox import CTkListbox
 from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function, UserDefinedFunctions
 import copy
 from assets.Error import Error
-from subprogs.notepad.notepad import Notepad
 from subprogs.user_input.single_dialog import SingleDialog
+from subprogs.notepad.notepad import Notepad
 
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
@@ -52,7 +52,7 @@ DATA_LABEL: str = None
 # For example if "Spectrum" is processed and NAME_SUFFIX = "_MODIFIED"
 # you will get "Spectrum_MODIFIED" name in result
 # self.subprog_settings['name_suffix']
-NAME_SUFFIX: str = '_BASELINE'
+NAME_SUFFIX: str = '_FIT'
 
 # If true, calculations are done automatically upon selection of data in the main GUI
 # self.subprog_settings['auto_calculate']
@@ -369,7 +369,8 @@ class CurveFit(Methods, WindowGUI):
         self.canvas.get_tk_widget().grid(row=0, column=0, sticky="nsew")
         self.canvas.draw()
 
-        # Set inital values to widgets
+        self.ci_entry = self.builder.get_object("ci_entry", self.mainwindow)
+        # Set initial values to widgets
         self.list_category.activate(0)
         self.category_selected('User defined')
 
@@ -860,8 +861,6 @@ class CurveFit(Methods, WindowGUI):
 
         model, params = self.function_definition.build_lmfit_model()
 
-        # Set algorithm
-
 
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY OF ONE DIMENSION
@@ -902,8 +901,27 @@ class CurveFit(Methods, WindowGUI):
         result = model.fit(y1.real, params=params, x=x1, method=method)
 
         # Calculate confidence intervals
-        #ci = result.conf_interval(sigmas=[1, 2, 3])
+        prob = self.ci_entry.get()
+        prob_list = prob.split(';')
+        probabilities_for_ci = []
+        if prob_list:
+            try:
+                for i in prob_list:
+                    prob = float(i)
+                    if prob <=0 or prob >= 1:
+                        raise ValueError
+                    probabilities_for_ci.append(prob)
+            except ValueError:
+                Error.show(title = 'CI intervals', info = "For calculating CI please provide probabilities separated by ;. For example: 0.6827; 0.9545; 0.9973"                )
+                probabilities_for_ci = None
 
+        else:
+            probabilities_for_ci = None
+
+        if probabilities_for_ci:
+            ci = result.conf_interval(sigmas=probabilities_for_ci)
+        else:
+            ci = None
         # Print best fit
         best_fit = result.best_fit.copy()
         self.function_definition.fit_results['best_fit'] = best_fit
@@ -911,8 +929,20 @@ class CurveFit(Methods, WindowGUI):
         self.function_definition.fit_results['y'] = copy.deepcopy(y1)
         self.function_definition.fit_results['resid'] = copy.deepcopy(y1 - best_fit)
         self.function_definition.fit_results['report_txt'] = result.fit_report()
-        #self.function_definition.fit_results['ci_txt'] = self.function_definition.ci_to_text(ci)
+        if ci:
+            self.function_definition.fit_results['ci_txt'] = self.function_definition.ci_to_text(ci)
+        else:
+            self.function_definition.fit_results['ci_txt'] = "CI not calculated"
         self.data_for_calculations[0]['y'] = best_fit
+        first = self.eleana.selections['first']
+        id_of_data = self.eleana.dataset[first].id
+        name = self.eleana.dataset[first].name
+        self.function_definition.fit_results['id_of_data'] = id_of_data
+        origin1 = "@result"
+        parameters1['Target Curve ID'] = id_of_data
+        parameters1['Target Curve Name'] = name
+        parameters1['Fit Results'] = result.fit_report()
+
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
@@ -971,7 +1001,10 @@ class CurveFit(Methods, WindowGUI):
         self.show_original_curve_checkbox.get()
 
     def copy_results_to_clipboard(self):
-        print('Copy')
+        result = self.textReport.get(0.0, 'end')
+        self.mainwindow.clipboard_clear()
+        self.mainwindow.clipboard_append(result)
+        self.mainwindow.update()
 
     def log_report(self, result):
         ''' Reformat report from lmfit'''
@@ -993,10 +1026,18 @@ class CurveFit(Methods, WindowGUI):
              'show_original_curve_checkbox': bool(self.show_original_curve_checkbox.get()),
              'show_fitted_curve_checkbox': bool(self.show_fitted_curve_checkbox.get()),
              'show_resid': bool(self.show_resid_checkbox.get()),
-             'use_default_check': bool(self.use_default_check.get())
+             'use_default_check': bool(self.use_default_check.get()),
+             'ci_entry': self.ci_entry.get(),
              }]
 
     def restore_settings(self):
+        val =self.restore('ci_entry')
+        if val:
+            self.ci_entry.delete(0, 'end')
+            self.ci_entry.insert(0, val)
+        else:
+            self.ci_entry.delete(0, "end")
+            self.ci_entry.insert(0, "0.6827; 0.9545; 0.9973")
         val = self.restore('use_default_check')
         if val is True or val is None:
             self.use_default_check.select()
@@ -1057,6 +1098,8 @@ class CurveFit(Methods, WindowGUI):
         else:
             self.show_resid_checkbox.deselect()
 
+    def show_CI(self):
+        notepad = Notepad(master = self.mainwindow, title = "Confidence intervals", text = self.function_definition.fit_results['ci_txt'])
 
 
 if __name__ == "__main__":

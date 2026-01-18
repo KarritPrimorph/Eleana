@@ -5,10 +5,10 @@ from PIL import Image
 from tkinterdnd2 import TkinterDnD
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 5.03   # Set the Eleana version. This will be stored in self.eleana.version
+ELEANA_VERSION = 5.04   # Set the Eleana version. This will be stored in self.eleana.version
 DATE = "11/01/2026"     # Set the date of the release
 INTERPRETER = sys.executable  # Defines python version
-DEVEL = True  # For final product set to False
+DEVEL = True  # To display information in development set to True
 
 # ======================================================
 # Setup working directory for PyInstaller
@@ -18,7 +18,6 @@ if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
 
 ''' Create ROOT window '''
-#root = ctk.CTk()
 root = TkinterDnD.Tk()
 root.withdraw()
 root.overrideredirect(True)

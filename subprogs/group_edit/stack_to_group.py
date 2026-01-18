@@ -9,7 +9,7 @@ PROJECT_UI = PROJECT_PATH / "stack_to_group.ui"
 import numpy as np
 
 class StackToGroup:
-    def __init__(self, master, eleana, which='first'):
+    def __init__(self, master, eleana, index):
         self.eleana = eleana
         self.builder = builder = pygubu.Builder()
         self.master = master
@@ -29,12 +29,11 @@ class StackToGroup:
         self.btn_cancel = builder.get_object("btn_cancel", self.mainwindow)
         self.sel_group = builder.get_object("sel_group", self.mainwindow)
         self.name_label = builder.get_object('ctklabel1', self.mainwindow)
-        self.which = which
+        #self.which = which
 
-        self.index = self.eleana.selections[self.which]
+        self.index = index
 
         asToGr = self.eleana.assignmentToGroups
-        #asToGr['<group-list/>'].clear()
         groups = list(asToGr.keys())
         self.sel_group.configure(values=groups)
         self.sel_group.set('All')
@@ -42,6 +41,7 @@ class StackToGroup:
         self.display_data_groups()
 
         self.response = None
+
     def get(self):
         if self.mainwindow.winfo_exists():
             self.master.wait_window(self.mainwindow)

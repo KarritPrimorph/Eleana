@@ -254,7 +254,7 @@ class MainMenu:
         self.menu_stack2D.add_command(label="Convert stack to group", command = lambda: self.callbacks.get('stack_to_group')('any'),
                                       image=self.icon_convert_to_group, compound="left")
         # --- Extract from stack
-        self.menu_stack2D.add_command(label="Extract selected data",
+        self.menu_stack2D.add_command(label="Extract/Delete selected stacked data",
                                       command=self.callbacks.get('extract_from_stack'),
                                       image=self.icon_extract_from_stack, compound="left")
 
