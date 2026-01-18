@@ -129,15 +129,30 @@ Write-Host "==> Building package with PyInstaller..."
 
 $PyInstallerArgs = @(
     "eleana.py"
+
     "--name", $DistName
     "--clean"
     "--noconfirm"
     "--onedir"
     "--windowed"
     "--icon", "$PSScriptRoot\eleanapy.ico"
+
+    # === collect-all +==
+    "--collect-all", "numpy"
+    "--collect-all", "scipy"
+    "--collect-all", "lmfit"
+    "--collect-all", "pygubu"
+
+    # === hidden imports ===
+    "--hidden-import", "scipy.special._cdflib"
     "--hidden-import", "customtkinter"
     "--hidden-import", "pygubu.plugins.customtkinter"
+    "--hidden-import", "pygubu.plugins.pygubu.flodgauge_bo"
     "--hidden-import", "PIL._tkinter_finder"
+    "--hidden-import", "numexpr"
+    "--hidden-import", "sympy.utilities.lambdify"
+
+    # === App data ===
     "--add-data", "assets;assets"
     "--add-data", "modules;modules"
     "--add-data", "subprogs;subprogs"
@@ -146,6 +161,7 @@ $PyInstallerArgs = @(
 )
 
 pyinstaller @PyInstallerArgs
+
 
 # --- STEP 8: Rename executable ---
 $DistPath = Join-Path $ProjectDst "dist\$DistName"
