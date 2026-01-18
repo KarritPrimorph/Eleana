@@ -263,6 +263,7 @@ class Application():
         self.pane9 = builder.get_object('pane9', self.mainwindow)
         #self.pane6 = builder.get_object('pane6', self.mainwindow)
 
+        self.btn_always_confirm = builder.get_object("btn_always_confirm", self.mainwindow)
 
         # Widgets for comparison view:
         self.listbox = CTkListbox(self.listFrame, command=self.list_selected, multiple_selection=True, height=400, gui_appearance=self.eleana.settings.general['gui_appearance'])
@@ -1351,6 +1352,11 @@ class Application():
     *                RESULT                   *
     ****************************************'''
 
+    def set_always_confirm(self):
+        mode = bool(self.btn_always_confirm.get())
+        self.eleana.gui_state.always_confirm = mode
+        print(self.eleana.gui_state.always_confirm)
+
     #@check_busy
     def result_show(self):
         self.eleana.set_selections('r_dsp', bool(self.check_result_show.get()))
@@ -1514,7 +1520,7 @@ class Application():
     def replace_first(self, ask = True):
         if self.eleana.selections['result'] < 0:
             return
-        if ask:
+        if ask and not self.eleana.gui_state.always_confirm:
             msg = CTkMessagebox(title="Replace First", message="Do you want to replace First with Result data?",
                         icon="question", option_1="No", option_2="Yes")
             response = msg.get()
@@ -1538,13 +1544,15 @@ class Application():
         self.sel_first.set(name)
 
     #@check_busy
-    def replace_group(self):
+    def replace_group(self, ask = True):
         group = self.eleana.selections['group']
-        info = CTkMessagebox(master = self.mainwindow, title='Replace data in group', icon="warning", option_1="Cancel", option_2="Replace",
+        if ask and not self.eleana.gui_state.always_confirm:
+            info = CTkMessagebox(master = self.mainwindow, title='Replace data in group', icon="warning", option_1="Cancel", option_2="Replace",
                              message=f'Are you sure you want to replace the data in the group: "{group}" with the results?')
-        response = info.get()
-        if response == 'Cancel':
-            return
+            response = info.get()
+            if response == 'Cancel':
+                return
+
         self.delete_data_from_group(skip_questions=True)
         self.all_results_to_current_group()
 

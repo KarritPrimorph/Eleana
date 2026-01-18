@@ -38,6 +38,7 @@ class GuiState:
     inverted_x: bool
     auxilary_axes: bool
     scales: dict
+    always_confirm: bool
 
 @dataclass
 class Settings:
@@ -203,7 +204,8 @@ class Eleana:
                                             'ylim': (0,0),
                                             'aux_xlim': (0,0),
                                             'aux_ylim': (0,0),
-                                            }
+                                            },
+                                  always_confirm=False
                                   )
 
         # Create temporary storages
