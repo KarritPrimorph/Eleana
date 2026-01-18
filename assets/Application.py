@@ -2867,4 +2867,3 @@ class Application():
             new_log = '\n' + output
             self.log_field.insert("end", new_log)
             return output
-
