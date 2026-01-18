@@ -280,6 +280,8 @@ class SubMethods_07:
 
         self.app.sel_cursor_mode.configure(state="normal")
         self.app.sel_graph_cursor(value=self.subprog_cursor['previous'], clear_annotations=True)
+
+        #self.app.sel_graph_cursor(value="None", clear_annotations=True)
         # Garbage collect
         gc.collect()
 

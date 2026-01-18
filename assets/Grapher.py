@@ -695,14 +695,6 @@ class Grapher():
                 self.cursor.remove()
                 self.cursor = None
 
-
-            ''' OLD 
-            if hasattr(self.cursor, "events"):
-                self.cursor.events["add"].disconnect()
-                self.cursor = None
-                self.cursor_binding_id = None
-            '''
-
             self.annotationsFrame.grid_remove()
             self.infoframe.grid_remove()
             self.btn_clear_cursors.grid_remove()
@@ -728,8 +720,6 @@ class Grapher():
             )
             self.cursor.connect("add", self.annotation_create)
             self.cursor.connect("remove", self.annotation_removed)
-            #print(self.canvas.callbacks.callbacks['button_press_event'])
-
 
         elif index == 5:
             # Free select
@@ -743,6 +733,7 @@ class Grapher():
 
         elif index == 6:
             # Crosshair
+            self.canvas.figure.artists.clear()
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
             _show_annotation_list()
@@ -750,6 +741,7 @@ class Grapher():
             self.cursor.connect("add", self.mplcursor_crosshair)
             self.click_binding_id = self.canvas.mpl_connect('button_press_event', self.on_click_in_plot)
             self.info.configure(text='LEFT CLICK - select point\nRIGHT CLICK - delete selected point')
+
 
         elif index == 7:
             # Range select
@@ -926,18 +918,12 @@ class Grapher():
         if self.cursor_limit != 0:
             if len(self.eleana.settings.grapher['custom_annotations']) >= self.cursor_limit:
 
-                ''' FIX '''
                 try:
                     sel.annotation.remove()
                 except Exception:
                     pass
                 return
 
-
-                ''' OLD
-                sel = self.cursor.selections[-1]
-                self.cursor.remove_selection(sel)
-                return '''
 
         if curve is None:
             curve = sel.artist.get_label()
@@ -996,6 +982,9 @@ class Grapher():
             self.clearAnnotationList()
         except:
             pass
+
+        self.canvas.figure.artists.clear()
+
         if skip:
             return
         else:
