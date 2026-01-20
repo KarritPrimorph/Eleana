@@ -51,6 +51,7 @@ def main_menubar_callbacks(inst):
              "average_stack": inst.average_stack,
              "stack_to_group": inst.stack_to_group,
              "extract_from_stack": inst.extract_from_stack,
+             "rescan_dataset": inst.rescan_dataset,
 
              # ANALYSIS
              "xy_distance": inst.xy_distance,

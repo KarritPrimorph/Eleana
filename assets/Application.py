@@ -1887,6 +1887,21 @@ class Application():
         preferences = PreferencesApp(master = self.mainwindow, eleana = self.eleana, grapher = self.grapher)
         response = preferences.get()
 
+
+    def rescan_dataset(self, show_errors = True):
+        try:
+            self.update.dataset_list()
+        except:
+            pass
+        try:
+            self.update.groups()
+        except:
+            self.update.all_lists()
+        try:
+            self.gui_to_selections()
+        except:
+            pass
+
     def load_project(self, event=None, recent=None, filename = None):
         ''' Load project created with the Application '''
         if filename:
@@ -1896,7 +1911,7 @@ class Application():
                 recent = self.eleana.paths['last_projects'][recent]
             except IndexError:
                 Error.show(title = 'Error', info = "The project could not be found on list.")
-
+        collected_errors = []
         project = self.load.load_project(recent)
         self.main_menubar.create_showplots_menu()
         if not project:
@@ -1905,8 +1920,6 @@ class Application():
         self.update.dataset_list()
         self.update.groups()
         self.update.all_lists()
-        if self.eleana.settings.grapher['custom_annotations']:
-            pass
         path_to_file = Path(self.eleana.paths['last_projects'][0])
         name = path_to_file.name
         self.mainwindow.title(name + ' - Eleana')

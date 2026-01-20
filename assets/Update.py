@@ -12,6 +12,7 @@
 # See the GNU Lesser General Public License for more details.
 from pathlib import Path
 from modules.CTkScrollableDropdown import CTkScrollableDropdown
+from assets.Error import Error
 
 PROJECT_PATH = Path(__file__).parent.parent
 PROJECT_UI = PROJECT_PATH / "Eleana_interface.ui"
@@ -298,12 +299,15 @@ class Update:
         return names
 
     # Creating groups on basis of groups defined in eleana.dataset
-    def groups(self):
+    def groups(self, show_errors = True):
         dataset = self.eleana.dataset
         found_groups = ['All']
 
         for data in dataset:
-            found_groups.extend(data.groups)
+            try:
+                found_groups.extend(data.groups)
+            except TypeError:
+                found_groups.append('All')
         found_groups = list(set(found_groups))
         found_groups.sort()
         assignToGroups = {'<group-list/>': found_groups}
@@ -313,7 +317,14 @@ class Update:
             group_assignments[group] = []
             i = 0
             while i < len(dataset):
+                if dataset[i].groups is None:
+                    dataset[i].groups = ['All']
+                    if show_errors:
+                        Error.show(title = "Missing assignment to groups", info = f"{dataset[i].name_nr} does not have any assignment to groups. Please correct i manually")
                 if group == 'All':
+                    group_assignments[group].append(i)
+                elif group is None:
+                    group = 'All'
                     group_assignments[group].append(i)
                 elif group in dataset[i].groups:
                     group_assignments[group].append(i)

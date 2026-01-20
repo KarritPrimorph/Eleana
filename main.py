@@ -5,8 +5,8 @@ from PIL import Image
 from tkinterdnd2 import TkinterDnD
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 5.04   # Set the Eleana version. This will be stored in self.eleana.version
-DATE = "11/01/2026"     # Set the date of the release
+ELEANA_VERSION = 5.05   # Set the Eleana version. This will be stored in self.eleana.version
+DATE = "20/01/2026"     # Set the date of the release
 INTERPRETER = sys.executable  # Defines python version
 DEVEL = True  # To display information in development set to True
 

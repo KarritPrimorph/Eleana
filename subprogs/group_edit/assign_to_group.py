@@ -45,8 +45,9 @@ class Groupassign:
         self.copy_original_groups = copy.copy(self.eleana.dataset[self.index].groups)
 
         asToGr = self.eleana.assignmentToGroups
-        del asToGr['<group-list/>']
         groups = list(asToGr.keys())
+        if '<group-list/>' in groups:
+            groups.remove('<group-list/>')
         self.sel_group.configure(values = groups)
         self.sel_group.set('All')
         self.mainwindow.bind("<Escape>", self.cancel)

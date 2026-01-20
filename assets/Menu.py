@@ -102,6 +102,7 @@ class MainMenu:
         self.icon_box = self.prepare_icon('box.png')
         self.icon_set_zero = self.prepare_icon('set_zero.png')
         self.icon_offset_corr = self.prepare_icon('offset_correction.png')
+        self.icon_eye = self.prepare_icon('eye.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -307,6 +308,14 @@ class MainMenu:
 
         # - Graph Preferences
         self.menu_edit.add_command(label="Preferences", command = self.callbacks.get('preferences'), image=self.icon_graphPrefs, compound="left")
+
+        # ---- Separator
+        self.menu_edit.add_separator()
+
+        #
+        self.menu_edit.add_command(label="Rescan and fix dataset",
+                                   command=lambda: self.callbacks.get('rescan_dataset')(show_errors=False),
+                                   image=self.icon_eye, compound="left")
 
         ''' Menu ANALYSIS '''
 
