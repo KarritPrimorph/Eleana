@@ -88,6 +88,10 @@ class Grapher():
 
         self.canvas.mpl_connect('button_release_event', self.on_mouse_release)
 
+        # State flags
+        self._is_drawing = False
+        self._block_axis_callbacks = False
+
         # Connect callbacks
         self.ax.callbacks.connect('ylim_changed', self.on_ylim_changed)
         self.ax.callbacks.connect('xlim_changed', self.on_xlim_changed)
@@ -313,6 +317,19 @@ class Grapher():
 
     def plot_graph(self):
         ''' This method plots the basic working plot with First,Second,Result'''
+        # Set states
+        if self._is_drawing:
+            return
+
+        self._is_drawing = True
+        self._block_axis_callbacks = True
+
+        # Reset cursors
+        if self.cursor is not None:
+            self.cursor.remove()
+            self.cursor = None
+
+
         # Store currens scales' limits
         self.eleana.gui_state.scales['xlim'] = self.ax.get_xlim()
         self.eleana.gui_state.scales['ylim'] = self.ax.get_ylim()
@@ -505,6 +522,9 @@ class Grapher():
 
     def draw_plot(self):
         ''' Put the selected curves on the graph'''
+        if not self._is_drawing:
+            return
+
         self.ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
                        fancybox=False, shadow=False, ncol=5)
 
@@ -532,9 +552,18 @@ class Grapher():
         self.eleana.notify_on = True
         self.eleana.notify(variable='grapher_action', value="plot")
         self.eleana.notify_on = self.notify_on_copy
+        self._block_axis_callbacks = False
+        self._is_drawing = False
+
+        self.canvas.draw_idle()
+
+        self.cursor_on_off()
+
 
     def put_custom_annotations(self):
         ''' Create custom annotations in the graph '''
+        if not self._is_drawing:
+            return
         if self.eleana.gui_state.cursor_mode != 'None':
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
@@ -596,9 +625,6 @@ class Grapher():
             self.clearAnnotationList()
             self.annotationlist.grid_remove()
 
-        self.canvas.draw_idle()
-        self.cursor_on_off()
-
     def show_color_span(self):
         ''' Prints the ranges selected on graph according to defined
             selections in self.eleana.settings.grapher['color_span']
@@ -617,6 +643,8 @@ class Grapher():
             to the graph. The additional plots are simply helper curves like
             baseline or initial fit guess etc.
         '''
+
+
         if not self.additional_plots:
             return
         for data in self.additional_plots:
@@ -674,7 +702,7 @@ class Grapher():
             self.annotationsFrame.grid()
             self.info.grid()
 
-        self.clear_all_annotations(skip=True)
+        #self.clear_all_annotations(skip=True)
 
         self.free_move_binding_id = None
         self.click_binding_id = None
@@ -688,11 +716,15 @@ class Grapher():
         self.current_cursor_mode = self.cursor_modes[index]
         if index == 0:
             # Switch off mplcursors
+
             self.btn_clear_cursors.grid_remove()
 
-            ''' FIX '''
             if self.cursor is not None:
-                self.cursor.remove()
+                try:
+                    self.cursor.disconnect()
+                    self.cursor.remove()
+                except:
+                    pass
                 self.cursor = None
 
             self.annotationsFrame.grid_remove()
@@ -721,6 +753,8 @@ class Grapher():
             self.cursor.connect("add", self.annotation_create)
             self.cursor.connect("remove", self.annotation_removed)
 
+
+
         elif index == 5:
             # Free select
             self.btn_clear_cursors.grid()
@@ -730,10 +764,10 @@ class Grapher():
             self.click_binding_id = self.canvas.mpl_connect('button_press_event', self.on_click_in_plot)
             self.info.configure(text='LEFT CLICK - select point\nRIGHT CLICK - delete selected point')
             self.motion_binding_id = self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move_in_free_select)
+            self.clear_all_annotations(skip=True)
 
         elif index == 6:
             # Crosshair
-            self.canvas.figure.artists.clear()
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
             _show_annotation_list()
@@ -741,7 +775,6 @@ class Grapher():
             self.cursor.connect("add", self.mplcursor_crosshair)
             self.click_binding_id = self.canvas.mpl_connect('button_press_event', self.on_click_in_plot)
             self.info.configure(text='LEFT CLICK - select point\nRIGHT CLICK - delete selected point')
-
 
         elif index == 7:
             # Range select
@@ -918,12 +951,18 @@ class Grapher():
         if self.cursor_limit != 0:
             if len(self.eleana.settings.grapher['custom_annotations']) >= self.cursor_limit:
 
+                ''' FIX '''
                 try:
                     sel.annotation.remove()
                 except Exception:
                     pass
                 return
 
+
+                ''' OLD
+                sel = self.cursor.selections[-1]
+                self.cursor.remove_selection(sel)
+                return '''
 
         if curve is None:
             curve = sel.artist.get_label()
@@ -982,9 +1021,6 @@ class Grapher():
             self.clearAnnotationList()
         except:
             pass
-
-        self.canvas.figure.artists.clear()
-
         if skip:
             return
         else:
@@ -1098,12 +1134,16 @@ class Grapher():
         self.canvas.mpl_connect("key_press_event", self.on_key_press_on_graph)
 
     def on_ylim_changed(self, axes):
+        if self._is_drawing or self._block_axis_callbacks:
+            return
         ylim = self.ax.get_ylim()
         self.scale1['y'] = ylim
         self.check_autoscale_y.deselect()
 
 
     def on_xlim_changed(self, axes):
+        if self._is_drawing or self._block_axis_callbacks:
+            return
         xlim = self.ax.get_xlim()
         self.scale1['x'] = xlim
         self.check_autoscale_x.deselect()

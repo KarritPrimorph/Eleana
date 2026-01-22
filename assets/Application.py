@@ -2703,12 +2703,16 @@ class Application():
     *                    CURSORS                     *
     ***********************************************'''
     def sel_graph_cursor(self, value, clear_annotations=True):
-        if clear_annotations:
-            self.grapher.clear_all_annotations(skip = True)
+
+
+        # if clear_annotations:
+        #     self.grapher.clear_all_annotations(skip = True)
+
         self.grapher.current_cursor_mode['label'] = value
         self.sel_cursor_mode.set(value)
         self.eleana.gui_state.cursor_mode = copy.copy(value)
-        self.grapher.plot_graph()
+        self.grapher.cursor_on_off()
+        self.grapher.clear_all_annotations()
 
     def select_data_from_group(self, title):
         av_data = self.sel_first._values
