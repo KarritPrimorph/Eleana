@@ -19,6 +19,9 @@ import matplotlib
 import mplcursors
 #import modules.mplcursors._mplcursors as mplcursors
 import copy
+
+from sympy.strategies.core import switch
+
 from modules.CTkListbox import CTkListbox
 import numpy as np
 
@@ -315,7 +318,7 @@ class Grapher():
             data = {'x': [], 're_y': [], 'im_y': [], 'complex': False}
         return data
 
-    def plot_graph(self):
+    def plot_graph(self, switch_cursors = True):
         ''' This method plots the basic working plot with First,Second,Result'''
         # Set states
         if self._is_drawing:
@@ -517,10 +520,10 @@ class Grapher():
             self.ax.set_yscale('linear')
 
         # Draw Graph
-        self.draw_plot()
+        self.draw_plot(switch_cursors = switch_cursors)
         self.eleana.notify_on = True
 
-    def draw_plot(self):
+    def draw_plot(self, switch_cursors = True):
         ''' Put the selected curves on the graph'''
         if not self._is_drawing:
             return
@@ -557,7 +560,8 @@ class Grapher():
 
         self.canvas.draw_idle()
 
-        self.cursor_on_off()
+        if switch_cursors:
+            self.cursor_on_off()
 
 
     def put_custom_annotations(self):
@@ -603,7 +607,7 @@ class Grapher():
                 else:
                     # Do not snap to plot
                     xy = annot['point']
-                number_ = str(i + 1) if self.style_of_annotation['number'] else ''
+                number_ = str(i) if self.style_of_annotation['number'] else ''
                 if annot['curve'] == 'XY':
                     self.ax.annotate(text=self.style_of_annotation['text'] + number_,
                                      xy=xy,
@@ -702,8 +706,6 @@ class Grapher():
             self.annotationsFrame.grid()
             self.info.grid()
 
-        #self.clear_all_annotations(skip=True)
-
         self.free_move_binding_id = None
         self.click_binding_id = None
         crs_mode = self.current_cursor_mode['label']
@@ -731,7 +733,9 @@ class Grapher():
             self.infoframe.grid_remove()
             self.btn_clear_cursors.grid_remove()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
-
+            self.clear_all_annotations(skip=True)
+            self.canvas.draw_idle()
+            return
 
         elif index > 0 and index < 5:
             self.btn_clear_cursors.grid()
@@ -811,6 +815,7 @@ class Grapher():
         state = self.toolbar.mode
         if state == 'zoom rect' or state == 'pan/zoom':
             return
+
         if (event.inaxes is not None and (self.sel_cursor_mode.get() == 'Free select' or self.sel_cursor_mode.get() == 'Crosshair') and event.button == 1):
             # Create annotation when left mouse button is clicked
             if self.cursor_limit !=0:
@@ -957,12 +962,6 @@ class Grapher():
                 except Exception:
                     pass
                 return
-
-
-                ''' OLD
-                sel = self.cursor.selections[-1]
-                self.cursor.remove_selection(sel)
-                return '''
 
         if curve is None:
             curve = sel.artist.get_label()

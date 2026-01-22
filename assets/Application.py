@@ -1046,7 +1046,9 @@ class Application():
         selection = self.sel_first.get()
         if selection == 'None':
             return
-        self.first_selected(selection)
+        #self.first_selected(selection)
+
+        self.grapher.plot_graph(switch_cursors=False)
         self.grapher.plot_additional_curves()
 
     #@check_busy
@@ -1110,7 +1112,7 @@ class Application():
         else:
             self.firstComplex.grid_remove()
         self.eleana.selections['f_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def f_stk_selected(self, selected_value_text):
@@ -1176,14 +1178,25 @@ class Application():
         modify_data = ModifyData(self, which)
         response = modify_data.get()
 
+
+    TU JEST DO POPRAWY CZĘŚĆ Z suxilary_axes w second_show
+
     #@check_busy
     def second_show(self):
         self.eleana.set_selections('s_dsp', bool(self.check_second_show.get()))
         selection = self.sel_second.get()
         if selection == 'None':
             return
-        self.second_selected(selection)
+
+        #self.second_selected(selection)
+        #self.auxilary_axes()
+
+        self.grapher.plot_graph(switch_cursors=False)
         self.auxilary_axes()
+
+
+        #self.grapher.plot_additional_curves()
+
 
     #@check_busy
     def second_selected(self, selected_value_text):
@@ -1207,7 +1220,7 @@ class Application():
         else:
             self.secondComplex.grid_remove()
         self.eleana.selections['s_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def second_down_clicked(self):
@@ -1387,7 +1400,8 @@ class Application():
         else:
             self.resultComplex.grid_remove()
         self.eleana.selections['r_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
+
 
     #@check_busy
     def result_up_clicked(self):
