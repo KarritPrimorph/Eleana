@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.4" author="PygubuDesigner 0.41.4">
+<interface version="1.5" author="PygubuDesigner 0.41.4">
   <project>
     <settings />
     <customwidgets />
+    <resources />
   </project>
   <object class="tk.Toplevel" id="EleanaWindow" named="True">
     <property name="geometry">1600x1300</property>
@@ -1548,6 +1549,28 @@
                                                       <property name="padx">2</property>
                                                       <property name="row">0</property>
                                                       <property name="sticky">w</property>
+                                                    </layout>
+                                                  </object>
+                                                </child>
+                                              </object>
+                                            </child>
+                                            <child>
+                                              <object class="customtkinter.CTkFrame" id="ctkframe21">
+                                                <property name="fg_color">#505050</property>
+                                                <layout manager="grid">
+                                                  <property name="column">0</property>
+                                                  <property name="padx">5</property>
+                                                  <property name="pady">2</property>
+                                                  <property name="row">3</property>
+                                                  <property name="sticky">nsew</property>
+                                                </layout>
+                                                <child>
+                                                  <object class="customtkinter.CTkCheckBox" id="btn_always_confirm" named="True">
+                                                    <property name="command" type="command" cbtype="simple">set_always_confirm</property>
+                                                    <property name="text" translatable="yes">Always confirm</property>
+                                                    <layout manager="grid">
+                                                      <property name="column">0</property>
+                                                      <property name="row">0</property>
                                                     </layout>
                                                   </object>
                                                 </child>
