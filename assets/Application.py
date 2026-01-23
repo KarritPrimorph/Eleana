@@ -1179,7 +1179,7 @@ class Application():
         response = modify_data.get()
 
 
-    #TU JEST DO POPRAWY CZĘŚĆ Z suxilary_axes w second_show
+    #TU JEST DO POPRAWY CZĘŚĆ Z auxilary_axes w second_show
 
     #@check_busy
     def second_show(self):
