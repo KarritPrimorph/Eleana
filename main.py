@@ -3,6 +3,7 @@ import sys
 import customtkinter as ctk
 from PIL import Image
 from tkinterdnd2 import TkinterDnD
+from screeninfo import get_monitors
 
 # BASIC CONFIGURATION
 ELEANA_VERSION = 5.05   # Set the Eleana version. This will be stored in self.eleana.version
@@ -43,13 +44,17 @@ bg_label = ctk.CTkLabel(
 )
 bg_label.pack(fill="both", expand=True)
 
+monitor = get_monitors()[0]  # Get first monitor
+screen_w, screen_h = monitor.width, monitor.height
+screen_x, screen_y = monitor.x, monitor.y
 
-# Set the splash to the center
+# Splash size
 w, h = img.width, img.height
-screen_w = splash.winfo_screenwidth()
-screen_h = splash.winfo_screenheight()
-x = (screen_w - w) // 2
-y = (screen_h - h) // 2
+
+# Center splash on the main monitor
+x = screen_x + (screen_w - w) // 2
+y = screen_y + (screen_h - h) // 2
+
 splash.geometry(f"{w}x{h}+{x}+{y}")
 splash.update()
 
