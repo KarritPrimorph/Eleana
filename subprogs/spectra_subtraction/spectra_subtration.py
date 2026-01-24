@@ -515,6 +515,9 @@ class SpectraSubtraction(Methods, WindowGUI):
         self.data_for_calculations[0]['x'] = x1
         self.data_for_calculations[0]['y'] = np.array(processed_y2)
 
+        #comment1 = comment1 + "\n" + "--- INTERACTIVE SPECTRA ARITHMETICS --- \n"
+        #comment1 = comment1 + f"OPERATION: {self.values['operation']}"
+
         del processed_y2
         del x1
 

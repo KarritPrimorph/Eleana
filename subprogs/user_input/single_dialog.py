@@ -25,7 +25,10 @@ class SingleDialog:
         # -------------------
 
         # Set modal
-        self.mainwindow.grab_set()  # Set as modal
+        try:
+            self.mainwindow.grab_set()  # Set as modal
+        except:
+            pass
         self.mainwindow.attributes('-topmost', True)  # Always on top
         self.mainwindow.title(title)
 

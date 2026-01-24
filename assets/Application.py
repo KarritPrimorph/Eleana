@@ -83,6 +83,7 @@ from subprogs.curve_fit.curve_fit import CurveFit
 from subprogs.simple_arithmetics.simple_arithmetics import SimpleArithmetics
 from subprogs.set_zero_on_x_axis.set_zero_on_x_axis import SetZeroOnX
 from subprogs.offset_correction.offset_correction import OffsetCorr
+from subprogs.user_input.TwoListSelection import TwoListSelection
 
 # Widgets used by main application
 from widgets.CTkHorizontalSlider import CTkHorizontalSlider
@@ -404,7 +405,7 @@ class Application():
                 skip_messeges = True
             elif file_type == 'spe':
                 self.import_magnettech1(filename = file)
-            elif file_type == 'dat' or file_type == 'txt':
+            elif file_type == 'dat' or file_type == 'txt' or file_type == 'csv':
                 self.import_ascii(filename = file, auto = auto)
                 if auto is False:
                     dialog = CTkMessagebox(master = self.mainwindow,
@@ -1112,7 +1113,7 @@ class Application():
         else:
             self.firstComplex.grid_remove()
         self.eleana.selections['f_stk'] = 0
-        self.grapher.plot_graph(switch_cursors=False)
+        self.grapher.plot_graph()
 
     #@check_busy
     def f_stk_selected(self, selected_value_text):
@@ -1178,19 +1179,14 @@ class Application():
         modify_data = ModifyData(self, which)
         response = modify_data.get()
 
-
-    #TU JEST DO POPRAWY CZĘŚĆ Z auxilary_axes w second_show
-
     #@check_busy
     def second_show(self):
         self.eleana.set_selections('s_dsp', bool(self.check_second_show.get()))
         selection = self.sel_second.get()
         if selection == 'None':
             return
-
-        self.grapher.plot_graph(switch_cursors=False)
-        #self.auxilary_axes()
-        #self.grapher.plot_additional_curves()
+        self.second_selected(selection)
+        self.auxilary_axes()
 
     #@check_busy
     def second_selected(self, selected_value_text):
@@ -1214,7 +1210,7 @@ class Application():
         else:
             self.secondComplex.grid_remove()
         self.eleana.selections['s_stk'] = 0
-        self.grapher.plot_graph(switch_cursors=False)
+        self.grapher.plot_graph()
 
     #@check_busy
     def second_down_clicked(self):
@@ -1327,6 +1323,8 @@ class Application():
         index = self.eleana.get_index_by_name(current)
         spectrum = copy.deepcopy(self.eleana.dataset[index])
         self.add_to_results(spectrum)
+        self.eleana.selections['result'] = True
+        self.check_result_show.select()
 
     #@check_busy
     def add_to_results(self, spectrum):
@@ -1394,8 +1392,7 @@ class Application():
         else:
             self.resultComplex.grid_remove()
         self.eleana.selections['r_stk'] = 0
-        self.grapher.plot_graph(switch_cursors=False)
-
+        self.grapher.plot_graph()
 
     #@check_busy
     def result_up_clicked(self):
@@ -1503,16 +1500,31 @@ class Application():
 
     #@check_busy
     def all_results_to_new_group(self):
-
+        ''' Add all results to dataset and assign to groups '''
         if len(self.eleana.results_dataset) == 0:
             return
-        # Overrirde chan
-        group_assign = Groupassign(master=self.mainwindow, eleana=self.eleana, which='first', select_only = True)
-        response = group_assign.get()
-        groups = copy.copy(response)
+
+        groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+        if not groups:
+            Error.show(title = 'Error in groups', info = "def all_results_to_new_group: groups not found")
+
+        groups.remove('All')
+        dialog = TwoListSelection(left_label="Available groups",
+                                    master = self.mainwindow,
+                                    right_label="Assigned to groups",
+                                  items = groups,
+                                  disable_new = False
+                                  )
+        selected = dialog.get()
+        if not selected:
+            return
+
+        selected.insert(0, 'All')
+        groups.insert(0, "All")
+
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
-            result.groups = groups
+            result.groups = selected
             self.eleana.create_new_id(result)
             self.eleana.dataset.append(result)
         self.update.group_list()
@@ -1625,6 +1637,8 @@ class Application():
         position = list_of_results[-1]
         self.sel_result.set(position)
         self.result_selected(position)
+        self.eleana.selections['result'] = True
+        self.check_result_show.select()
 
         if skip_grapher:
             return
@@ -2498,16 +2512,57 @@ class Application():
     def first_to_group(self):
         if self.eleana.selections['first'] < 0:
             return
-        group_assign = Groupassign(master=self.mainwindow, eleana = self.eleana, which='first')
-        response = group_assign.get()
+        groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+        if not groups:
+            Error.show(title = 'Error in groups', info = "def first_to_groups: groups not found")
+
+        groups.remove('All')
+        dialog = TwoListSelection(left_label="Available groups",
+                                    master = self.mainwindow,
+                                    right_label="Assigned to groups",
+                                  items = groups,
+                                  disable_new = False
+                                  )
+        selected = dialog.get()
+        if not selected:
+            return
+
+        selected.insert(0, 'All')
+        first = self.eleana.dataset[self.eleana.selections['first']]
+        #group_assign = Groupassign(master=self.mainwindow, eleana = self.eleana, which='first')
+        #response = group_assign.get()
+        first.groups = selected
+
         self.update.group_list()
         self.update.all_lists()
 
     def second_to_group(self):
         if self.eleana.selections['second'] < 0:
             return
-        group_assign = Groupassign(master=app, which='second')
-        response = group_assign.get()
+        #group_assign = Groupassign(master=app, which='second')
+        #response = group_assign.get()
+
+        groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+        if not groups:
+            Error.show(title='Error in groups', info="def first_to_groups: groups not found")
+
+        groups.remove('All')
+        dialog = TwoListSelection(left_label="Available groups",
+                                  master=self.mainwindow,
+                                  right_label="Assigned to groups",
+                                  items=groups,
+                                  disable_new=False
+                                  )
+        selected = dialog.get()
+        if not selected:
+            return
+
+        selected.insert(0, 'All')
+        second = self.eleana.dataset[self.eleana.selections['second']]
+        second.groups = selected
+
+        self.update.group_list()
+        self.update.all_lists()
 
     def create_simple_static_plot(self):
         '''
@@ -2711,16 +2766,12 @@ class Application():
     *                    CURSORS                     *
     ***********************************************'''
     def sel_graph_cursor(self, value, clear_annotations=True):
-
-
-        # if clear_annotations:
-        #     self.grapher.clear_all_annotations(skip = True)
-
+        if clear_annotations:
+            self.grapher.clear_all_annotations(skip = True)
         self.grapher.current_cursor_mode['label'] = value
         self.sel_cursor_mode.set(value)
         self.eleana.gui_state.cursor_mode = copy.copy(value)
-        self.grapher.cursor_on_off()
-        self.grapher.clear_all_annotations()
+        self.grapher.plot_graph()
 
     def select_data_from_group(self, title):
         av_data = self.sel_first._values
