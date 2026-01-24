@@ -10,11 +10,16 @@ import difflib
 
 class CTkScrollableDropdown(customtkinter.CTkToplevel):
 
-    def __init__(self, attach, x=None, y=None, button_color=None, height: int = 600, width: int = None,
+    def __init__(self, attach,
+                 x=None,
+                 y=None,
+                 button_color=None,
+                 height: int = 600,
+                 width: int = 600,
                  fg_color=None, button_height: int = 20, justify="center", scrollbar_button_color=None,
                  scrollbar=True, scrollbar_button_hover_color=None, frame_border_width=2, values=[],
                  command=None, image_values=[], alpha: float = 0.97, frame_corner_radius=20, double_click=False,
-                 resize=True, frame_border_color=None, text_color=None, autocomplete=False, 
+                 resize=True, frame_border_color=None, text_color=None, autocomplete=False,
                  hover_color=None, **button_kwargs):
         
         super().__init__(master=attach.winfo_toplevel(), takefocus=1)
