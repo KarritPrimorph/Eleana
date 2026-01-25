@@ -11,6 +11,7 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
 
+from types import SimpleNamespace
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 from matplotlib.backend_bases import key_press_handler
 from matplotlib.figure import Figure
@@ -88,6 +89,10 @@ class Grapher():
 
         self.canvas.mpl_connect('button_release_event', self.on_mouse_release)
 
+        # State flags
+        self._is_drawing = False
+        self._block_axis_callbacks = False
+
         # Connect callbacks
         self.ax.callbacks.connect('ylim_changed', self.on_ylim_changed)
         self.ax.callbacks.connect('xlim_changed', self.on_xlim_changed)
@@ -119,7 +124,13 @@ class Grapher():
         self.scale1 = {'x': [], 'y': []}
 
         # Clear some dirty annotations from the graphe
-        self.clear_all_annotations()
+
+        self.clear_all_annotations(skip = True)
+
+        # Define variables for cursor_on_off
+        #self.free_move_binding_id = None
+        self.click_binding_id = None
+
 
     def on_mouse_release(self, event = None):
         ''' When mouse button is released on the plot '''
@@ -311,8 +322,21 @@ class Grapher():
             data = {'x': [], 're_y': [], 'im_y': [], 'complex': False}
         return data
 
-    def plot_graph(self):
+    def plot_graph(self, switch_cursors = True ):
         ''' This method plots the basic working plot with First,Second,Result'''
+        # Set states
+        if self._is_drawing:
+            return
+
+        self._is_drawing = True
+        self._block_axis_callbacks = True
+
+        # Reset cursors
+        if self.cursor is not None:
+            self.cursor.remove()
+            self.cursor = None
+
+
         # Store currens scales' limits
         self.eleana.gui_state.scales['xlim'] = self.ax.get_xlim()
         self.eleana.gui_state.scales['ylim'] = self.ax.get_ylim()
@@ -500,11 +524,25 @@ class Grapher():
             self.ax.set_yscale('linear')
 
         # Draw Graph
-        self.draw_plot()
+        self.draw_plot(switch_cursors = switch_cursors)
         self.eleana.notify_on = True
 
-    def draw_plot(self):
+        # If crosshair is activated reconnect it to the new artist
+        if self.sel_cursor_mode.get() == 'Crosshair':
+            # Remove old
+            if self.cursor is not None:
+                self.cursor.remove()
+
+            # Create new connection to Crosshair
+            self.cursor = self.mplcursors.cursor(self.ax, multiple=False, hover=True)
+            self.cursor.connect("add", self.mplcursor_crosshair)
+
+
+    def draw_plot(self, switch_cursors = True):
         ''' Put the selected curves on the graph'''
+        if not self._is_drawing:
+            return
+
         self.ax.legend(loc='upper center', bbox_to_anchor=(0.5, 1.1),
                        fancybox=False, shadow=False, ncol=5)
 
@@ -525,16 +563,29 @@ class Grapher():
         self.show_color_span()
 
         # Add annotations
-        self.put_custom_annotations()
+        try:
+            self.put_custom_annotations()
+        except:
+            pass
 
         # Notify graph plot
         self.notify_on_copy = copy.copy(self.eleana.notify_on)
         self.eleana.notify_on = True
         self.eleana.notify(variable='grapher_action', value="plot")
         self.eleana.notify_on = self.notify_on_copy
+        self._block_axis_callbacks = False
+        self._is_drawing = False
+
+        self.canvas.draw_idle()
+
+        if switch_cursors:
+            self.cursor_on_off()
+
 
     def put_custom_annotations(self):
         ''' Create custom annotations in the graph '''
+        if not self._is_drawing:
+            return
         if self.eleana.gui_state.cursor_mode != 'None':
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
@@ -574,7 +625,7 @@ class Grapher():
                 else:
                     # Do not snap to plot
                     xy = annot['point']
-                number_ = str(i + 1) if self.style_of_annotation['number'] else ''
+                number_ = str(i) if self.style_of_annotation['number'] else ''
                 if annot['curve'] == 'XY':
                     self.ax.annotate(text=self.style_of_annotation['text'] + number_,
                                      xy=xy,
@@ -596,9 +647,6 @@ class Grapher():
             self.clearAnnotationList()
             self.annotationlist.grid_remove()
 
-        self.canvas.draw_idle()
-        self.cursor_on_off()
-
     def show_color_span(self):
         ''' Prints the ranges selected on graph according to defined
             selections in self.eleana.settings.grapher['color_span']
@@ -617,6 +665,8 @@ class Grapher():
             to the graph. The additional plots are simply helper curves like
             baseline or initial fit guess etc.
         '''
+
+
         if not self.additional_plots:
             return
         for data in self.additional_plots:
@@ -660,18 +710,6 @@ class Grapher():
             sel.extras[0].set_ydata([y, y])
             sel.extras[1].set_xdata([x, x])
 
-    def switch_cursors_off(self):
-        # Switch off mplcursors
-        self.btn_clear_cursors.grid_remove()
-        ''' FIX '''
-        if self.cursor is not None:
-            self.cursor.remove()
-            self.cursor = None
-        self.annotationsFrame.grid_remove()
-        self.infoframe.grid_remove()
-        self.btn_clear_cursors.grid_remove()
-        self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
-
     def cursor_on_off(self):
         def _show_annotation_list():
             #self.annotationlist = CTkListbox(self.annotationsFrame, command=self.annotationlist_clicked,
@@ -686,51 +724,42 @@ class Grapher():
             self.annotationsFrame.grid()
             self.info.grid()
 
-        def _switch_cursors_off():
+        self.clear_all_annotations(skip=True)
+
+        if self.cursor is not None:
+            self.cursor.remove()
+            self.cursor = None
+
+        if self.click_binding_id is not None:
+            self.canvas.mpl_disconnect(self.click_binding_id)
+            self.click_binding_id = None
+
+        crs_mode = self.current_cursor_mode['label']
+        try:
+            for sel in self.cursor.selections:
+                    self.cursor.remove_selection(sel)
+        except:
+            pass
+        index = self.sel_cursor_mode._values.index(crs_mode)
+        self.current_cursor_mode = self.cursor_modes[index]
+        if index == 0:
             # Switch off mplcursors
             self.btn_clear_cursors.grid_remove()
-            ''' FIX '''
             if self.cursor is not None:
-                self.cursor.remove()
+                try:
+                    self.cursor.disconnect()
+                    self.cursor.remove()
+                except:
+                    pass
                 self.cursor = None
+
             self.annotationsFrame.grid_remove()
             self.infoframe.grid_remove()
             self.btn_clear_cursors.grid_remove()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
-
-        self.clear_all_annotations(skip=True)
-
-        self.free_move_binding_id = None
-        self.click_binding_id = None
-        crs_mode = self.current_cursor_mode['label']
-        if self.cursor is not None:
-            try:
-                for sel in self.cursor.selections:
-                        self.cursor.remove_selection(sel)
-            except Exception as e:
-                if self.eleana.devel_mode:
-                    print('Grapher:cursor_on_off:',e)
-        index = self.sel_cursor_mode._values.index(crs_mode)
-        self.current_cursor_mode = self.cursor_modes[index]
-        if index == 0:
-            _switch_cursors_off()
-
-            # # Switch off mplcursors
-            # self.btn_clear_cursors.grid_remove()
-            #
-            # ''' FIX '''
-            # if self.cursor is not None:
-            #     self.cursor.remove()
-            #     self.cursor = None
-            #
-            # self.annotationsFrame.grid_remove()
-            # self.infoframe.grid_remove()
-            # self.btn_clear_cursors.grid_remove()
-            # self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
-
+            self.clear_all_annotations(skip = True)
 
         elif index > 0 and index < 5:
-            _switch_cursors_off()
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
             _show_annotation_list()
@@ -749,9 +778,9 @@ class Grapher():
             )
             self.cursor.connect("add", self.annotation_create)
             self.cursor.connect("remove", self.annotation_removed)
+            self.clear_all_annotations(skip = True)
 
         elif index == 5:
-            _switch_cursors_off()
             # Free select
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
@@ -760,11 +789,11 @@ class Grapher():
             self.click_binding_id = self.canvas.mpl_connect('button_press_event', self.on_click_in_plot)
             self.info.configure(text='LEFT CLICK - select point\nRIGHT CLICK - delete selected point')
             self.motion_binding_id = self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move_in_free_select)
+            self.clear_all_annotations(skip=True)
 
         elif index == 6:
-            _switch_cursors_off()
             # Crosshair
-            self.canvas.figure.artists.clear()
+            self.clear_all_annotations(skip=True)
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear cursors', command=self.clear_all_annotations)
             _show_annotation_list()
@@ -772,10 +801,9 @@ class Grapher():
             self.cursor.connect("add", self.mplcursor_crosshair)
             self.click_binding_id = self.canvas.mpl_connect('button_press_event', self.on_click_in_plot)
             self.info.configure(text='LEFT CLICK - select point\nRIGHT CLICK - delete selected point')
-
+            self.clear_all_annotations(skip=True)
 
         elif index == 7:
-            _switch_cursors_off()
             # Range select
             self.btn_clear_cursors.grid()
             self.btn_clear_cursors.configure(text='Clear ranges', command = self.clear_selected_ranges)
@@ -790,11 +818,17 @@ class Grapher():
                 self.cursor.events["add"].disconnect()
                 self.cursor = None
             self.annotationsFrame.grid_remove()
+
             # Switch off free mouse events
-            if self.free_move_binding_id is not None:
-                self.plt.disconnect(self.free_move_binding_id)
-            if self.click_binding_id is not None:
-                self.canvas.mpl_disconnect(self.click_binding_id)
+            # if self.free_move_binding_id is not None:
+            #     self.canvas.mpl_disconnect(self.free_move_binding_id)
+            #     self.free_move_binding_id = None
+            #
+            # if self.click_binding_id is not None:
+            #     self.canvas.mpl_disconnect(self.click_binding_id)
+            #     self.click_binding_id = None
+
+        return
 
     def annotationlist_clicked(self, sel):
         pass
@@ -805,18 +839,30 @@ class Grapher():
         if not event.inaxes:  # If not inside the plot area
             return
 
-    def on_click_in_plot(self, event):
+    def on_click_in_plot(self, event=None, point = None):
         """ Get coordinates from graph when Free Select is set in the combobox """
         state = self.toolbar.mode
         if state == 'zoom rect' or state == 'pan/zoom':
             return
+
+        if event is None:
+            event = SimpleNamespace(
+                inaxes=True,
+                button=1,
+                xdata=None,
+                ydata=None
+            )
+
         if (event.inaxes is not None and (self.sel_cursor_mode.get() == 'Free select' or self.sel_cursor_mode.get() == 'Crosshair') and event.button == 1):
             # Create annotation when left mouse button is clicked
             if self.cursor_limit !=0:
                if len(self.eleana.settings.grapher['custom_annotations']) >= self.cursor_limit:
                    return
-            x, y = event.xdata, event.ydata
-            point_selected = (x,y)
+            if point:
+                point_selected = point
+            else:
+                x, y = event.xdata, event.ydata
+                point_selected = (x,y)
             current_nr = 0
             if self.eleana.settings.grapher['custom_annotations']:
                 #last_annotation = self.eleana.settings.grapher['custom_annotations'][-1]
@@ -829,7 +875,7 @@ class Grapher():
                              'nr': current_nr, 'mode' : self.sel_cursor_mode.get(), 'snap_to':self.eleana.settings.grapher.get('snap_to', 'none')}
             self.eleana.settings.grapher['custom_annotations'].append(my_annotation)
             self.updateAnnotationList(action='add')
-            number_ = str(current_nr) if self.style_of_annotation['number'] else ''
+            number_ = str(current_nr+1) if self.style_of_annotation['number'] else ''
             self.ax.annotate(text=self.style_of_annotation['text'] + number_,
                              xy=point_selected,
                              #xytext=self.xytext_position(point_selected),
@@ -950,12 +996,18 @@ class Grapher():
         if self.cursor_limit != 0:
             if len(self.eleana.settings.grapher['custom_annotations']) >= self.cursor_limit:
 
+                ''' FIX '''
                 try:
                     sel.annotation.remove()
                 except Exception:
                     pass
                 return
 
+
+                ''' OLD
+                sel = self.cursor.selections[-1]
+                self.cursor.remove_selection(sel)
+                return '''
 
         if curve is None:
             curve = sel.artist.get_label()
@@ -1006,6 +1058,7 @@ class Grapher():
             self.updateAnnotationList()
 
     def clear_all_annotations(self, skip=None):
+
         self.additional_plots = []
         self.eleana.settings.grapher['custom_annotations'] = []
         self.eleana.set_selections(variable='grapher_action', value='annotations_cleared')
@@ -1013,9 +1066,6 @@ class Grapher():
             self.clearAnnotationList()
         except:
             pass
-
-        self.canvas.figure.artists.clear()
-
         if skip:
             return
         else:
@@ -1129,12 +1179,16 @@ class Grapher():
         self.canvas.mpl_connect("key_press_event", self.on_key_press_on_graph)
 
     def on_ylim_changed(self, axes):
+        if self._is_drawing or self._block_axis_callbacks:
+            return
         ylim = self.ax.get_ylim()
         self.scale1['y'] = ylim
         self.check_autoscale_y.deselect()
 
 
     def on_xlim_changed(self, axes):
+        if self._is_drawing or self._block_axis_callbacks:
+            return
         xlim = self.ax.get_xlim()
         self.scale1['x'] = xlim
         self.check_autoscale_x.deselect()

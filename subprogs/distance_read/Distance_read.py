@@ -240,9 +240,9 @@ class DistanceRead(Methods, WindowGUI):
         self.set_entry_value(entry=self.dx_entry, value=dx)
 
         self.clear_custom_annotations_list()
-        self.remove_custom_annotations_from_graph()
         self.place_custom_annotation(x = min_x)
         self.place_custom_annotation(x = max_x)
+
         self.btn_findminmax.configure(state="normal")
         return True
 

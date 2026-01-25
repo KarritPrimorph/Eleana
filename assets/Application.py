@@ -1113,7 +1113,7 @@ class Application():
         else:
             self.firstComplex.grid_remove()
         self.eleana.selections['f_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def f_stk_selected(self, selected_value_text):
@@ -1122,7 +1122,7 @@ class Application():
             self.eleana.set_selections('f_stk', index)
         else:
             return
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def f_stk_up_clicked(self):
@@ -1210,7 +1210,7 @@ class Application():
         else:
             self.secondComplex.grid_remove()
         self.eleana.selections['s_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def second_down_clicked(self):
@@ -1252,7 +1252,7 @@ class Application():
             self.eleana.set_selections('s_stk', index)
         else:
             return
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def s_stk_up_clicked(self):
@@ -1392,7 +1392,7 @@ class Application():
         else:
             self.resultComplex.grid_remove()
         self.eleana.selections['r_stk'] = 0
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def result_up_clicked(self):
@@ -1437,7 +1437,7 @@ class Application():
             self.eleana.set_selections('r_stk', index)
         else:
             return
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     #@check_busy
     def r_stk_up_clicked(self):

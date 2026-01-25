@@ -7,8 +7,7 @@ from assets.Error import Error
 from subprogs.table.table import CreateFromTable
 import pandas
 import matplotlib.pyplot as plt
-from pathlib import Path
-from functools import wraps
+from types import SimpleNamespace
 import gc
 import weakref
 
@@ -1385,11 +1384,12 @@ class SubMethods_07:
 
     def clear_custom_annotations_list(self):
         ''' Clear the list of added custom_annotations'''
-        self.eleana.settings.grapher['custom_annotations'] = []
-        try:
-            self.grapher.annotationlist.delete("all")
-        except:
-            pass
+        self.grapher.clear_all_annotations()
+        # self.eleana.settings.grapher['custom_annotations'] = []
+        # try:
+        #     self.grapher.annotationlist.delete("all")
+        # except:
+        #     pass
 
     def place_custom_annotation(self, x, y=None, which='first', refresh_gui=True):
         ''' Puts the annotation at given (x,y) point.
@@ -1403,30 +1403,48 @@ class SubMethods_07:
         else:
             snap = True
         try:
-            self.set_custom_annotation(point=(x, y), snap=snap, which=which)
+            annotation = self.set_custom_annotation(point=(x, y), snap=snap, which=which)
         except ValueError:
             if self.eleana.devel_mode:
                 print("Error placing custom annotation. Empty array.")
                 return
-        annots = self.eleana.settings.grapher['custom_annotations']
-        i = 0
-        for annot in annots:
-            xy = annot['point']
-            number_ = str(i + 1) if self.grapher.style_of_annotation['number'] else ''
+
+        self.grapher.on_click_in_plot(point = annotation['point'])
+        #self.eleana.settings.grapher['custom_annotations'].append(copy.deepcopy(annotation))
+        #self.grapher.draw_plot()
+    # event = SimpleNamespace(
+    #         inaxes = True,
+    #         button = 1,
+    #         xdata =
+    #     )
+
+
+        # annots = self.eleana.settings.grapher['custom_annotations']
+        # i = 0
+        # for annot in annots:
+        #     xy = annot['point']
+        #     self.grapher.on_click_in_plot(event = None, point = xy)
+            #number_ = str(i) if self.grapher.style_of_annotation['number'] else ''
+
+
+
             # self.grapher.ax.annotate(text=self.grapher.style_of_annotation['text'] + number_,
             #                  xy=xy, arrowprops=self.grapher.style_of_annotation['arrowprops']
             #                  )
-            self.grapher.ax.annotate(text=self.grapher.style_of_annotation['text'] + number_,
-                                     xy=xy,
-                                     xytext=self.grapher.xytext_position(xy),
-                                     arrowprops=self.grapher.style_of_annotation['arrowprops'],
-                                     bbox=self.grapher.style_of_annotation['bbox'],
-                                     fontsize=self.grapher.style_of_annotation['fontsize'],
-                                     color=self.grapher.style_of_annotation['color']
-                                     )
+            # self.grapher.ax.annotate(text=self.grapher.style_of_annotation['text'] + number_,
+            #                          xy=xy,
+            #                          xytext=self.grapher.xytext_position(xy),
+            #                          arrowprops=self.grapher.style_of_annotation['arrowprops'],
+            #                          bbox=self.grapher.style_of_annotation['bbox'],
+            #                          fontsize=self.grapher.style_of_annotation['fontsize'],
+            #                          color=self.grapher.style_of_annotation['color']
+            #                          )
 
-            i += 1
-        self.grapher.canvas.draw()
+
+        #self.grapher.put_custom_annotations()
+
+        #    i += 1
+        #self.grapher.canvas.draw_idle()
 
     def remove_custom_annotations_from_graph(self):
         ''' Remove all annotations added to the graph '''
@@ -1472,8 +1490,9 @@ class SubMethods_07:
                         'stk_index': stk_index,
                         'point': (x_coord, y_coord),
                         'nr': number_}
-        self.eleana.settings.grapher['custom_annotations'].append(custom_annot)
-        self.add_custom_annotation_entry(custom_annot)
+        #self.eleana.settings.grapher['custom_annotations'].append(custom_annot)
+        #self.add_custom_annotation_entry(custom_annot)
+        return custom_annot
 
     def add_custom_annotation_entry(self, annotation):
         ''' Creates the entry and adds it to the annotation list'''
