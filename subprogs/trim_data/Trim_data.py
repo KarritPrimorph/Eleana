@@ -208,14 +208,13 @@ CURSOR_OUTSIDE_TEXT: str = 'One or more selected points are outside the (x, y) r
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
-    from assets.Eleana import Eleana
 else:
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
 
-from subprogs.general_methods.SubprogMethods5 import SubMethods_05 as Methods
+from subprogs.trim_data.SubprogMethods5 import SubMethods_05 as Methods
 class TrimData(Methods, WindowGUI):
     def __init__(self, app=None, which='first', commandline=False):
         self.__app = weakref.ref(app)

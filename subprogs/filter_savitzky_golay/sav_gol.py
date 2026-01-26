@@ -207,7 +207,7 @@ else:
 mod = importlib.import_module(module_path)
 WindowGUI = getattr(mod, class_name)
 
-from subprogs.general_methods.SubprogMethods5 import SubMethods_05 as Methods                       #|
+from subprogs.general_methods.SubprogMethods7 import SubMethods_07 as Methods                       #|
 class SavGol(Methods, WindowGUI):                                                                   #|
     def __init__(self, app=None, which='first', commandline=False):
         self.__app = weakref.ref(app)

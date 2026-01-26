@@ -1323,7 +1323,7 @@ class Application():
         index = self.eleana.get_index_by_name(current)
         spectrum = copy.deepcopy(self.eleana.dataset[index])
         self.add_to_results(spectrum)
-        self.eleana.selections['result'] = True
+        self.eleana.selections['r_show'] = True
         self.check_result_show.select()
 
     #@check_busy
@@ -1637,7 +1637,7 @@ class Application():
         position = list_of_results[-1]
         self.sel_result.set(position)
         self.result_selected(position)
-        self.eleana.selections['result'] = True
+        self.eleana.selections['r_disp'] = True
         self.check_result_show.select()
 
         if skip_grapher:
