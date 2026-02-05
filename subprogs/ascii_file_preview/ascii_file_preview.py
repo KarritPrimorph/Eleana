@@ -9,8 +9,10 @@ import tkinter as tk
 from tkinter import ttk
 import customtkinter as ctk
 import copy
+from screeninfo import get_monitors
+
 class AsciFilePreview:
-    def __init__(self, master=None, filename = None, clipboard = None, eleana = None, auto = False):
+    def __init__(self, master, filename = None, clipboard = None, eleana = None, auto = False):
         self.builder = builder = pygubu.Builder()
         self.master = master
         self.eleana = eleana
@@ -19,7 +21,7 @@ class AsciFilePreview:
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
         # Main widget
-        self.mainwindow = builder.get_object("toplevel1", master)
+        self.mainwindow = builder.get_object("toplevel1", self.master)
         builder.connect_callbacks(self)
         self.subprog_id = 'ascii_file_preview.py|ascii_file_preview'
         # --- END OF PYGUBU BUILDER ---
@@ -73,8 +75,10 @@ class AsciFilePreview:
         self.read_file()
         self.show_preview()
 
-        self.center_window(self.mainwindow,  700, 500)
+        self.center_window(self.mainwindow,  800, 700)
         self.restore_settings()
+
+
 
         if self.auto:
             self.ok()
@@ -90,8 +94,8 @@ class AsciFilePreview:
         self.mainwindow.mainloop()
 
     def center_window(self, window, width, height):
-        screen_width = window.winfo_screenwidth()
-        screen_height = window.winfo_screenheight()
+        monitor = get_monitors()[0]  # Get first monitor
+        screen_width, screen_height = monitor.width, monitor.height
         x = (screen_width - width) // 2
         y = (screen_height - height) // 2
         window.geometry(f"{width}x{height}+{x}+{y}")

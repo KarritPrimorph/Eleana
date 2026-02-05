@@ -337,12 +337,12 @@ class Grapher():
             self.cursor = None
 
 
-        # Store currens scales' limits
-        self.eleana.gui_state.scales['xlim'] = self.ax.get_xlim()
-        self.eleana.gui_state.scales['ylim'] = self.ax.get_ylim()
+        # Store current scales' limits
+        self.eleana.gui_state.scales['xlim'] = copy.copy(self.ax.get_xlim())
+        self.eleana.gui_state.scales['ylim'] = copy.copy(self.ax.get_ylim())
         if self.eleana.gui_state.auxilary_axes:
-            self.eleana.gui_state.scales['aux_xlim'] = self.aux_ax.get_xlim()
-            self.eleana.gui_state.scales['aux_ylim'] = self.aux_ax.get_ylim()
+            self.eleana.gui_state.scales['aux_xlim'] = copy.copy(self.aux_ax.get_xlim())
+            self.eleana.gui_state.scales['aux_ylim'] = copy.copy(self.aux_ax.get_ylim())
         else:
             self.eleana.gui_state.scales['aux_xlim'] = None
             self.eleana.gui_state.scales['aux_ylim'] = None
@@ -547,14 +547,26 @@ class Grapher():
                        fancybox=False, shadow=False, ncol=5)
 
         # Handle autoscaling
-        if self.eleana.gui_state.autoscale_x:
-            self.scale1['x'] = copy.deepcopy(self.ax.get_xlim())
-        else:
-            self.ax.set_xlim(self.scale1['x'])
-        if self.eleana.gui_state.autoscale_y:
-            self.scale1['y'] = copy.deepcopy(self.ax.get_ylim())
-        else:
-            self.ax.set_ylim(self.scale1['y'])
+        # if self.eleana.gui_state.autoscale_x:
+        #     self.scale1['x'] = copy.deepcopy(self.ax.get_xlim())
+        # else:
+        #     self.ax.set_xlim(self.scale1['x'])
+        # if self.eleana.gui_state.autoscale_y:
+        #     self.scale1['y'] = copy.deepcopy(self.ax.get_ylim())
+        # else:
+        #     self.ax.set_ylim(self.scale1['y'])
+
+        # Set scales if not autoscale
+        if not self.eleana.gui_state.autoscale_x:
+            self.ax.set_xlim(self.eleana.gui_state.scales['xlim'])
+            if self.aux_ax:
+                self.aux_ax.set_xlim(self.eleana.gui_state.scales['aux_xlim'])
+
+        if not self.eleana.gui_state.autoscale_y:
+            self.ax.set_ylim(self.eleana.gui_state.scales['ylim'])
+            if self.aux_ax:
+                self.aux_ax.set_ylim(self.eleana.gui_state.scales['aux_ylim'])
+
 
         if self.eleana.gui_state.inverted_x:
             self.ax.invert_xaxis()

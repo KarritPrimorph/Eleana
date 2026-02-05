@@ -410,11 +410,14 @@ class Application():
                 if auto is False:
                     dialog = CTkMessagebox(master = self.mainwindow,
                                            message = 'Do you want to automatically load the rest of the files using the same import parameters?',
-                                           option_1 = 'Yes',
-                                           option_2 = 'No')
+                                           option_1 = 'Cancel',
+                                           option_2 = 'No',
+                                           option_3 = 'Yes')
                     response = dialog.get()
                     if response == 'Yes':
                         auto = True
+                    elif response == "Cancel":
+                        break
                     else:
                         auto = False
 
@@ -1399,7 +1402,9 @@ class Application():
         selection = self.sel_result.get()
         if selection == 'None':
             return
-        self.result_selected(selection)
+        #self.result_selected(selection)
+        self.grapher.plot_graph(switch_cursors=False)
+        self.grapher.plot_additional_curves()
 
     #@check_busy
     def result_selected(self, selected_value_text):
@@ -2771,11 +2776,26 @@ class Application():
     *           GRAPH SWITCHES AND BUTTONS           *
     ***********************************************'''
 
-    def switch_autoscale_x(self):
-        self.grapher.plot_graph()
+    def switch_autoscale(self):
+        self.eleana.gui_state.autoscale_x = bool(self.check_autoscale_x.get())
+        self.eleana.gui_state.autoscale_y = bool(self.check_autoscale_y.get())
 
-    def switch_autoscale_y(self):
-        self.grapher.plot_graph()
+        # # Check if autoscale X is on or off
+        # if not self.eleana.gui_state.autoscale_x:
+        #     self.eleana.gui_state.scales['xlim'] = copy.copy(self.grapher.ax.get_xlim())
+        #
+        #     if self.grapher.aux_ax:
+        #         self.eleana.gui_state.scales['aux_xlim'] = copy.copy(self.grapher.aux_ax.get_xlim())
+        #
+        # # Check if autoscale Y is on or off
+        # if not self.eleana.gui_state.autoscale_y:
+        #     self.eleana.gui_state.scales['ylim'] = copy.copy(self.grapher.ax.get_ylim())
+        #
+        #     if self.grapher.aux_ax:
+        #         self.eleana.gui_state.scales['aux_ylim'] = copy.copy(self.grapher.aux_ax.get_ylim())
+
+
+        self.grapher.plot_graph(switch_cursors=False)
 
     def set_log_scale_x(self):
         self.eleana.gui_state.log_x = bool(self.check_log_x.get())

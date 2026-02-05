@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.4" author="PygubuDesigner 0.41.4">
+<interface version="1.4" author="PygubuDesigner 0.40.2">
   <project>
     <settings />
     <customwidgets />
@@ -1658,7 +1658,7 @@
                                     <child>
                                       <object class="customtkinter.CTkCheckBox" id="check_autoscale_X" named="True">
                                         <property name="border_width">2</property>
-                                        <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                        <property name="command" type="command" cbtype="simple">switch_autoscale</property>
                                         <property name="corner_radius">20</property>
                                         <property name="text" translatable="yes">Autoscale X</property>
                                         <layout manager="grid">
@@ -1673,7 +1673,7 @@
                                     <child>
                                       <object class="customtkinter.CTkCheckBox" id="check_autoscale_Y" named="True">
                                         <property name="border_width">2</property>
-                                        <property name="command" type="command" cbtype="simple">switch_autoscale_y</property>
+                                        <property name="command" type="command" cbtype="simple">switch_autoscale</property>
                                         <property name="corner_radius">20</property>
                                         <property name="text" translatable="yes">Autoscale Y</property>
                                         <layout manager="grid">
