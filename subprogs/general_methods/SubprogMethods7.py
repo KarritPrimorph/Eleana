@@ -237,7 +237,7 @@ class SubMethods_07:
 
     def cancel(self, event=None):
         ''' Close the window with self.response = None '''
-
+        self._destroying = True
         DEVEL = copy.copy(self.eleana.devel_mode)
 
         # Unregister observer
@@ -408,22 +408,25 @@ class SubMethods_07:
     def ok_clicked(self, calculate = True):
         ''' [-OK-] button
             This is standard function in SubprogMethods '''
-
-        if self.eleana.busy:
-            if self.eleana.devel_mode:
-                print('ok_clicked - blocked by self.eleana.busy')
+        if getattr(self, "_destroying", False):
             return
+        if self.eleana.busy:
+            return
+
+        self.mainwindow.after_idle(lambda: self._ok_clicked_in_idle(calculate=calculate))
+
+    def _ok_clicked_in_idle(self, calculate = True):
+        ''' This is the main method for calculations executed after GUI idle'''
         self.eleana.busy = True
         try:
             self.start_single_calculations(calculate = calculate)
         except Exception as e:
             self.eleana.busy = False
             self.set_mouse_state(state='')
-            raise e
+            #raise e
 
         self.set_mouse_state(state='')
         self.set_mouse_state(state='')
-        self.eleana.busy = False
         self.after_ok_clicked()
         if not calculate:
             return
@@ -434,6 +437,7 @@ class SubMethods_07:
         self.original_data2 = None
         self.data_for_calculations = None
         gc.collect()
+        self.eleana.busy = False
 
     def process_group_clicked(self):
         ''' [-Process Group-] button

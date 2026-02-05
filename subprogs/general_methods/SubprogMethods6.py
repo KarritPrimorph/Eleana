@@ -408,10 +408,6 @@ class SubMethods_06:
         ''' [-OK-] button
             This is standard function in SubprogMethods '''
 
-        if self.eleana.busy:
-            if self.eleana.devel_mode:
-                print('ok_clicked - blocked by self.eleana.busy')
-            return
         self.eleana.busy = True
         try:
             self.start_single_calculations(calculate = calculate)
@@ -422,7 +418,7 @@ class SubMethods_06:
 
         self.set_mouse_state(state='')
         self.set_mouse_state(state='')
-        self.eleana.busy = False
+
         self.after_ok_clicked()
         if not calculate:
             return
@@ -433,6 +429,7 @@ class SubMethods_06:
         self.original_data2 = None
         self.data_for_calculations = None
         gc.collect()
+        #self.eleana.busy = False
 
     def process_group_clicked(self):
         ''' [-Process Group-] button

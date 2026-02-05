@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.4" author="PygubuDesigner 0.40.2">
+<interface version="1.4" author="PygubuDesigner 0.41.4">
   <project>
     <settings />
     <customwidgets />
@@ -1788,7 +1788,7 @@
                                             <property name="command" type="command" cbtype="simple">auxilary_axes</property>
                                             <property name="corner_radius">20</property>
                                             <property name="text" translatable="yes"> </property>
-                                            <property name="width">20</property>
+                                            <property name="width">30</property>
                                             <layout manager="grid">
                                               <property name="column">0</property>
                                               <property name="padx">5</property>
