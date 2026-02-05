@@ -2779,22 +2779,6 @@ class Application():
     def switch_autoscale(self):
         self.eleana.gui_state.autoscale_x = bool(self.check_autoscale_x.get())
         self.eleana.gui_state.autoscale_y = bool(self.check_autoscale_y.get())
-
-        # # Check if autoscale X is on or off
-        # if not self.eleana.gui_state.autoscale_x:
-        #     self.eleana.gui_state.scales['xlim'] = copy.copy(self.grapher.ax.get_xlim())
-        #
-        #     if self.grapher.aux_ax:
-        #         self.eleana.gui_state.scales['aux_xlim'] = copy.copy(self.grapher.aux_ax.get_xlim())
-        #
-        # # Check if autoscale Y is on or off
-        # if not self.eleana.gui_state.autoscale_y:
-        #     self.eleana.gui_state.scales['ylim'] = copy.copy(self.grapher.ax.get_ylim())
-        #
-        #     if self.grapher.aux_ax:
-        #         self.eleana.gui_state.scales['aux_ylim'] = copy.copy(self.grapher.aux_ax.get_ylim())
-
-
         self.grapher.plot_graph(switch_cursors=False)
 
     def set_log_scale_x(self):
