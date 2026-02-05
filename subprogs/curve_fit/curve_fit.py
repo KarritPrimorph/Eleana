@@ -900,6 +900,7 @@ class CurveFit(Methods, WindowGUI):
         method = self.algorithms.get(self.sel_algorithm.get(), '')
         result = model.fit(y1.real, params=params, x=x1, method=method)
 
+        success = result.success
         # Calculate confidence intervals
         prob = self.ci_entry.get()
         prob_list = prob.split(';')
@@ -919,7 +920,11 @@ class CurveFit(Methods, WindowGUI):
             probabilities_for_ci = None
 
         if probabilities_for_ci:
-            ci = result.conf_interval(sigmas=probabilities_for_ci)
+            try:
+                ci = result.conf_interval(sigmas=probabilities_for_ci)
+            except Exception as e:
+                Error.show(title = 'CI calculations', info = 'Cannot calculate confidence intervals. The fit is underdetermined or poorly constrained', details = e)
+                ci = None
         else:
             ci = None
         # Print best fit
@@ -969,6 +974,8 @@ class CurveFit(Methods, WindowGUI):
 
         # Create summary row to add to the report. The values must match the column names in REPORT_HEADERS
         row_to_report = None
+        if success:
+            self.tab_window.set('Result')
 
         return row_to_report
 

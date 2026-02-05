@@ -213,7 +213,7 @@ WindowGUI = getattr(mod, class_name)
 
 from subprogs.general_methods.SubprogMethods7 import SubMethods_07 as Methods
 class SpectraSubtraction(Methods, WindowGUI):
-    def __init__(self, app=None, which='first', commandline=False):
+    def __init__(self, app=None, which='first', commandline=False, close_subprogs = None):
         self.__app = weakref.ref(app)
         if app and not commandline:                                                                 #|
             # Initialize window if app is defined and not commandline                               #|
@@ -592,7 +592,7 @@ class SpectraSubtraction(Methods, WindowGUI):
         elif self.values['operation'] == "A":
             y2 = y1 + y2
 
-        # Remove side parts when linear mode is selected and extapolation is off
+        # Remove side parts when linear mode is selected and extrapolation is off
         if self.values['interp_method'] == 'linear' and self.values['extrapol'] == 0:
             remove_down_to = 0
             remove_up_to = len(x1)

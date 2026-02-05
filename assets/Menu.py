@@ -352,8 +352,8 @@ class MainMenu:
         self.menu_modifications.add_command(label="Normalize amplitude", command=self.callbacks.get('normalize'),
                                        image=self.icon_normalize, compound="left")
 
-        # - Trim data
-        self.menu_modifications.add_command(label="Trim data", command=self.callbacks.get('trim_data'),
+        # - Crop data
+        self.menu_modifications.add_command(label="Crop data", command=self.callbacks.get('trim_data'),
                                             image=self.icon_trimdata, compound="left")
 
         # - Set zero

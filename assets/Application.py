@@ -1295,6 +1295,37 @@ class Application():
         self.eleana.set_selections('s_cpl', value)
         self.grapher.plot_graph()
 
+    def quick_subtraction(self):
+        ''' Prepare for quick subtraction First - Second'''
+        if self.eleana.selections['first'] < 0 or self.eleana.selections['second'] < 0:
+            Error.show(title="Subtraction", info = 'Both First and Second must be selected to compute First − Second')
+            return
+        self.perform_quick_calcs(operation = 'subtract')
+
+    def quick_addition(self):
+        ''' Prepare for quick addition First + Second'''
+        if self.eleana.selections['first'] < 0 or self.eleana.selections['second'] < 0:
+            Error.show(title="Subtraction", info='Both First and Second must be selected to compute First − Second')
+            return
+        self.perform_quick_calcs(operation='add')
+
+    def perform_quick_calcs(self, operation, first = None, second = None):
+        ''' Perform quick calculations'''
+
+        if first is None:
+            first = copy.deepcopy(self.eleana.dataset[self.eleana.selections['first']])
+        if second is None:
+            second = copy.deepcopy(self.eleana.dataset[self.eleana.selections['first']])
+
+        X1 = first.x
+        Y1 = first.y
+        X2 = second.x
+        Y2 = second.y
+
+        # Interpolate y2 to x1 axis
+        Y2_interp = np.interp(X1, X2, Y2, left=0.0, right=0.0)
+
+
     #@check_busy
     def swap_first_second(self):
         first_pos = self.sel_first.get()

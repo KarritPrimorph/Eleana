@@ -98,6 +98,8 @@ class Function:
 
     def ci_to_text(self, ci):
         """Convert lmfit CI dict to readable text"""
+        if ci is None:
+            return 'CI not calculated'
         lines = []
 
         for parname, points in ci.items():

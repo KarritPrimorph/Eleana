@@ -21,7 +21,7 @@ GUI_FILE: str = 'TrimDataui.py'
 GUI_CLASS: str = 'TrimDataUI'
 
 # Title of the window that shown in the main bar
-TITLE: str = 'Trim data'
+TITLE: str = 'Crop data'
 
 # If True, this window will be always on top
 # self.subprog_settings['on_top']
@@ -42,7 +42,7 @@ DATA_LABEL: str = 'data_label'
 # For example if "Spectrum" is processed and NAME_SUFFIX = "_MODIFIED"
 # you will get "Spectrum_MODIFIED" name in result
 # self.subprog_settings['name_suffix']
-NAME_SUFFIX: str = '_BASELINE'
+NAME_SUFFIX: str = '_CROPPED'
 
 # If true, calculations are done automatically upon selection of data in the main GUI
 # self.subprog_settings['auto_calculate']
