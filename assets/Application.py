@@ -1975,6 +1975,9 @@ class Application():
             self.sel_result.set('None')
         self.grapher.plot_graph()
 
+    def find(self, find_by):
+        print("FIND")
+
     def clear_dataset(self, dialog = True):
         if dialog:
             quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear dataset",

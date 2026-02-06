@@ -103,6 +103,7 @@ class MainMenu:
         self.icon_set_zero = self.prepare_icon('set_zero.png')
         self.icon_offset_corr = self.prepare_icon('offset_correction.png')
         self.icon_eye = self.prepare_icon('eye.png')
+        self.icon_magnifier = self.prepare_icon('magnifier.png')
 
     def create(self, master):
         ''' BUILD MENU '''
@@ -224,6 +225,25 @@ class MainMenu:
                                   activebackground=self.activebg, activeforeground=self.activefg,
                                   borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
         self.main_menu.add_cascade(label=" Edit ", menu=self.menu_edit)
+
+        # - Find
+        self.menu_find = tk.Menu(self.menu_edit, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
+                                    activebackground=self.activebg, activeforeground=self.activefg,
+                                    borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
+
+        self.menu_edit.add_cascade(label="Find", menu=self.menu_find, image=self.icon_magnifier, compound='left')
+
+        #  ---- Find by ID
+        self.menu_find.add_command(label="Find ID", command=lambda x='id': self.callbacks.get('find')(x),
+                                   image=self.icon_magnifier, compound="left")
+
+        # ----- Find by Name
+        self.menu_find.add_command(label="Find Name", command=lambda x='name': self.callbacks.get('find')(x),
+                                   image=self.icon_magnifier, compound="left")
+
+
+        # - Separator
+        self.menu_edit.add_separator()
 
         # - Data in spreadsheet
         self.menu_edit.add_command(label="Edit data in table", command=self.callbacks.get('edit_values_in_table'),

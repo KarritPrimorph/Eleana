@@ -35,6 +35,7 @@ def main_menubar_callbacks(inst):
              "close_application": inst.close_application,
 
              # EDIT
+             "find": inst.find,
              "edit_values_in_table": inst.edit_values_in_table,
              "create_from_table": inst.create_from_table,
              "edit_parameters": inst.edit_parameters,
