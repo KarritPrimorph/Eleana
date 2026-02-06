@@ -26,8 +26,6 @@ from subprogs.user_input.single_dialog import SingleDialog
 
 
 
-
-
 # how bruker Elexsys parameters are mapped to eleana parameters
 # If you want eleana to extract more parameters from dsc
 # just add them here
@@ -233,7 +231,7 @@ class SpectrumEPR(BaseDataModel):
             source='Bruker Elexsys'
         )
 
-        # if the size does not match, it means we have second dimention (stack spectrum)
+        # if the size does not match, it means we have second dimension (stack spectrum)
         # change data type
         data_type = 'stack 2D'
 
@@ -797,44 +795,44 @@ def createFromAdaniDat(filename: str | Path):
             continue
 
         if line.startswith("Center field:"):
-            parameters["center_field_G"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])*10.0}"
+            parameters["center_field_G"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])*10.0}"
             continue
 
         if line.startswith("Sweep width:"):
-            parameters["sweep_width_G"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])*10.0}"
+            parameters["sweep_width_G"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])*10.0}"
             continue
 
         if line.startswith("Mod. amplitude:"):
-            parameters["mod_amplitude_G"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])/100.0}"
+            parameters["mod_amplitude_G"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])/100.0}"
             continue
 
         if line.startswith("Power attenuation:"):
-            parameters["power_dB"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])}"
+            parameters["power_dB"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])}"
             continue
 
         if line.startswith("Gain value:"):
-            expr = line.split(":")[1].replace(',', '.').strip()
+            expr = line.split(':')[1].replace(',', '.').strip()
             parameters["gain"] = f"{eval(expr)}"
             continue
 
         if line.startswith("Sweep time:"):
-            parameters["sweep_time_s"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])}"
+            parameters["sweep_time_s"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])}"
             continue
 
         if line.startswith("Pass number:"):
-            parameters["pass_number"] = f"{int(line.split(":")[1].strip())}"
+            parameters["pass_number"] = f"{int(line.split(':')[1].strip())}"
             continue
 
         if line.startswith("g-factor:"):
-            parameters["g_factor"] = f"{float(line.split(":")[1].replace(',', '.').strip())}"
+            parameters["g_factor"] = f"{float(line.split(':')[1].replace(',', '.').strip())}"
             continue
 
         if line.startswith("Sample temperature:"):
-            parameters["sample_temp_C"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])}"
+            parameters["sample_temp_C"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])}"
             continue
 
         if line.startswith("Set Sample temperature:"):
-            parameters["set_sample_temp_C"] = f"{float(line.split(":")[1].replace(',', '.').split()[0])}"
+            parameters["set_sample_temp_C"] = f"{float(line.split(':')[1].replace(',', '.').split()[0])}"
             continue
 
     return SpectrumEPR.from_adani(filepath.name, data, parameters)
