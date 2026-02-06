@@ -343,8 +343,8 @@ class SpectraSubtraction(Methods, WindowGUI):
         self.values = {}
 
         # Switch off X autoscale
-        self.app.check_autoscale_x
-        self.app.switch_autoscale_x
+        #self.app.check_autoscale_x
+        #self.app.switch_autoscale_x
 
         # Switch off visible second data
         if self.eleana.selections['s_dsp']:

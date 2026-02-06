@@ -32,7 +32,7 @@ import json
 from tkinter import filedialog
 from tkinterdnd2 import DND_FILES
 from assets.Menu import ContextMenu
-
+from scipy.interpolate import CubicSpline
 
 ''' ELEANA MODULES '''
 # Import modules from "/modules" folder
@@ -1318,15 +1318,57 @@ class Application():
         if first is None:
             first = copy.deepcopy(self.eleana.dataset[self.eleana.selections['first']])
         if second is None:
-            second = copy.deepcopy(self.eleana.dataset[self.eleana.selections['first']])
+            second = copy.deepcopy(self.eleana.dataset[self.eleana.selections['second']])
 
         X1 = first.x
         Y1 = first.y
+
         X2 = second.x
         Y2 = second.y
 
+        if second.type == "stack 2D":
+            Error.show(title = f"Quick {operation}", info = "The Second spectrum cannot be a stack of data.")
+            return
+
         # Interpolate y2 to x1 axis
-        Y2_interp = np.interp(X1, X2, Y2, left=0.0, right=0.0)
+        interpolator = CubicSpline(X2, Y2, extrapolate=False)
+        Y2_interp = interpolator(X1)
+
+        if first.type == "stack 2D":
+            for y_stack in Y1:
+                if operation == 'subtract':
+                    y2_in = Y1 - Y2_interp
+                elif operation == 'add':
+                    y2_in = Y1 + Y2_interp
+                else:
+                    return
+        elif first.type == "single 2D":
+            if operation == 'subtract':
+                y2_in = Y1 - Y2_interp
+            elif operation == 'add':
+                y2_in = Y1 + Y2_interp
+            else:
+                return
+
+        first.y = y2_in
+        op = ' <MINUS> ' if operation == 'subtract' else ' <PLUS> '
+        comment = ['\n',
+                   f'--- OPERATION: {operation} ---\n',
+                   f'{first.name} (ID:{first.id}) ',
+                   f'{op}',
+                   f'{second.name} (ID:{second.id})\n',]
+        first.comment = first.comment.join(comment)
+        self.eleana.results_dataset.append(first)
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+        # Set the position to the last added item
+        list_of_results = self.sel_result._values
+        position = list_of_results[-1]
+        self.sel_result.set(position)
+        self.result_selected(position)
+        self.eleana.selections['r_disp'] = True
+        self.check_result_show.select()
+        self.grapher.plot_graph(switch_cursors=False)
 
 
     #@check_busy
@@ -1678,7 +1720,7 @@ class Application():
 
         if skip_grapher:
             return
-        self.grapher.plot_graph()
+        self.grapher.plot_graph(switch_cursors=False)
 
     def generate_name_suffix(self, name, list_of_results):
         name_lists = []
