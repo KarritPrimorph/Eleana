@@ -349,8 +349,7 @@ class SubMethods_07:
             self.data_label.configure(text=name)
 
 
-
-        collect_custom_annotations = copy.copy(self.eleana.settings.grapher['custom_annotations'])
+        #collect_custom_annotations = copy.copy(self.eleana.settings.grapher['custom_annotations'])
         if variable == "first" and value is None:
             self.app.mainwindow.configure(cursor="")
             self.grapher.canvas.get_tk_widget().config(cursor="")
@@ -425,7 +424,6 @@ class SubMethods_07:
             self.set_mouse_state(state='')
             #raise e
 
-        self.set_mouse_state(state='')
         self.set_mouse_state(state='')
         self.after_ok_clicked()
         if not calculate:
@@ -688,6 +686,7 @@ class SubMethods_07:
         origin1 = copy.copy(self.original_data1.origin)
         comment1 = copy.copy(self.original_data1.comment)
         parameters1 = copy.copy(self.original_data1.parameters)
+        id1 = copy.copy(self.original_data1.id)
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -707,7 +706,8 @@ class SubMethods_07:
                   'type': datatype1,
                   'origin': origin1,
                   'comment': comment1,
-                  'parameters': parameters1
+                  'parameters': parameters1,
+                  'id': id1
                   }
         self.data_for_calculations.append(data_1)
 
@@ -725,7 +725,8 @@ class SubMethods_07:
                               'type': copy.copy(datatype1),
                               'origin': copy.copy(origin1),
                               'comment': copy.copy(comment1),
-                              'parameters': copy.deepcopy(parameters1)
+                              'parameters': copy.deepcopy(parameters1),
+                              'id': copy.copy(id1)
                               }
             self.data_for_calculations.append(data_1_orig)
 
@@ -743,6 +744,7 @@ class SubMethods_07:
                 origin2 = copy.copy(self.original_data1.origin)
                 comment2 = copy.copy(self.original_data1.comment)
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
+                id2 = copy.copy(self.original_data1.id)
                 # Extract the data in x and y
                 x_data2, y_data2 = self.extract_region_xy(x=x_data2, y=y_data2)
                 if y_data2.size == 0:
@@ -759,7 +761,8 @@ class SubMethods_07:
                               'type': copy.copy(datatype2),
                               'origin': copy.copy(origin2),
                               'comment': copy.copy(comment2),
-                              'parameters': copy.copy(parameters2)
+                              'parameters': copy.copy(parameters2),
+                              'id': copy.copy(id2)
                               }
                 except:
                     # Skip setting 'stk_value'
@@ -772,7 +775,8 @@ class SubMethods_07:
                               'type': datatype2,
                               'origin': origin2,
                               'comment': comment2,
-                              'parameters': parameters2
+                              'parameters': parameters2,
+                              'id': id2
                               }
                 self.data_for_calculations.append(data_2)
 
@@ -790,7 +794,8 @@ class SubMethods_07:
                                    'type': datatype2,
                                    'origin': origin2,
                                    'comment': comment2,
-                                   'parameters': parameters2
+                                   'parameters': parameters2,
+                                   'id': id2
                                    }
                     self.data_for_calculations.append(data_2_orig)
                     del data_2_orig
@@ -826,6 +831,7 @@ class SubMethods_07:
         origin1 = copy.copy(self.original_data1.origin)
         comment1 = copy.copy(self.original_data1.comment)
         parameters1 = copy.deepcopy(self.original_data1.parameters)
+        id1 = copy.copy(self.original_data1.id)
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -844,7 +850,8 @@ class SubMethods_07:
                   'type': datatype1,
                   'origin': origin1,
                   'comment': comment1,
-                  'parameters': parameters1
+                  'parameters': parameters1,
+                  'id': id1
                   }
         self.data_for_calculations.append(data_1)
 
@@ -862,7 +869,8 @@ class SubMethods_07:
                            'type': datatype1,
                            'origin': origin1,
                            'comment': comment1,
-                           'parameters': parameters1
+                           'parameters': parameters1,
+                           'id': id1
                            }
             self.data_for_calculations.append(data_1_orig)
             del data_1_orig
@@ -881,6 +889,7 @@ class SubMethods_07:
                 origin2 = copy.copy(self.original_data1.origin)
                 comment2 = copy.copy(self.original_data1.comment)
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
+                id2 = copy.copy(self.original_data1.id)
 
                 # Extract the data in x and y
                 x_data2, y_data2 = self.extract_region_xy(x=x_data2, y=y_data2)
@@ -893,7 +902,8 @@ class SubMethods_07:
                           'type': datatype2,
                           'origin': origin2,
                           'comment': comment2,
-                          'parameters': parameters2
+                          'parameters': parameters2,
+                          'id': id2
                           }
                 self.data_for_calculations.append(data_2)
                 del data_2
@@ -912,7 +922,8 @@ class SubMethods_07:
                                    'type': datatype2,
                                    'origin': origin2,
                                    'comment': comment2,
-                                   'parameters': parameters2
+                                   'parameters': parameters2,
+                                   'id': id2
                                    }
                     self.data_for_calculations.append(data_2_orig)
                     data_2_orig
@@ -937,7 +948,6 @@ class SubMethods_07:
             if self.report['create']:
                 self.add_to_report(row=row_to_report)
         self.create_result()
-        #self.set_mouse_state(state='')
         return True
 
     def stack_calc(self, calculate):

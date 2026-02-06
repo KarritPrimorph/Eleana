@@ -561,7 +561,7 @@ class SpectraSubtraction(Methods, WindowGUI):
         origin1 = self.data_for_calculations[0]['origin']
         comment1 = self.data_for_calculations[0]['comment']
         parameters1 = self.data_for_calculations[0]['parameters']
-        #id1 = self.data_for_calculations[0]['id']
+        id1 = self.original_data1.id
 
         if self.use_second:
             x2 = self.data_for_calculations[1+sft]['x']
@@ -574,7 +574,7 @@ class SpectraSubtraction(Methods, WindowGUI):
             origin2 = self.data_for_calculations[1+sft]['origin']
             comment2 = self.data_for_calculations[1+sft]['comment']
             parameters2 = self.data_for_calculations[1+sft]['parameters']
-            #id2 = self.data_for_calculations[1+sft]['id']
+            id2 = self.original_data2.id
         #cursor_positions = self.grapher.cursor_annotations
         # ------------------------------------------
 
@@ -623,8 +623,8 @@ class SpectraSubtraction(Methods, WindowGUI):
 
         comment = ['\n',
                    f'--- OPERATION: {self.sel_operation_mode.get()} ---\n',
-                   f'A) {name1} \n',
-                   f'B) {name2} \n', ]
+                   f'A) {name1} ID:{id1}\n',
+                   f'B) {name2} ID:{id2}\n', ]
         self.data_for_calculations[0]['comment'] = self.data_for_calculations[0]['comment'].join(comment)
 
         del x1
