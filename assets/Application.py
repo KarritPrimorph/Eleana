@@ -52,6 +52,7 @@ from assets.Update import Update
 from assets.DataClasses import BaseDataModel
 from assets.Error import Error
 from assets.Dropfiles import FileDropWindow
+from assets.Staticplotwindow import Staticplotwindow # Do not remove this line
 
 ''' SUBPROGS '''
 from subprogs.filter_fft.fft_filter import FFTFilter

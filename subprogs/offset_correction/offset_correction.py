@@ -396,7 +396,9 @@ class OffsetCorr(Methods, WindowGUI):
         annotations = self.eleana.settings.grapher['custom_annotations']
         if not annotations:
             return None
-        zero_point = annotations[0]['point'][1]
+        zero_point_x = annotations[0]['point'][0]
+        idx = np.abs(x1 - zero_point_x).argmin()
+        zero_point = y1[idx]
         self.data_for_calculations[0]['y'] = y1 - zero_point
 
 
