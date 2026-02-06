@@ -1900,7 +1900,7 @@ class Application():
             self.sel_result.configure(values=['None'])
             self.r_stk.configure(values=[])
             self.resultFrame.grid_remove()
-            self.grapher.plot_graph()
+            self.grapher.plot_graph(switch_cursors=False)
 
     def clear_all_annotations(self):
         self.grapher.clear_all_annotations()
