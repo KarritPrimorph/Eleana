@@ -1,5 +1,3 @@
-from os import close
-
 from assets.Observer import Observer
 import copy
 import numpy as np
@@ -7,7 +5,6 @@ from assets.Error import Error
 from subprogs.table.table import CreateFromTable
 import pandas
 import matplotlib.pyplot as plt
-from types import SimpleNamespace
 import gc
 import weakref
 
@@ -36,7 +33,8 @@ class SubMethods_07:
     # List of class instances
     _instances = []
 
-    def __init__(self, app_weak=None, commandline=False, which = 'first', close_subprogs = False):
+    def __init__(self, app_weak=None, commandline=False, which = 'first', close_subprogs = None):
+
         # Add created instance to the list
         SubMethods_07._instances.append(weakref.ref(self))
 
@@ -57,7 +55,6 @@ class SubMethods_07:
         # This contains temporary information whether message should be
         # diplayed when function is used for first time
         self.display_for_first_time = {'stk_changed': True,
-
                                     }
         if app_weak and not self.commandline:
             # Window start from Menu in GUI
@@ -70,16 +67,18 @@ class SubMethods_07:
             else:
                 self.data_label = None
 
-
         # Set to which selection 'First' or 'Second'
         self.which = which
         # If self.app is defined, configure window, observer and grapher
         if self.app:
+
             # Custom window configuration in parent
             self.configure_window()
+
             # Create observer
             self.observer = Observer(self.eleana, self)
             self.eleana.notify_on = True
+
             # Set current position in Results Dataset
             cursor_type = self.subprog_cursor.get('type', 'none').lower()
 
@@ -97,14 +96,19 @@ class SubMethods_07:
                 self.app.sel_graph_cursor(self.subprog_cursor['type'])
                 self.app.mainwindow.update()
                 if not self.subprog_cursor.get('changing'):
+
                     # Disable cursor changing
                     self.app.sel_cursor_mode.configure(state="disabled")
+
                 if self.subprog_cursor['clear_on_start']:
+
                     # Clear current cursors
                     if self.subprog_cursor.get('type').lower() == 'range select':
                         self.grapher.clear_selected_ranges()
                     else:
                         self.grapher.clear_all_annotations()
+
+
             # Restore settings for the subporg
             self.subprog_id = self.subprog_settings['folder'] + "|" + self.subprog_settings.get('title', '')
             if self.subprog_settings.get('restore', False):
@@ -140,6 +144,8 @@ class SubMethods_07:
                     self.mainwindow.attributes("-toolwindow", True)
                 except:
                     pass
+
+
     # Create weak references to eleana, grapher and update
     # through weakref app
     # ----------------------------------------------
@@ -231,7 +237,7 @@ class SubMethods_07:
 
     def cancel(self, event=None):
         ''' Close the window with self.response = None '''
-
+        self._destroying = True
         DEVEL = copy.copy(self.eleana.devel_mode)
 
         # Unregister observer
@@ -254,11 +260,6 @@ class SubMethods_07:
         self._destroy_custom_widgets()
 
         self.response = None
-
-        # Return cursor selection to enabled
-        #self.app.sel_cursor_mode.configure(state="normal")
-        #self.app.sel_cursor_mode.set(self.subprog_cursor['previous'])
-
 
         self.grapher.clear_selected_ranges()
         self.clear_additional_plots()
@@ -284,7 +285,6 @@ class SubMethods_07:
         gc.collect()
 
         # Show unclosed references if there are any
-
         if DEVEL:
             references = gc.get_referrers(self)
             if references:
@@ -408,22 +408,25 @@ class SubMethods_07:
     def ok_clicked(self, calculate = True):
         ''' [-OK-] button
             This is standard function in SubprogMethods '''
-
-        if self.eleana.busy:
-            if self.eleana.devel_mode:
-                print('ok_clicked - blocked by self.eleana.busy')
+        if getattr(self, "_destroying", False):
             return
+        if self.eleana.busy:
+            return
+
+        self.mainwindow.after_idle(lambda: self._ok_clicked_in_idle(calculate=calculate))
+
+    def _ok_clicked_in_idle(self, calculate = True):
+        ''' This is the main method for calculations executed after GUI idle'''
         self.eleana.busy = True
         try:
             self.start_single_calculations(calculate = calculate)
         except Exception as e:
             self.eleana.busy = False
             self.set_mouse_state(state='')
-            raise e
+            #raise e
 
         self.set_mouse_state(state='')
         self.set_mouse_state(state='')
-        self.eleana.busy = False
         self.after_ok_clicked()
         if not calculate:
             return
@@ -434,6 +437,7 @@ class SubMethods_07:
         self.original_data2 = None
         self.data_for_calculations = None
         gc.collect()
+        self.eleana.busy = False
 
     def process_group_clicked(self):
         ''' [-Process Group-] button
@@ -1188,9 +1192,14 @@ class SubMethods_07:
                 result_selected = result_list[position_in_list]
             except IndexError:
                 result_selected = result_list[-1]
-            self.app.result_selected(result_selected)
             self.app.sel_result.set(result_selected)
 
+            # Switch on Result Show
+            self.eleana.selections['r_dsp'] = True
+            self.app.check_result_show.select()
+            self.app.result_show()
+
+        # Run custom function after
         self.after_result_show_on_graph()
 
     def create_result_stack(self):
