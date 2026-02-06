@@ -470,13 +470,13 @@ class Grapher():
         if self.aux_ax is not None:
             axis_title = self.axis_title('second')
             color = self.eleana.settings.grapher['style_second']['color_re']
-            self.aux_ax.set_xlabel(f'{axis_title['x_title']}', color = color)
-            self.aux_ax.set_ylabel(f'{axis_title['y_title']}', color = color)
+            self.aux_ax.set_xlabel(f'{axis_title["x_title"]}', color = color)
+            self.aux_ax.set_ylabel(f'{axis_title["y_title"]}', color = color)
 
             axis_title = self.axis_title('first')
             color = self.eleana.settings.grapher['style_first']['color_re']
-            self.ax.set_xlabel(f'{axis_title['x_title']}', color=color)
-            self.ax.set_ylabel(f'{axis_title['y_title']}', color=color)
+            self.ax.set_xlabel(f'{axis_title["x_title"]}', color=color)
+            self.ax.set_ylabel(f'{axis_title["y_title"]}', color=color)
 
         # Add result
         data = self.data_for_plot('result')
