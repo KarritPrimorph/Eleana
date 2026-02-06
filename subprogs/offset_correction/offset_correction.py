@@ -401,7 +401,6 @@ class OffsetCorr(Methods, WindowGUI):
         zero_point = y1[idx]
         self.data_for_calculations[0]['y'] = y1 - zero_point
 
-
         # Send calculated values to result (if needed). This will be sent to command line
         result = None # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE
 

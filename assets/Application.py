@@ -1119,6 +1119,10 @@ class Application():
         self.eleana.selections['f_stk'] = 0
         self.grapher.plot_graph(switch_cursors=False)
 
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
     #@check_busy
     def f_stk_selected(self, selected_value_text):
         if selected_value_text in self.f_stk._values:
@@ -1127,6 +1131,10 @@ class Application():
         else:
             return
         self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
 
     #@check_busy
     def f_stk_up_clicked(self):
@@ -1216,6 +1224,11 @@ class Application():
         self.eleana.selections['s_stk'] = 0
         self.grapher.plot_graph(switch_cursors=False)
 
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+
     #@check_busy
     def second_down_clicked(self):
         current_position = self.sel_second.get()
@@ -1257,6 +1270,10 @@ class Application():
         else:
             return
         self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
 
     #@check_busy
     def s_stk_up_clicked(self):
@@ -1370,6 +1387,10 @@ class Application():
         self.eleana.selections['r_disp'] = True
         self.check_result_show.select()
         self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
 
 
     #@check_busy
@@ -1517,6 +1538,10 @@ class Application():
         else:
             return
         self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
 
     #@check_busy
     def r_stk_up_clicked(self):

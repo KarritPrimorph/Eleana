@@ -118,6 +118,7 @@ class SubMethods_05:
                     # Clear current cursors
                     if self.subprog_cursor.get('type').lower() == 'range select':
                         self.grapher.clear_selected_ranges()
+                        self.grapher.cursor_on_off()
                     else:
                         self.grapher.clear_all_annotations()
             # Restore settings for the subporg
@@ -125,6 +126,7 @@ class SubMethods_05:
             if self.subprog_settings.get('restore', False):
                 self.restore_settings()
             self.mainwindow.protocol('WM_DELETE_WINDOW', self.cancel)
+
 
     # Create weak references to eleana, grapher and update
     # through weakref app
