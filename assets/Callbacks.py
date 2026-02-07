@@ -18,6 +18,7 @@ def main_menubar_callbacks(inst):
              # FILE
              "load_project": inst.load_project,
              "save_as": inst.save_as,
+             "save_current": inst.save_current,
              "drag_and_drop_files": inst.drag_and_drop_files,
              "import_elexsys": inst.import_elexsys,
              "import_EMX": inst.import_EMX,

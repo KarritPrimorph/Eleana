@@ -407,12 +407,12 @@ class SubMethods_07:
     def ok_clicked(self, calculate = True):
         ''' [-OK-] button
             This is standard function in SubprogMethods '''
-        if getattr(self, "_destroying", False):
-            return
-        if self.eleana.busy:
-            return
 
-        self.mainwindow.after_idle(lambda: self._ok_clicked_in_idle(calculate=calculate))
+        try:
+            self._ok_clicked_in_idle(calculate = calculate)
+        except:
+            self.eleana.busy = False
+        self.eleana.busy = False
 
     def _ok_clicked_in_idle(self, calculate = True):
         ''' This is the main method for calculations executed after GUI idle'''

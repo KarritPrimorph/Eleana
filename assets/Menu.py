@@ -306,6 +306,7 @@ class MainMenu:
         self.menu_clear = tk.Menu(self.menu_edit, tearoff=0, bg=self.bg, fg=self.fg, font=self.font,
                                  activebackground=self.activebg, activeforeground=self.activefg,
                                  borderwidth=self.borderwidth, activeborderwidth=self.borderwidth)
+
         self.menu_edit.add_cascade(label="Clear", menu=self.menu_clear, image = self.icon_clear, compound="left")
 
         # -------- Clear dataset

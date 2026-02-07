@@ -570,7 +570,8 @@ class CurveFit(Methods, WindowGUI):
         self.tableFrames['value'].columnconfigure(0, weight=1)
         for i, param in enumerate(self.function_definition.parameters):
             entry = CTkSpinbox(master = self.tableFrames['value'],
-                               fractional_change=0.02,
+                               disable_wheel=False,
+                               fractional_change=0.05,
                                width = 200,
                                height = 34,
                                command = lambda p=param: self.table_changed(widget = 'value', parameter = p))
