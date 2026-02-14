@@ -55,6 +55,9 @@ w, h = img.width, img.height
 x = screen_x + (screen_w - w) // 2
 y = screen_y + (screen_h - h) // 2
 
+# x=1
+# y=1
+
 splash.geometry(f"{w}x{h}+{x}+{y}")
 splash.update()
 

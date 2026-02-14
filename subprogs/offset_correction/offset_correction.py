@@ -293,7 +293,6 @@ class OffsetCorr(Methods, WindowGUI):
         # HERE DEFINE ADDITIONAL MAIN WINDOW CONFIGURATION
         #self.mainwindow =
         self.check_direct = self.builder.get_object('check_direct', self.master)
-        pass
 
 
     def set_direct(self):

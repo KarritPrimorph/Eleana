@@ -569,7 +569,8 @@ class Application(MenuFileMixin,
             try:
                 eleana_user_dir.mkdir()
             except:
-                print("Cannot create working Eleana folder in your home directory.")
+                if self.eleana.devel_mode:
+                    print("Cannot create working Eleana folder in your home directory.")
         try:
             filename = Path(self.eleana.paths['home_dir'], '.EleanaPy', 'paths.pic')
             # Read paths.pic
@@ -1445,7 +1446,6 @@ class Application(MenuFileMixin,
     def set_always_confirm(self):
         mode = bool(self.btn_always_confirm.get())
         self.eleana.gui_state.always_confirm = mode
-        print(self.eleana.gui_state.always_confirm)
 
     #@check_busy
     def result_show(self):
@@ -1453,9 +1453,9 @@ class Application(MenuFileMixin,
         selection = self.sel_result.get()
         if selection == 'None':
             return
-        #self.result_selected(selection)
-        self.grapher.plot_graph(switch_cursors=False)
-        self.grapher.plot_additional_curves()
+        self.result_selected(selection)
+        #self.grapher.plot_graph(switch_cursors=False)
+        #self.grapher.plot_additional_curves()
 
     #@check_busy
     def result_selected(self, selected_value_text):

@@ -404,40 +404,59 @@ class SubMethods_07:
     # STANDARD METHODS FOR SUBPROG GUI BUTTONS
     # -------------------------------------------------
 
-    def ok_clicked(self, calculate = True):
-        ''' [-OK-] button
-            This is standard function in SubprogMethods '''
+    # def ok_clicked(self, calculate = True):
+    #     ''' [-OK-] button
+    #         This is standard function in SubprogMethods '''
+    #
+    #     try:
+    #         self._ok_clicked_in_idle(calculate = calculate)
+    #     except:
+    #         self.eleana.busy = False
+    #     self.eleana.busy = False
 
-        try:
-            self._ok_clicked_in_idle(calculate = calculate)
-        except:
-            self.eleana.busy = False
-        self.eleana.busy = False
+    def ok_clicked(self, calculate=True):
+        """Main method for calculations executed after GUI idle"""
 
-    def _ok_clicked_in_idle(self, calculate = True):
-        ''' This is the main method for calculations executed after GUI idle'''
         self.eleana.busy = True
+        self.set_mouse_state(state='watch')
+
         try:
-            self.start_single_calculations(calculate = calculate)
-        except Exception as e:
+            self.start_single_calculations(calculate=calculate)
+            self.after_ok_clicked()
+
+            if calculate:
+                self.show_results_matching_first()
+
+        finally:
             self.eleana.busy = False
             self.set_mouse_state(state='')
-            #raise e
 
-        self.set_mouse_state(state='')
-        self.after_ok_clicked()
-        if not calculate:
-            return
-        self.show_results_matching_first()
+            # --- SAFE CLEANUP ---
+            if self.original_data1 is not None:
+                self.original_data1.clear()
+                self.original_data1 = None
+
+            if self.original_data2 is not None:
+                self.original_data2.clear()
+                self.original_data2 = None
+
+            if isinstance(self.data_for_calculations, list):
+                self.data_for_calculations.clear()
+                self.data_for_calculations = None
+
+        # self.after_ok_clicked()
+        # if not calculate:
+        #     return
+        # self.show_results_matching_first()
 
         # Clear memory
-        self.original_data1 = None
-        self.original_data2 = None
-        self.data_for_calculations = None
-        gc.collect()
-        self.eleana.busy = False
+        #self.original_data1 = None
+        #self.original_data2 = None
+        #self.data_for_calculations = None
 
-    def process_group_clicked(self):
+        # self.eleana.busy = False
+
+    def process_group_clicked(self, calculate = True):
         ''' [-Process Group-] button
             This is standard function in SubprogMethods '''
         if self.eleana.busy:
@@ -446,15 +465,31 @@ class SubMethods_07:
             return
         self.eleana.busy = True
         self.set_mouse_state(state='watch')
+        try:
+            self.perform_group_calculations(calculate=calculate)
+            self.show_results_matching_first()
+            self.after_process_group_clicked()
+        except Exception:
+            raise Exception
+        finally:
+            self.set_mouse_state(state='')
+            self.eleana.busy = False
 
+            # --- SAFE CLEANUP ---
+            if self.original_data1 is not None:
+                self.original_data1.clear()
+                self.original_data1 = None
 
-        self.perform_group_calculations()
+            if self.original_data2 is not None:
+                self.original_data2.clear()
+                self.original_data2 = None
 
-        self.set_mouse_state(state='')
-        self.eleana.busy = False
+            if isinstance(self.data_for_calculations, list):
+                self.data_for_calculations.clear()
+                self.data_for_calculations = None
 
-        self.show_results_matching_first()
-        self.after_process_group_clicked()
+        #self.show_results_matching_first()
+        #self.after_process_group_clicked()
 
     def show_report_clicked(self):
         ''' [-Show Report-] button
@@ -503,7 +538,8 @@ class SubMethods_07:
         skip_report_show = True
         #self.set_mouse_state("watch")
         # Create result_dataset if add or replace is set
-        if self.subprog_settings.get('result') == 'add' and calculate:
+        mode = self.subprog_settings.get('result')
+        if mode == 'add' or mode == 'dataset' and calculate:
             # Simply add the result to the eleana.results_dataset
             self.result_data = copy.deepcopy(self.original_data1)
 
@@ -519,7 +555,7 @@ class SubMethods_07:
             self.eleana.results_dataset.append(self.result_data)
             self.current_index_in_results = len(self.eleana.results_dataset) - 1
 
-        elif self.subprog_settings.get('result') == 'replace' and calculate:
+        elif mode == 'replace' and calculate:
             # The replace mode was set
             self.result_data = copy.deepcopy(self.original_data1)
             self.result_data.name = self.result_data.name + self.subprog_settings.get('name_suffix', '')
@@ -541,6 +577,8 @@ class SubMethods_07:
                 # Replace the last data in results_dataset
                 self.current_index_in_results = len(self.eleana.results_dataset) - 1
                 self.eleana.results_dataset[self.current_index_in_results] = self.result_data
+
+
         else:
             # Do not create results
             self.result_data = None
@@ -583,7 +621,7 @@ class SubMethods_07:
                 self.data_label.configure(text=self.original_data1.name_nr)
                 if group_processing == False:
                     self.app.mainwindow.update()
-            status = self.do_calc_single2D(calculate)
+            status = self.do_calc_single2D(calculate = calculate)
             if status:
                 self.consecutive_number += 1
             else:
@@ -617,7 +655,7 @@ class SubMethods_07:
             self.show_report()
         return True
 
-    def perform_group_calculations(self):
+    def perform_group_calculations(self, calculate):
         required_cursors = self.subprog_cursor.get('cursor_required', 0)
         nr_of_annotations = len(self.eleana.settings.grapher['custom_annotations'])
         if required_cursors > nr_of_annotations:
@@ -647,13 +685,18 @@ class SubMethods_07:
             self.eleana.selections['first'] = each
             status1 = self.get_data(group_processing = True)
             if status1:
-                status2 = self.perform_single_calculations(calculate = True, group_processing=True)
+                status2 = self.perform_single_calculations(calculate = calculate, group_processing=True)
                 if not status2:
                     self.eleana.selections = copy_selections
                     self.subprog_settings = copy_of_subprog_settings
                     self.after_result_show_on_graph()
                     return False
 
+        # If operation is performed directly on dataset then replace
+        # if self.subprog_settings.get('result') == 'dataset':
+        #     self.app.replace_group(ask = False)
+        #     self.app.clear_results(skip_question = True)
+        #     return
 
         # After processing
         self.eleana.selections = copy_selections
@@ -667,8 +710,7 @@ class SubMethods_07:
         self.after_calculations()
         self.show_report()
 
-        # Collect garbage
-        gc.collect()
+
 
     def do_calc_stk_data(self):
         ''' Gets each stk from stack 2D and send to calculate '''
@@ -906,7 +948,7 @@ class SubMethods_07:
                           'id': id2
                           }
                 self.data_for_calculations.append(data_2)
-                del data_2
+
 
                 # Add original data
                 if self.regions.get('orig_in_odd_idx'):
@@ -926,7 +968,7 @@ class SubMethods_07:
                                    'id': id2
                                    }
                     self.data_for_calculations.append(data_2_orig)
-                    data_2_orig
+
             else:
                 Error.show(info='If the first data is 2D, the second must also be 2D, not a stack.', details='')
                 return False
@@ -934,6 +976,7 @@ class SubMethods_07:
             self.data_for_calculations.append(None)
 
         # Go to calculate function
+
         if calculate is False:
             return
         row_to_report = self.calculate()
@@ -943,6 +986,7 @@ class SubMethods_07:
             if self.subprog_cursor.get('cursor_outside_text'):
                 Error.show(title=name1, info=self.subprog_cursor.get('cursor_outside_text'))
             return False
+
 
         if isinstance(row_to_report, list):
             if self.report['create']:
@@ -1190,10 +1234,13 @@ class SubMethods_07:
     # ------------------------------------------------
 
     def show_results_matching_first(self):
+        if self.subprog_settings.get('result') == 'dataset':
+            return
+
         if self.subprog_settings.get('result'):
             self.app.update.list_in_combobox('sel_result')
             self.app.update.list_in_combobox('r_stk')
-            self.app.mainwindow.update()
+            #self.app.mainwindow.update_idle()
             first_list = self.app.sel_first._values
             selected_first = self.app.sel_first.get()
             position_in_list = first_list.index(selected_first)
@@ -1202,6 +1249,7 @@ class SubMethods_07:
                 result_selected = result_list[position_in_list]
             except IndexError:
                 result_selected = result_list[-1]
+
             self.app.sel_result.set(result_selected)
 
             # Switch on Result Show
@@ -1256,7 +1304,7 @@ class SubMethods_07:
         result_create = copy.deepcopy(self.subprog_settings.get('result'))
         if result_create not in ['add', 'replace', 'dataset']:
             return  # Do nothing if result should not be created
-
+        print(result_create)
 
         # Calculate index where spectrum must be inserted:
         results_dataset = self.eleana.results_dataset
@@ -1300,16 +1348,20 @@ class SubMethods_07:
                 results_dataset[index_in_result].origin = copy.copy(new_result.origin)
                 results_dataset[index_in_result].comment = copy.copy(new_result.comment)
                 results_dataset[index_in_result].parameters = copy.copy(new_result.parameters)
-        self.app.update.list_in_combobox(comboboxID='sel_result')
 
-        new_result = None
-        gc.collect()
+        if result_create != 'dataset':
+            self.app.update.list_in_combobox(comboboxID='sel_result')
+
+        #new_result = None
+        #gc.collect()
 
         # If operation should be performed on the dataset directly
         if result_create == 'dataset':
-            self.show_results_matching_first()
-            self.__app().replace_first(ask =False)
-            self.__app().clear_results(skip_question = True)
+            dataset_index = self.eleana.selections['first']
+            if dataset_index < 0:
+                return
+            self.eleana.dataset[dataset_index] = new_result
+            self.grapher.plot_graph(switch_cursors = False)
         return
 
     def update_results_list(self, results):
