@@ -196,6 +196,24 @@ class BaseDataModel:
         self.parameters.clear()
         self.groups.clear()
 
+    def clear(self):
+        """Remove large numpy arrays to free memory."""
+
+        # NumPy arrays
+        self.x = None
+        self.y = None
+        self.z = None
+        self.error_x = None
+        self.error_y = None
+        self.error_z = None
+
+        # Stack-related
+        self.stk_names = None
+
+        # Optional: clear metadata if desired
+        self.parameters.clear()
+        self.groups.clear()
+
 
 @dataclass
 class SpectrumEPR(BaseDataModel):

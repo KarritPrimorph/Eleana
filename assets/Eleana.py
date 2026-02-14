@@ -23,6 +23,8 @@ import shutil
 import json
 from tkinter.filedialog import asksaveasfile, askopenfilename
 import gc
+
+from assets.LoadSave import Preferences
 from modules.CTkMessagebox import CTkMessagebox
 import random
 from datetime import datetime
@@ -255,11 +257,10 @@ class Eleana:
             return
         if self.notify_on:
             self.notify(variable=variable, value=value)
-            #if self.devel_mode:
-            #    print('Eleana.py: Activate observer')
+
 
     # End of methods for observers --------------------
-    def set_default_settings(self):
+    def set_default_settings(self, only_get = False):
         ''' Set default settings '''
 
         # Default general settings
@@ -309,6 +310,8 @@ class Eleana:
                                  'end': 0}
         grapher['custom_annotations'] = []
         grapher['snap_to'] = 'none'
+        if only_get:
+            return general, grapher
 
         # Store settings in Settings dataclass
         self.settings = Settings(general=general, grapher=grapher)
@@ -443,10 +446,20 @@ class Eleana:
             file_to_read = open(filename, "rb")
             preferences = pickle.load(file_to_read)
             file_to_read.close()
+
+            general, grapher = self.set_default_settings(only_get=True)
+
+            for key, value in preferences.grapher.items():
+                if value is None:
+                    preferences.grapher[key] = grapher[key]
+
+            for key, value in preferences.general.items():
+                if value is None:
+                    preferences.general[key] = general[key]
             return preferences
+
         except Exception as e:
             print(e)
-            self.set_default_settings()
             return None
 
     def create_missing_id(self):

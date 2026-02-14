@@ -161,8 +161,7 @@ class PreferencesApp:
         self.graph_general_box.set(self.plt_style)
 
         self.first_plot_type_box.set(self.style_first['plot_type'])
-        #self.first_linewidth.delete(0,'end')
-        #self.first_linewidth.insert(0, self.style_first['linewidth'])
+       
         self.first_linestyle.set(self.style_first['linestyle'])
         self.first_marker.set(self.style_first['marker'])
         self.first_markersize.delete(0, 'end')
