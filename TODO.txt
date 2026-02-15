@@ -1,6 +1,3 @@
-1. Problem z działaniem klikania na wykresie i kursorami. Generalnie przy standardowym mplcurosrs
-   nie kasują się, generalnie mikusje się szerge usawień Tzreba znaowu sprawdzić co tak się dzieje z tymi kursorami
-
-2. Przy zaznaczeniu Range Selection w Curve Fit nie wyświetla się po kliknięciu, ale przy fitowaniu już się pojawia i dziaa
-   Trzeba sprawdzić, dlaczego nie działa wyswietlanie wprost
-
+1. Sprawdzić czy wszędzie gdzie modyfikowane są dane bezpośrednio na danych Dataset to:
+    a) zmieniane jest ID
+    b) tworzone jest zależność w comments jaka hest historia IDs tego widma

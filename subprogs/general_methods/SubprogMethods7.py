@@ -1304,7 +1304,6 @@ class SubMethods_07:
         result_create = copy.deepcopy(self.subprog_settings.get('result'))
         if result_create not in ['add', 'replace', 'dataset']:
             return  # Do nothing if result should not be created
-        print(result_create)
 
         # Calculate index where spectrum must be inserted:
         results_dataset = self.eleana.results_dataset
@@ -1352,14 +1351,12 @@ class SubMethods_07:
         if result_create != 'dataset':
             self.app.update.list_in_combobox(comboboxID='sel_result')
 
-        #new_result = None
-        #gc.collect()
-
         # If operation should be performed on the dataset directly
         if result_create == 'dataset':
             dataset_index = self.eleana.selections['first']
             if dataset_index < 0:
                 return
+
             self.eleana.dataset[dataset_index] = new_result
             self.grapher.plot_graph(switch_cursors = False)
         return
@@ -1636,7 +1633,6 @@ class SubMethods_07:
             self.grapher.canvas.get_tk_widget().config(cursor=state)
             self.app.mainwindow.configure(cursor=state)
         return
-
 
     # STORE AND RESTORE SETTINGS
     # -------------------------------------------------

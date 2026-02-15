@@ -210,7 +210,6 @@ class EditDataclassInTable:
                 column_names.append(label)
         return list2D
 
-
     def on_cell_change(self, event):
         col = event.column
         row = event.row
@@ -227,6 +226,7 @@ class EditDataclassInTable:
             data = self.eleana.dataset[self.original_index].y
 
         data[row] = value
+
         self.modifications = True
 
         self.grapher.plot_graph(switch_cursors=False)

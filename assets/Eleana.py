@@ -483,15 +483,18 @@ class Eleana:
                 # )
                 # id_hex = hex(int(id_dec_str))
                 # data.id = format(int(id_dec_str), 'x')
-                self.create_new_id(data)
+                self.create_new_id(data, operation_changing_id=None)
 
-    def create_new_id(self, data):
+    def create_new_id(self, data, operation_changing_id):
+        original_id = data.id
         id_dec_str = datetime.now().strftime("%y%m%d%H%M%S") + ''.join(
             str(random.randint(0, 9)) for _ in range(10)
         )
         id_hex = hex(int(id_dec_str))
         data_id = format(int(id_dec_str), 'x')
         data.id = data_id
+        if operation_changing_id:
+            data.comment = data.comment + f"\nOn: {original_id} performed {operation_changing_id}"
 
 
     def data_index_by_id(self, id):

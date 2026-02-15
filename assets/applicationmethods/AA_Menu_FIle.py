@@ -68,9 +68,7 @@ class MenuFileMixin:
 
 
     def save_as(self, filename = None):
-
         ''' Save as '''
-
         file_saved = self.eleana.save_project(filename)
         if not file_saved:
             return

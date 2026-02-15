@@ -1418,7 +1418,7 @@ class Application(MenuFileMixin,
         list_of_results = []
         try:
             for each in self.eleana.results_dataset:
-                new_id = each.create_new_id()
+                new_id = each.create_new_id(data = each, operation_changing_id = None)
                 each.id = new_id
                 list_of_results.append(each.name)
 
@@ -1578,7 +1578,7 @@ class Application(MenuFileMixin,
             return
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
-            self.eleana.create_new_id(result)
+            self.eleana.create_new_id(result, operation_changing_id=None)
             result.groups = [self.sel_group.get()]
             self.eleana.dataset.append(result)
         self.update.dataset_list()
@@ -1616,7 +1616,7 @@ class Application(MenuFileMixin,
         for each in self.eleana.results_dataset:
             result = copy.deepcopy(each)
             result.groups = selected
-            self.eleana.create_new_id(result)
+            self.eleana.create_new_id(result, operation_changing_id=None)
             self.eleana.dataset.append(result)
         self.update.group_list()
         self.update.dataset_list()
@@ -1641,7 +1641,7 @@ class Application(MenuFileMixin,
         index = self.eleana.selections['result']
         index_first = self.eleana.selections['first']
         result = copy.deepcopy(self.eleana.results_dataset[index])
-        self.eleana.create_new_id(result)
+        self.eleana.create_new_id(result, operation_changing_id=None)
         result.groups = [self.sel_group.get()]
         self.eleana.dataset.pop(index_first)
         self.eleana.dataset.insert(index_first, result)
@@ -1673,7 +1673,7 @@ class Application(MenuFileMixin,
             return
         index = self.eleana.selections['result']
         result = copy.deepcopy(self.eleana.results_dataset[index])
-        self.eleana.create_new_id(result)
+        self.eleana.create_new_id(result, operation_changing_id=None)
         result.groups = [self.sel_group.get()]
         self.eleana.dataset.append(result)
         self.update.dataset_list()
@@ -1921,6 +1921,9 @@ class Application(MenuFileMixin,
                 stk_names = self.eleana.dataset[select['first']].stk_names
                 stk_name = stk_names[select['f_stk']]
                 self.f_stk.set(stk_name)
+            else:
+                self.firstStkFrame.grid_remove()
+
             if self.eleana.dataset[select['first']].complex:
                 self.firstComplex.grid()
                 self.firstComplex.set(select['f_cpl'])
@@ -1937,6 +1940,9 @@ class Application(MenuFileMixin,
                 stk_names = self.eleana.dataset[select['second']].stk_names
                 stk_name = stk_names[select['s_stk']]
                 self.s_stk.set(stk_name)
+            else:
+                self.secondFrame.grid_remove()
+
             if self.eleana.dataset[select['second']].complex:
                 self.secondComplex.grid()
                 self.secondComplex.set(select['s_cpl'])
@@ -1953,6 +1959,9 @@ class Application(MenuFileMixin,
                 stk_names = self.eleana.result_dataset[select['result']].stk_names
                 stk_name = stk_names[select['r_stk']]
                 self.r_stk.set(stk_name)
+            else:
+                self.resultStkFrame.grid_remove()
+
             if self.eleana.results_dataset[select['result']].complex:
                 self.resultComplex.grid()
                 self.resultComplex.set(select['r_cpl'])

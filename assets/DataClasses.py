@@ -125,6 +125,7 @@ class BaseDataModel:
     comment: str = ''
     stk_names: Optional[List[str]] = None
     id: str = field(default_factory=generate_id, init=False)
+    #history: List[dict] = field(default_factory=lambda: [], init=False)
 
     @classmethod
     def from_dict(cls, data):
