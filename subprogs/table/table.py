@@ -260,7 +260,8 @@ class CreateFromTable:
 
     def generate_table(self, df=None, list2D=None):
         if df is not None:
-            self.table = Sheet(parent = self.tableFrame, total_rows=1024)
+            self.table = Sheet(parent = self.tableFrame, total_rows=1)
+            self.table.set_options(expand_sheet_if_paste_too_big=True)
             column_names = df.columns.tolist()
             table_data =  df.values.tolist()
             self.table.set_sheet_data(table_data)

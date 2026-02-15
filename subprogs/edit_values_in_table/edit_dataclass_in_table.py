@@ -7,12 +7,14 @@ import string
 from modules.tksheet import Sheet
 from assets.Error import Error
 from assets.Observer import Observer
+import copy
+from modules.CTkMessagebox import CTkMessagebox
 
 PROJECT_PATH = pathlib.Path(__file__).parent
-PROJECT_UI = PROJECT_PATH / "edit_values_in_table.ui"
+PROJECT_UI = PROJECT_PATH / "edit_dataset_in_table.ui"
 
-class EditValuesInTable:
-    def __init__(self, eleana_app=None, master=None,
+class EditDataclassInTable:
+    def __init__(self, eleana_app, master, grapher,
                     x = None,               # X array as 1D of np.array type
                     y = None,               # Y array as 1D or 2D np.array type
                     column_names = None,    # The column headers if None will be default
@@ -24,9 +26,9 @@ class EditValuesInTable:
         self.master = master
         self.eleana = eleana_app
         self.builder = builder = pygubu.Builder()
+        self.grapher = grapher
         builder.add_resource_path(PROJECT_PATH)
         builder.add_from_file(PROJECT_UI)
-        self.spreadsheet = spreadsheet
 
         # Register Observer
         self.observer = Observer(self.eleana, self)
@@ -51,40 +53,15 @@ class EditValuesInTable:
         self.frame_2.grid_remove()
         self.frame_3.grid_remove()
 
-        # Create data for table:
-        if spreadsheet is None:
-            self.row_counts = len(x)
-            x_data = np.atleast_1d(x)
-            shape = y.shape
-            if len(shape) == 2:
-                self.column_counts = shape[0] + 1
-            else:
-                self.column_counts = 2
-            y_data = np.atleast_2d(y).T
-
-            if complex is None:
-                self.complex = np.iscomplexobj(y_data)
-            else:
-                self.complex = complex
-            list2D = [[x_data[i], *y_data[i]] for i in range(0, len(x_data))]
-            if not column_names:
-                column_names = []
-                n = len(list2D[0])
-                for i in range(0, n):
-                    label = ""
-                    while i >= 0:
-                        label = string.ascii_uppercase[i % 26] + label
-                        i = i // 26 - 1
-                    column_names.append(label)
-        else:
-            list2D = spreadsheet
-            self.row_counts = len(list2D)
-        self.generate_table(column_names, list2D)
-
         self.response = None
         self.mainwindow.bind("<Escape>", self.cancel)
-        self.table.bind("<<Paste>>", self.paste_event)
         self.mainwindow.attributes('-topmost', True)
+
+        self.table = None
+
+        self.get_dataset_for_table(which = 'first')
+
+        self.modifications = False
 
     def get(self):
         if self.mainwindow.winfo_exists():
@@ -92,22 +69,35 @@ class EditValuesInTable:
         return self.response
 
     def cancel(self, event = None):
+        self.eleana.dataset[self.original_index] = copy.deepcopy(self.original_copy)
+        self.grapher.plot_graph(switch_cursors=False)
+
+
         self.response = None
+
+        # Unregister observer
+        self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
+        self.eleana.detach(self.observer)
+        self.observer = None
+
         self.mainwindow.destroy()
 
     def run(self):
         self.mainwindow.mainloop()
 
     def ok(self):
-        self.response = self.prepare_results()
-        if self.response is None:
-            return
+        # self.response = self.prepare_results()
+        # if self.response is None:
+        #     return
+        # Unregister observer
+        self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
+        self.eleana.detach(self.observer)
+        self.observer = None
+
         self.mainwindow.destroy()
 
     def prepare_results(self):
         row_counts = self.table.get_total_rows(include_index=False)
-        #row_counts = (self.row_counts)
-        #column_counts = self.column_counts
         column_counts = self.table.get_total_columns(include_header=False)
         data = []
         for n in range(row_counts):
@@ -123,8 +113,7 @@ class EditValuesInTable:
                         row_data.append(float(cell_value))
                 except ValueError:
                     continue
-                    Error.show(info = f'Could not convert entry "{cell_value}" to float. See column {m}, row {n+1}.')
-                    return None
+
             data.append(row_data)
         x_axis = [row.pop(0) for row in data]
         x = np.array(x_axis)
@@ -134,12 +123,15 @@ class EditValuesInTable:
         return [x, y]
 
     def generate_table(self, headers, list2D):
+        if self.table is not None:
+            self.table.destroy()
         self.table = Sheet(self.tableFrame)
         self.table.set_sheet_data(list2D)
         self.table.headers(headers)
         self.table.grid(row=0, column=0, sticky="nswe")
         self.table.change_theme(ctk.get_appearance_mode())
         self.table.enable_bindings("ctrl_select", "all", "right_click_popup_menu")
+        self.table.extra_bindings("sheetmodified", self.on_cell_change)
 
     def get_data_from_column(self, column_name):
         index = self.sel_x_axis._values.index(column_name)
@@ -156,8 +148,96 @@ class EditValuesInTable:
         self.table.set_sheet_data([[None] * ncols] * nrows)
 
     def data_changed(self, variable, value):
+        if variable != "grapher_action":
+            if self.modifications:
+                dialog = CTkMessagebox(message = "The data has been modified. Do you want to accept the changes?", option_1 = "Decline", option_2 = "Accept")
+                response = dialog.get()
+                if response == 'Decline':
+                    self.eleana.dataset[self.original_index] = self.original_copy
+                    self.modifications = False
+
         if variable == "first":
-            pass
+            self.get_dataset_for_table(which = 'first')
+            self.modifications = False
+        else:
+            return
+
+    def get_dataset_for_table(self, which):
+        ''' Get current data for table'''
+        index_in_data = self.eleana.selections[which]
+        data = self.eleana.dataset[index_in_data]
+
+        # Create copy of original data and position in dataset
+        self.original_copy = copy.deepcopy(data)
+        self.original_index = index_in_data
+
+        # Prepare values for cells
+        x_header = f"{data.parameters['name_x']} [{data.parameters['unit_x']}]"
+        if data.type == 'single 2D' or data.type == "":
+            y_header = f"{data.parameters.get('name_y', '')} [{data.parameters.get('unit_y', '')}]"
+            headers = [x_header, y_header]
+        elif data.type == 'stack 2D':
+            headers = [x_header]
+            headers.extend(data.stk_names)
+        list2D = self.create_data_for_table(data.x, data.y, complex_ = data.complex, column_names=headers)
+
+        self.generate_table(headers = headers, list2D = list2D)
+        self.mainwindow.title(data.name_nr)
+
+    def create_data_for_table(self, x, y, complex_, column_names):
+        self.row_counts = len(x)
+        x_data = np.atleast_1d(x)
+        shape = y.shape
+        if len(shape) == 2:
+            self.column_counts = shape[0] + 1
+        else:
+            self.column_counts = 2
+        y_data = np.atleast_2d(y).T
+
+        if complex_ is None:
+            self.complex = np.iscomplexobj(y_data)
+        else:
+            self.complex = complex_
+        list2D = [[x_data[i], *y_data[i]] for i in range(0, len(x_data))]
+        if not column_names:
+            column_names = []
+            n = len(list2D[0])
+            for i in range(0, n):
+                label = ""
+                while i >= 0:
+                    label = string.ascii_uppercase[i % 26] + label
+                    i = i // 26 - 1
+                column_names.append(label)
+        return list2D
+
+
+    def on_cell_change(self, event):
+        col = event.column
+        row = event.row
+        text = event.text
+        try:
+            value = float(text)
+        except:
+            Error.show(info = "Could not convert value to float. See column {col}.")
+            return
+
+        if col == 0:
+            data = self.eleana.dataset[self.original_index].x
+        elif col == 1:
+            data = self.eleana.dataset[self.original_index].y
+
+        data[row] = value
+        self.modifications = True
+
+        self.grapher.plot_graph(switch_cursors=False)
+
+        return event.text
+
+    def reset_changes(self):
+        self.eleana.dataset[self.original_index] = self.original_copy
+        self.modifications = False
+        self.get_dataset_for_table(which = 'first')
+        self.grapher.plot_graph(switch_cursors=False)
 
 if __name__ == "__main__":
     app = CreateFromTable()

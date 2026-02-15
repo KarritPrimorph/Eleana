@@ -1,7 +1,9 @@
 from assets.Callbacks import main_menubar_callbacks
 from assets.Error import Error
 from modules.CTkMessagebox import CTkMessagebox
+
 from subprogs.edit_values_in_table.edit_values_in_table import EditValuesInTable
+from subprogs.edit_values_in_table.edit_dataclass_in_table import EditDataclassInTable
 from subprogs.table.table import CreateFromTable
 from subprogs.edit_parameters.edit_parameters import EditParameters
 from subprogs.group_edit.stack_to_group import StackToGroup
@@ -23,7 +25,7 @@ class MenuEditMixin:
 
     def edit_values_in_table(self, which ='first'):
 
-        ''' Edit data in tablec'''
+        ''' Edit data in table'''
 
         if which == 'first' or which == 'second':
             index_in_data = self.eleana.selections[which]
@@ -43,24 +45,37 @@ class MenuEditMixin:
             Error.show(info = "Data type not specified. Expected 'single 2D' or 'stack 2D'")
             return
 
-        table = EditValuesInTable(eleana_app=self.eleana,
-                                master=self.mainwindow,
-                                x = data.x,
-                                y = data.y,
-                                #name = data.name,
-                                #window_title = f"Edit {data.name}",
-                                column_names = headers,
-                                complex = data.complex
-                                )
-        response = table.get()
-        if response is None:
-            return
-        data.x = response[0]
-        data.y = response[1]
-        self.update.dataset_list()
-        self.update.group_list()
-        self.update.all_lists()
-        self.grapher.plot_graph()
+        # table = EditValuesInTable(eleana_app=self.eleana,
+        #                         master=self.mainwindow,
+        #                         x = data.x,
+        #                         y = data.y,
+        #                         #name = data.name,
+        #                         #window_title = f"Edit {data.name}",
+        #                         column_names = headers,
+        #                         complex = data.complex
+        #                         )
+
+        table = EditDataclassInTable(eleana_app=self.eleana,
+                                  master=self.mainwindow,
+                                  grapher = self.grapher,
+                                  # x=data.x,
+                                  # y=data.y,
+                                  # # name = data.name,
+                                  # # window_title = f"Edit {data.name}",
+                                  # column_names=headers,
+                                  # complex=data.complex
+                                  )
+
+
+        # response = table.get()
+        # if response is None:
+        #     return
+        # data.x = response[0]
+        # data.y = response[1]
+        # self.update.dataset_list()
+        # self.update.group_list()
+        # self.update.all_lists()
+        # self.grapher.plot_graph()
 
     def create_from_table(self):
 
@@ -71,7 +86,7 @@ class MenuEditMixin:
 
         value = ""
         cols = 10
-        rows = 4096
+        rows = 100
         # Generate empty table
         data = [[value for _ in range(cols)] for _ in range(rows)]
 
