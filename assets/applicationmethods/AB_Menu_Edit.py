@@ -29,16 +29,44 @@ class MenuEditMixin:
                 # all_names.append(each.name)
                 # all_names_nr.append(each.name_nr)
                 # all_stknames.append(each.stk_names)
-        i = True
-        while i:
-            dialog = SingleDialog(master = self.mainwindow, title="Search for ID", label = "Enter the ID:")
-            search_for_id = dialog.get()
-            if search_for_id is None:
-                return
-            if len(search_for_id) == 18 and all(c in "0123456789abcdefABCDEF" for c in search_for_id):
-                if search_for_id.lower() in all_ids:
-                    index = all_ids.index(search_for_id.lower())
-                    assign = CTkMessagebox(message = "Data found. Do you want to display it as:", option_1 = "Cancel", option_2 = "Second", option_3 = "First")
+            i = True
+            while i:
+                dialog = SingleDialog(master = self.mainwindow, title="Search for ID", label = "Enter the ID:")
+                search_for_id = dialog.get()
+                if search_for_id is None:
+                    return
+                if len(search_for_id) == 18 and all(c in "0123456789abcdefABCDEF" for c in search_for_id):
+                    if search_for_id.lower() in all_ids:
+                        index = all_ids.index(search_for_id.lower())
+                        assign = CTkMessagebox(message = "Data found. Do you want to display it as:", option_1 = "Cancel", option_2 = "Second", option_3 = "First")
+                        response = assign.get()
+                        i = False
+                        if response == "First":
+                            self.eleana.selections['first'] = index
+                            self.eleana.selections['f_dsp'] = True
+                            self.gui_to_selections()
+                        elif response == "Second":
+                            self.eleana.selections['second'] = index
+                            self.eleana.selections['s_dsp'] = True
+                            self.gui_to_selections()
+                    else:
+                        i = False
+                else:
+                    Error.show(info = "Please enter a valid ID.")
+        elif find_by == 'name':
+            all_names = []
+            for each in self.eleana.dataset:
+                all_names.append(each.name)
+            i = True
+            while i:
+                dialog = SingleDialog(master=self.mainwindow, title="Search for name", label="Enter the name:")
+                search_for_name = dialog.get()
+                if search_for_name is None:
+                    return
+                if search_for_name.lower() in all_names:
+                    index = all_names.index(search_for_names.lower())
+                    assign = CTkMessagebox(message="Data found. Do you want to display it as:", option_1="Cancel",
+                                           option_2="Second", option_3="First")
                     response = assign.get()
                     i = False
                     if response == "First":
@@ -50,9 +78,7 @@ class MenuEditMixin:
                         self.eleana.selections['s_dsp'] = True
                         self.gui_to_selections()
                 else:
-                    i = False
-            else:
-                Error.show(info = "Please enter a valid ID.")
+                    Error.show(info="")
 
 
     def edit_values_in_table(self, which ='first'):
