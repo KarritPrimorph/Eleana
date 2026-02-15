@@ -363,7 +363,19 @@ class Eleana:
         except Exception as e:
             Error.show(info="Cannot create the project file", details=e)
             return None
-        project_information = {'project version':'1.0'}
+        if self.dataset:
+            collected_ids = [each.id for each in self.dataset]
+            collected_names = [each.name for each in self.dataset]
+            collected_stknames = [each.stk_names for each in self.dataset]
+        else:
+            collected_ids = []
+        project_information = {'project version':'1.0',
+                               'ids':collected_ids,
+                               'names':collected_names,
+                               'stk_names':collected_stknames
+                               }
+
+
         project_to_save = Project_1(dataset = self.dataset,
                                     results_dataset = self.results_dataset,
                                     groupsHierarchy = self.groupsHierarchy,

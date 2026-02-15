@@ -15,13 +15,23 @@ from subprogs.user_input.TwoListSelection import TwoListSelection
 import numpy as np
 import pandas
 import copy
+from rapidfuzz import process as fuzz
 
 class MenuEditMixin:
     def find(self, find_by):
-
         ''' Find '''
+        if find_by == 'id':
+            all_ids = []
+            all_names = []
+            all_names_nr = []
+            for each in self.eleana.dataset:
+                all_ids.append(each.id)
+                # all_names.append(each.name)
+                # all_names_nr.append(each.name_nr)
+                # all_stknames.append(each.stk_names)
 
-        print("FIND Mixin")
+
+
 
     def edit_values_in_table(self, which ='first'):
 
@@ -58,12 +68,6 @@ class MenuEditMixin:
         table = EditDataclassInTable(eleana_app=self.eleana,
                                   master=self.mainwindow,
                                   grapher = self.grapher,
-                                  # x=data.x,
-                                  # y=data.y,
-                                  # # name = data.name,
-                                  # # window_title = f"Edit {data.name}",
-                                  # column_names=headers,
-                                  # complex=data.complex
                                   )
 
 
