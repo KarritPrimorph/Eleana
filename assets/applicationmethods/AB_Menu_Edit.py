@@ -16,10 +16,14 @@ import numpy as np
 import pandas
 import copy
 from subprogs.user_input.single_dialog import SingleDialog
+from rapidfuzz import fuzz
 
 class MenuEditMixin:
     def find(self, find_by):
+
         ''' Find '''
+
+       # By ID
         if find_by == 'id':
             all_ids = []
             all_names = []
@@ -53,6 +57,8 @@ class MenuEditMixin:
                         i = False
                 else:
                     Error.show(info = "Please enter a valid ID.")
+
+        # By NAME
         elif find_by == 'name':
             all_names = []
             for each in self.eleana.dataset:
@@ -78,7 +84,9 @@ class MenuEditMixin:
                         self.eleana.selections['s_dsp'] = True
                         self.gui_to_selections()
                 else:
-                    Error.show(info="")
+                    # USE FUZZ for best matching
+                    i = False
+                    print('Fuzz matching TO DO')
 
 
     def edit_values_in_table(self, which ='first'):
