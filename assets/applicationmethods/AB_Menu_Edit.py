@@ -11,12 +11,12 @@ from subprogs.select_data.select_items import SelectItems
 from subprogs.notepad.notepad import Notepad
 from subprogs.preferences.preferences import PreferencesApp
 from subprogs.user_input.TwoListSelection import TwoListSelection
-
+from subprogs.select_data.select_data import SelectData
 import numpy as np
 import pandas
 import copy
 from subprogs.user_input.single_dialog import SingleDialog
-from rapidfuzz import fuzz
+import rapidfuzz
 
 class MenuEditMixin:
     def find(self, find_by):
@@ -62,7 +62,7 @@ class MenuEditMixin:
         elif find_by == 'name':
             all_names = []
             for each in self.eleana.dataset:
-                all_names.append(each.name)
+                all_names.append(each.name_nr)
             i = True
             while i:
                 dialog = SingleDialog(master=self.mainwindow, title="Search for name", label="Enter the name:")
@@ -70,7 +70,7 @@ class MenuEditMixin:
                 if search_for_name is None:
                     return
                 if search_for_name.lower() in all_names:
-                    index = all_names.index(search_for_names.lower())
+                    index = all_names.index(search_for_name.lower())
                     assign = CTkMessagebox(message="Data found. Do you want to display it as:", option_1="Cancel",
                                            option_2="Second", option_3="First")
                     response = assign.get()
@@ -86,7 +86,28 @@ class MenuEditMixin:
                 else:
                     # USE FUZZ for best matching
                     i = False
-                    print('Fuzz matching TO DO')
+                    best = rapidfuzz.process.extract(query = search_for_name, choices = all_names)
+                    found_names = [name[0] for name in best]
+                    indexes = []
+                    for found_name in found_names:
+                        idx = self.eleana.get_index_by_name(found_name)
+                        if idx is not None:
+                            indexes.append(self.eleana.get_index_by_name(found_name))
+                    if not indexes:
+                        Error.show(info = "No data found. Please try again.")
+
+                    select_data = SelectData(master = self.mainwindow,
+                                             title = 'Found data',
+                                             items = found_names,
+                                             group='All',
+                                             multiple_selections = False
+                                             )
+                    response = select_data.get()
+
+                    if response is None:
+                        return
+                    self.group_selected('All')
+                    self.first_selected(response)
 
 
     def edit_values_in_table(self, which ='first'):
