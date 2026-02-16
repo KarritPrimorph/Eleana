@@ -351,6 +351,8 @@ class CurveFit(Methods, WindowGUI):
                               'non-negative': []
                               }
 
+        self._rebuilding_table = False
+
         # Populate lists
         self.populate_category_and_functions()
 
@@ -544,6 +546,10 @@ class CurveFit(Methods, WindowGUI):
         ''' Create table for initial guesses and displays it in the Tab
         '''
 
+        if self._rebuilding_table:
+            return
+        self._rebuilding_table = True
+
         # FRAME PARAMETERS
         if self.table_widgets['parameter']:
             for widget in self.tableFrames['parameter'].winfo_children():
@@ -662,8 +668,13 @@ class CurveFit(Methods, WindowGUI):
             entry.grid(row=i, column=0, padx=2, pady=0, sticky="")
             self.table_widgets['non-negative'].append(entry)
 
+        self._rebuilding_table = False
+
     def table_changed(self, widget = None, parameter=None):
         ''' Called when function values, parameters or anything in GUI changes'''
+
+        if self._rebuilding_table:
+            return
 
         if self.eleana.selections['first'] < 0:
             return

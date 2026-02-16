@@ -34,6 +34,7 @@ class MenuFileMixin:
         self.update.all_lists()
         path_to_file = Path(self.eleana.paths['last_projects'][0])
         name = path_to_file.name
+        name = name.replace('.ele', '')
         self.mainwindow.title(name + ' - Eleana')
         self.eleana.paths['last_project_dir'] = str(Path(path_to_file).parent)
         self.main_menubar.last_projects_menu()
@@ -85,8 +86,10 @@ class MenuFileMixin:
         if win_title == 'new project - Eleana':
             self.save_as(filename = None)
         else:
-            file = win_title[:-13]
-            file = file + '.ele'
+            file = win_title[:-9].strip()
+            file = file
+            if '.ele' not in file:
+                file = file + '.ele'
             filename = Path(self.eleana.paths['last_project_dir'], file)
             self.save_as(filename)
 

@@ -556,6 +556,8 @@ class MainMenu:
         for each in self.eleana.paths['last_projects']:
             item = Path(each)
             item = str(i) + '. ' + item.name
+            if '.ele' in item:
+                item = item.replace('.ele', '')
             list_for_menu.append(item)
             i += 1
         recent_menu = self.menu_recent

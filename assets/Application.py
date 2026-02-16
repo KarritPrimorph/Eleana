@@ -48,6 +48,7 @@ from assets.LoadSave import Load, Save, Export
 from assets.Update import Update
 from assets.DataClasses import BaseDataModel
 from assets.Error import Error
+from assets.Staticplotwindow import Staticplotwindow
 
 ''' SUBPROGS '''
 from subprogs.user_input.single_dialog import SingleDialog
