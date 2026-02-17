@@ -67,11 +67,13 @@ class Project_1:
 class Eleana:
     # Main attributes associated with data gathered in the programe
     def __init__(self, version, devel):
+        self._application_started = False
         self.devel_mode = devel
         self.version = version
         self.initialize()
 
     def initialize(self):
+
         self.busy = False                               # <-- This variable is set to True if something is triggered in application and other proces must wait until it is False
         self.dataset = []                               # <-- This variable keeps all spectra available in Eleana. It is a list of objects
         self.results_dataset = []                       # <-- This keeps data containing results

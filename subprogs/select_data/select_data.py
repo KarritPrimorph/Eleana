@@ -84,8 +84,6 @@ class SelectData:
         self.mainwindow.destroy()
 
     def on_mousewheel(self, event):
-
-        print('Myszka')
         if event.delta:
             print(event)
             #self.selection_list.yview_scroll(int(-1 * (event.delta / 120)), "units")

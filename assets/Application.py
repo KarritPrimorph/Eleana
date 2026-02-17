@@ -31,6 +31,8 @@ from tkinterdnd2 import DND_FILES
 from assets.Menu import ContextMenu
 from scipy.interpolate import CubicSpline
 
+from assets.applicationmethods.GUI_Auxilary_axes import AuxilaryAxesMixin
+
 ''' ELEANA MODULES '''
 # Import modules from "/modules" folder
 from modules.CTkListbox import CTkListbox
@@ -104,7 +106,8 @@ class Application(MenuFileMixin,
                   MenuAnalysisMixin,
                   MenuModificationsMixin,
                   MenuEPRMixin,
-                  MenuToolsMixin):
+                  MenuToolsMixin,
+                  AuxilaryAxesMixin):
 
     def __init__(self, eleana_instance, command_processor, root=None, splash=None):
 
@@ -351,6 +354,7 @@ class Application(MenuFileMixin,
         # Add Drag and Drop functionality
         self.mainwindow.drop_target_register(DND_FILES)
         self.mainwindow.dnd_bind("<<Drop>>", self._on_drop_files)
+
     ''' 
      ----------    METHODS   -------------
     '''
@@ -493,72 +497,72 @@ class Application(MenuFileMixin,
         else:
             self.check_indexed_x.deselect()
         #
-    def auxilary_axes(self):
-        ''' Changes in status of auxilary axes '''
-        second = False if self.eleana.selections['second'] < 0 else True
-        is_on = bool(self.eleana.selections['s_dsp'])
-        if second and is_on:
-            self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
-        else:
-            self.eleana.gui_state.auxilary_axes = False
-
-        if self.eleana.gui_state.auxilary_axes:
-            self.aux_reset_frame.grid()
-        else:
-            self.aux_reset_frame.grid_remove()
-        self.grapher.toggle_aux_axis()
-
-
-    def reset_auxilary_axes(self):
-        ''' Set scales in auxilary to main axes'''
-        self.grapher.plot_graph()
-        self.grapher.on_mouse_release()
-
-    def reset_auxilary_x(self):
-        ''' Set x axis in auxilary scale the sami as in main'''
-        x_lim = self.grapher.aux_ax.get_xlim()
-        self.grapher.ax.set_xlim(x_lim)
-        self.grapher.canvas.draw_idle()
-        self.grapher.on_mouse_release()
-
-    def reset_auxilary_y(self):
-        ''' Set y axis in auxilary scale the sami as in main'''
-        y_lim = self.grapher.aux_ax.get_ylim()
-        self.grapher.ax.set_ylim(y_lim)
-        self.grapher.canvas.draw_idle()
-        self.grapher.on_mouse_release()
-
-    def apply_scaling(self):
-        ''' Multiply scales in selected data according to the scaling factor '''
-        index = self.eleana.selections['first']
-        if index < 0:
-            return
-        data = copy.deepcopy(self.eleana.dataset[index])
-        main_x_scale = self.grapher.ax.get_xlim()
-        auxi_x_scale = self. grapher.aux_ax.get_xlim()
-
-        main_y_scale = self.grapher.ax.get_ylim()
-        auxi_y_scale = self. grapher.aux_ax.get_ylim()
-
-        factor_y = (auxi_y_scale[1] - auxi_y_scale[0]) / (main_y_scale[1] - main_y_scale[0])
-        delta_y = main_y_scale[0] * factor_y - auxi_y_scale[0]
-        data.y = data.y * factor_y
-        data.y = data.y - delta_y
-
-        factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
-        delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
-
-        data.x = data.x * factor_x
-        data.x = data.x - delta_x
-
-        data.name = data.name + ':RESCALED'
-
-        self.eleana.results_dataset.append(data)
-        self.update.dataset_list()
-        self.update.all_lists()
-
-        self.result_selected(data.name)
-        self.sel_result.set(data.name)
+    # def auxilary_axes(self):
+    #     ''' Changes in status of auxilary axes '''
+    #     second = False if self.eleana.selections['second'] < 0 else True
+    #     is_on = bool(self.eleana.selections['s_dsp'])
+    #     if second and is_on:
+    #         self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
+    #     else:
+    #         self.eleana.gui_state.auxilary_axes = False
+    #
+    #     if self.eleana.gui_state.auxilary_axes:
+    #         self.aux_reset_frame.grid()
+    #     else:
+    #         self.aux_reset_frame.grid_remove()
+    #     self.grapher.toggle_aux_axis()
+    #
+    #
+    # def reset_auxilary_axes(self):
+    #     ''' Set scales in auxilary to main axes'''
+    #     self.grapher.plot_graph()
+    #     self.grapher.on_mouse_release()
+    #
+    # def reset_auxilary_x(self):
+    #     ''' Set x axis in auxilary scale the sami as in main'''
+    #     x_lim = self.grapher.aux_ax.get_xlim()
+    #     self.grapher.ax.set_xlim(x_lim)
+    #     self.grapher.canvas.draw_idle()
+    #     self.grapher.on_mouse_release()
+    #
+    # def reset_auxilary_y(self):
+    #     ''' Set y axis in auxilary scale the sami as in main'''
+    #     y_lim = self.grapher.aux_ax.get_ylim()
+    #     self.grapher.ax.set_ylim(y_lim)
+    #     self.grapher.canvas.draw_idle()
+    #     self.grapher.on_mouse_release()
+    #
+    # def apply_scaling(self):
+    #     ''' Multiply scales in selected data according to the scaling factor '''
+    #     index = self.eleana.selections['first']
+    #     if index < 0:
+    #         return
+    #     data = copy.deepcopy(self.eleana.dataset[index])
+    #     main_x_scale = self.grapher.ax.get_xlim()
+    #     auxi_x_scale = self. grapher.aux_ax.get_xlim()
+    #
+    #     main_y_scale = self.grapher.ax.get_ylim()
+    #     auxi_y_scale = self. grapher.aux_ax.get_ylim()
+    #
+    #     factor_y = (auxi_y_scale[1] - auxi_y_scale[0]) / (main_y_scale[1] - main_y_scale[0])
+    #     delta_y = main_y_scale[0] * factor_y - auxi_y_scale[0]
+    #     data.y = data.y * factor_y
+    #     data.y = data.y - delta_y
+    #
+    #     factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
+    #     delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
+    #
+    #     data.x = data.x * factor_x
+    #     data.x = data.x - delta_x
+    #
+    #     data.name = data.name + ':RESCALED'
+    #
+    #     self.eleana.results_dataset.append(data)
+    #     self.update.dataset_list()
+    #     self.update.all_lists()
+    #
+    #     self.result_selected(data.name)
+    #     self.sel_result.set(data.name)
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
@@ -650,6 +654,9 @@ class Application(MenuFileMixin,
         self.mainwindow.deiconify()
         if splash is not None:
             splash.destroy()
+
+        # Set Application status - Run
+        self.eleana._application_started = True
         self.mainwindow.mainloop()
 
     def after_gui_action(self, by_method = None):
