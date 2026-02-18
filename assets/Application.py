@@ -1949,7 +1949,7 @@ class Application(MenuFileMixin,
                 stk_name = stk_names[select['s_stk']]
                 self.s_stk.set(stk_name)
             else:
-                self.secondFrame.grid_remove()
+                self.secondStkFrame.grid_remove()
 
             if self.eleana.dataset[select['second']].complex:
                 self.secondComplex.grid()
