@@ -238,6 +238,7 @@ class SubMethods_07:
     def cancel(self, event=None):
         ''' Close the window with self.response = None '''
         self._destroying = True
+        print('restore', self.subprog_cursor['previous'])
         DEVEL = copy.copy(self.eleana.devel_mode)
 
         # Unregister observer

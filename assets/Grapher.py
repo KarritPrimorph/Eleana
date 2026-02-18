@@ -118,7 +118,7 @@ class Grapher():
 
         # Setting cursor mode
         self.cursor_modes = self.eleana.settings.grapher['cursor_modes']
-        self.current_cursor_mode = self.cursor_modes[0]
+        self.current_cursor_mode = copy.copy(self.cursor_modes[0])
 
         # Create variable for storing min-max
         self.scale1 = {'x': [], 'y': []}
@@ -322,7 +322,7 @@ class Grapher():
             data = {'x': [], 're_y': [], 'im_y': [], 'complex': False}
         return data
 
-    def plot_graph(self, switch_cursors = True ):
+    def plot_graph(self, switch_cursors = False):
         ''' This method plots the basic working plot with First,Second,Result'''
         # Set states
         if self._is_drawing:

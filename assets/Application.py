@@ -2879,7 +2879,8 @@ class Application(MenuFileMixin,
         self.grapher.current_cursor_mode['label'] = value
         self.sel_cursor_mode.set(value)
         self.eleana.gui_state.cursor_mode = copy.copy(value)
-        self.grapher.plot_graph()
+        self.grapher.cursor_on_off()
+        #self.grapher.plot_graph()
 
     def select_data_from_group(self, title):
         av_data = self.sel_first._values

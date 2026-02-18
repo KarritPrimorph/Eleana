@@ -1,3 +1,5 @@
 1. Sprawdzić czy wszędzie gdzie modyfikowane są dane bezpośrednio na danych Dataset to:
     a) zmieniane jest ID
     b) tworzone jest zależność w comments jaka hest historia IDs tego widma
+
+2. Przy uruchamianiu Polynomial baseline co drugi raz nie aktywuje się Range select.
