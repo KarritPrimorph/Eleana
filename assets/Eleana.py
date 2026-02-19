@@ -515,6 +515,7 @@ class Eleana:
             if name == selected_value_text:
                 return i
             i += 1
+        return None
 
     def get_indexes_from_group(self):
         ''' Return list of indexes in self.dataset

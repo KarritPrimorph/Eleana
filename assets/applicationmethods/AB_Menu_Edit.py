@@ -12,11 +12,16 @@ from subprogs.notepad.notepad import Notepad
 from subprogs.preferences.preferences import PreferencesApp
 from subprogs.user_input.TwoListSelection import TwoListSelection
 from subprogs.select_data.select_data import SelectData
+from subprogs.select_data.select_items import SelectItems
 import numpy as np
 import pandas
 import copy
 from subprogs.user_input.single_dialog import SingleDialog
 import rapidfuzz
+from pathlib import Path
+from tkinter import filedialog
+import zipfile
+
 
 class MenuEditMixin:
     def find(self, find_by):
@@ -109,6 +114,72 @@ class MenuEditMixin:
                     self.group_selected('All')
                     self.first_selected(response)
 
+        # On disk
+        elif find_by == 'projectname':
+            # Ask for directory
+            dialog = SingleDialog(master=self.mainwindow, title="Search on disk", label="Enter the project name:")
+            search_for_projectname = dialog.get()
+
+            folder = filedialog.askdirectory()
+            if not folder:
+                return
+
+            data = self._scan_for_files(folder = folder,
+                                        mode = find_by)
+
+            if not data:
+                return
+
+            # Use fuzz to find best matched filenames
+            filenames = data.get('name')
+            if not filenames:
+                return
+            i = False
+            best = rapidfuzz.process.extract(query=search_for_projectname, choices=filenames)
+            found_names = [name[0] for name in best]
+            select = SelectItems(master = self.mainwindow,
+                                 title = 'Select project to load',
+                                 items = found_names,
+                                 multiple_selections = False
+                                 )
+            selected = select.get()
+
+            return
+
+    def _scan_for_files(self, folder, mode = 'projectname'):
+        folder = Path(folder)
+        try:
+            ele_files = [p for p in folder.rglob("*.ele") if p.is_file()]
+        except Exception as e:
+            Error.show(title='Search on disk', info='Error while searchin for files', details=e)
+            return None
+
+        # Collect info.txt from each file
+        results = {}
+        for ele_path in ele_files:
+            try:
+                with zipfile.ZipFile(ele_path) as z:
+                    try:
+                        with z.open("info.txt") as f:
+                            content = f.read().decode("utf-8")
+                            results[ele_path] = content
+                    except KeyError:
+                        # No info.txt, ignore
+                        continue
+
+            except zipfile.BadZipFile:
+                # Broken file, ignore
+                continue
+
+        # Return what requested
+        if mode == 'projectname':
+            zwrot = {'name': [p.name for p in ele_files],
+                    'path': ele_files}
+
+        elif mode == 'content':
+            zwrot = {'content':results,
+                     'path': ele_files}
+        return zwrot
 
     def edit_values_in_table(self, which ='first'):
 
@@ -132,31 +203,11 @@ class MenuEditMixin:
             Error.show(info = "Data type not specified. Expected 'single 2D' or 'stack 2D'")
             return
 
-        # table = EditValuesInTable(eleana_app=self.eleana,
-        #                         master=self.mainwindow,
-        #                         x = data.x,
-        #                         y = data.y,
-        #                         #name = data.name,
-        #                         #window_title = f"Edit {data.name}",
-        #                         column_names = headers,
-        #                         complex = data.complex
-        #                         )
-
         table = EditDataclassInTable(eleana_app=self.eleana,
                                   master=self.mainwindow,
                                   grapher = self.grapher,
                                   )
 
-
-        # response = table.get()
-        # if response is None:
-        #     return
-        # data.x = response[0]
-        # data.y = response[1]
-        # self.update.dataset_list()
-        # self.update.group_list()
-        # self.update.all_lists()
-        # self.grapher.plot_graph()
 
     def create_from_table(self):
 

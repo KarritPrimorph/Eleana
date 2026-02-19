@@ -241,6 +241,9 @@ class MainMenu:
         self.menu_find.add_command(label="Find Name", command=lambda x='name': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
+        # ----- Find by Name
+        self.menu_find.add_command(label="Find Project on disk", command=lambda x='projectname': self.callbacks.get('find')(x),
+                                   image=self.icon_magnifier, compound="left")
 
         # - Separator
         self.menu_edit.add_separator()
