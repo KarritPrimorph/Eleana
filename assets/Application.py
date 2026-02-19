@@ -1194,7 +1194,7 @@ class Application(MenuFileMixin,
         if selection == 'None':
             return
         self.second_selected(selection)
-        self.auxilary_axes()
+        #self.auxilary_axes()
 
     #@check_busy
     def second_selected(self, selected_value_text):

@@ -6,19 +6,8 @@ class AuxilaryAxesMixin:
 
     def auxilary_axes(self):
         ''' Changes in status of auxilary axes '''
-        second = False if self.eleana.selections['second'] < 0 else True
-        is_on = bool(self.eleana.selections['s_dsp'])
-        if second and is_on:
-            self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
-        else:
-            if self.eleana._application_started:
-                info = CTkMessagebox(master = self.mainwindow,
-                                     message = 'Both First and Second mus be displayed to activate auxilary axes.',
-                                     icon='warning',
-                                     title = "Auxilary axes")
-            self.eleana.gui_state.auxilary_axes = False
-            self.check_auxilary_axes.deselect()
 
+        self.eleana.gui_state.auxilary_axes = bool(self.app.check_aux)
         if self.eleana.gui_state.auxilary_axes:
             self.aux_reset_frame.grid()
         else:
@@ -50,6 +39,25 @@ class AuxilaryAxesMixin:
 
     def apply_scaling(self):
         ''' Multiply scales in selected data according to the scaling factor '''
+
+        # Check if first and second is selected and on
+        fir = False if self.eleana.selections['first'] < 0 else True
+        fon = bool(self.eleana.selections['f_dsp'])
+        first = fir and fon
+
+        sec = False if self.eleana.selections['second'] < 0 else True
+        son = bool(self.eleana.selections['s_dsp'])
+        second = sec and son
+
+        if not first or not second:
+            info = CTkMessagebox(master=self.mainwindow,
+                             message='Both First and Second mus be displayed to activate auxilary axes.',
+                             icon='warning',
+                             title="Apply scaling")
+
+            return
+
+
         index = self.eleana.selections['first']
         if index < 0:
             return
@@ -73,10 +81,11 @@ class AuxilaryAxesMixin:
                                 )
 
         response = dialog.get()
+        indexes = []
         if response is None:
             return
         elif response == "First":
-            indexes = [self.eleana.selectons['first']]
+            indexes = [self.eleana.selections['first']]
         elif response == "All in group":
             indexes = self.eleana.get_indexes_from_group()
         elif response == "Select from list":
@@ -92,11 +101,17 @@ class AuxilaryAxesMixin:
                                 items = items
                                 )
             indexes = select.get()
-            print(indexes)
-            if indexes is None:
-                return
 
-    def _apply_scalling_operation(self, indexes, factor_x, delta_x, factor_y, delta_y):
+        if not indexes:
+            return
+        self._apply_scaling_operation(indexes = indexes,
+                                      factor_y = factor_y,
+                                      factor_x = factor_x,
+                                      delta_x = delta_x,
+                                      delta_y = delta_y
+                                      )
+
+    def _apply_scaling_operation(self, indexes, factor_x, delta_x, factor_y, delta_y):
 
         for index in indexes:
             data = copy.deepcopy(self.eleana.dataset[index])
@@ -114,8 +129,8 @@ class AuxilaryAxesMixin:
         self.update.dataset_list()
         self.update.all_lists()
 
-        #self.result_selected(data.name)
-        #self.sel_result.set(data.name)
+        self.result_selected(data.name)
+        self.sel_result.set(data.name)
 
     # def apply_scaling(self):
     #     ''' Multiply scales in selected data according to the scaling factor '''
