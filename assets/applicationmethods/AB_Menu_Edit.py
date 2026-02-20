@@ -21,7 +21,7 @@ import rapidfuzz
 from pathlib import Path
 from tkinter import filedialog
 import zipfile
-
+import ast
 
 class MenuEditMixin:
     def find(self, find_by):
@@ -31,13 +31,8 @@ class MenuEditMixin:
        # By ID
         if find_by == 'id':
             all_ids = []
-            all_names = []
-            all_names_nr = []
             for each in self.eleana.dataset:
                 all_ids.append(each.id.lower())
-                # all_names.append(each.name)
-                # all_names_nr.append(each.name_nr)
-                # all_stknames.append(each.stk_names)
             i = True
             while i:
                 dialog = SingleDialog(master = self.mainwindow, title="Search for ID", label = "Enter the ID:")
@@ -61,7 +56,7 @@ class MenuEditMixin:
                     else:
                         i = False
                 else:
-                    Error.show(info = "Please enter a valid ID.")
+                    Error.show(master = self.mainwindow, info = "Please enter a valid ID.")
 
         # By NAME
         elif find_by == 'name':
@@ -114,7 +109,7 @@ class MenuEditMixin:
                     self.group_selected('All')
                     self.first_selected(response)
 
-        # On disk
+        # Search for Project Name
         elif find_by == 'projectname':
             # Ask for directory
             dialog = SingleDialog(master=self.mainwindow, title="Search on disk", label="Enter the project name:")
@@ -143,15 +138,55 @@ class MenuEditMixin:
                                  multiple_selections = False
                                  )
             selected = select.get()
+            if selected is None:
+                return
+            idx = filenames.index(selected)
+            project_to_load = data['path'][idx]
+            self.load_project(filename = project_to_load)
 
-            return
+        # Search for content in files:
+        elif find_by == 'idondisk':
+            # Ask for directory
+            dialog = SingleDialog(master=self.mainwindow, title="Search for ID on disk", label="Enter the spectrum ID:")
+            search_for_id = dialog.get()
+
+            folder = filedialog.askdirectory()
+            if not folder:
+                return
+
+            data = self._scan_for_files(folder=folder,
+                                        mode='content')
+
+            # Get the IDs
+            ids_in_files = []
+            i = 0
+            found = False
+            for item in data:
+                #item = ast.literal_eval(item)
+                #content = item.get('ids', None)
+                #i+=1
+                #if content is not None:
+                #    if search_for_id in content:
+                #        found = True
+                #        break
+                pass
+            if found:
+                print('Found in nr', data['path'][i])
+
+
+            if not data:
+                return
+
+
+
+
 
     def _scan_for_files(self, folder, mode = 'projectname'):
         folder = Path(folder)
         try:
             ele_files = [p for p in folder.rglob("*.ele") if p.is_file()]
         except Exception as e:
-            Error.show(title='Search on disk', info='Error while searchin for files', details=e)
+            Error.show(master = self.mainwindow, title='Search on disk', info='Error while searchin for files', details=e)
             return None
 
         # Collect info.txt from each file
@@ -162,7 +197,8 @@ class MenuEditMixin:
                     try:
                         with z.open("info.txt") as f:
                             content = f.read().decode("utf-8")
-                            results[ele_path] = content
+                            if "project version" in content:
+                                results[ele_path] = content
                     except KeyError:
                         # No info.txt, ignore
                         continue
@@ -179,6 +215,7 @@ class MenuEditMixin:
         elif mode == 'content':
             zwrot = {'content':results,
                      'path': ele_files}
+
         return zwrot
 
     def edit_values_in_table(self, which ='first'):
@@ -188,7 +225,7 @@ class MenuEditMixin:
         if which == 'first' or which == 'second':
             index_in_data = self.eleana.selections[which]
         if index_in_data < 0:
-            Error.show(info = 'No data selected to edit.')
+            Error.show(master = self.mainwindow, info = 'No data selected to edit.')
             return
 
         data = self.eleana.dataset[index_in_data]

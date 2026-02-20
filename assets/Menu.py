@@ -241,10 +241,16 @@ class MainMenu:
         self.menu_find.add_command(label="Find Name", command=lambda x='name': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
-        # ----- Find by Name
+        # ----- Find Projectname on disk
         self.menu_find.add_command(label="Find Project on disk", command=lambda x='projectname': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
+        # ----- Find ID on disk
+        self.menu_find.add_command(label="Find ID on disk",
+                                   command=lambda x='idondisk': self.callbacks.get('find')(x),
+                                   image=self.icon_magnifier, compound="left")
+
+        # ----
         # - Separator
         self.menu_edit.add_separator()
 

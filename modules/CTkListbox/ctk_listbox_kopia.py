@@ -26,20 +26,23 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                  command=None,
                  justify="left",
                  disable_selection = False,
-                 gui_appearance = 'dark',
+                 gui_appearance = None,
                  **kwargs):
-        # mode = customtkinter.get_appearance_mode()
 
+        if not gui_appearance:
+            gui_appearance = customtkinter.get_appearance_mode()
 
         self.disable_selection = disable_selection
-        if gui_appearance == 'light':
-           text_color = '#454545'
-           select_color = '#bbbbbb'
-           hover_color = '#aaaaaa'
+        if gui_appearance.lower() == 'light':
+           text_color = '#151515'
+           select_color = '#777'
+           hover_color = '#888'
+           fg_color = "#ccc"
         else:
             text_color = '#eaeaea'
             select_color = '#bbbbbb'
-            hover_color = '#aaaaaa'
+            hover_color = '#555'
+            fg_color = '#333'
 
         super().__init__(master, width=width, height=height, fg_color=fg_color, border_width=border_width, **kwargs)
         self._scrollbar.grid_configure(padx=(0, border_width + 4))
@@ -154,6 +157,11 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                 for i in self.buttons:
                     self.select(i)
             return
+        elif isinstance(index, str):
+            elements = [btn.cget("text") for btn in self.buttons.values()]
+            if index in elements:
+                idx = elements.index(index)
+                index = idx
         selected = list(self.buttons.keys())[index]
         self.select(selected)
 
@@ -197,6 +205,10 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
             for i in self.buttons:
                 self.deselect(i)
             return
+        elif isinstance(index, str):
+            if index in self.listvariable:
+                idx = self.listvariable.index(index)
+                index = idx
         selected = list(self.buttons.keys())[index]
         self.deselect(selected)
 
