@@ -234,20 +234,28 @@ class MainMenu:
         self.menu_edit.add_cascade(label="Find", menu=self.menu_find, image=self.icon_magnifier, compound='left')
 
         #  ---- Find by ID
-        self.menu_find.add_command(label="Find ID", command=lambda x='id': self.callbacks.get('find')(x),
+        self.menu_find.add_command(label="By ID", command=lambda x='id': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
         # ----- Find by Name
-        self.menu_find.add_command(label="Find Name", command=lambda x='name': self.callbacks.get('find')(x),
+        self.menu_find.add_command(label="By Name", command=lambda x='name': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
+
+        self.menu_find.add_separator()
+
         # ----- Find Projectname on disk
-        self.menu_find.add_command(label="Find Project on disk", command=lambda x='projectname': self.callbacks.get('find')(x),
+        self.menu_find.add_command(label="Project name on disk", command=lambda x='projectname': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
         # ----- Find ID on disk
-        self.menu_find.add_command(label="Find ID on disk",
+        self.menu_find.add_command(label="ID on disk",
                                    command=lambda x='idondisk': self.callbacks.get('find')(x),
+                                   image=self.icon_magnifier, compound="left")
+
+        # ----- Find Name on disk
+        self.menu_find.add_command(label="Name of data name on disk",
+                                   command=lambda x='nameondisk': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
         # ----

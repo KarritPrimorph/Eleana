@@ -114,6 +114,8 @@ class MenuEditMixin:
             # Ask for directory
             dialog = SingleDialog(master=self.mainwindow, title="Search on disk", label="Enter the project name:")
             search_for_projectname = dialog.get()
+            if search_for_projectname is None:
+                return
 
             folder = filedialog.askdirectory()
             if not folder:
@@ -149,6 +151,8 @@ class MenuEditMixin:
             # Ask for directory
             dialog = SingleDialog(master=self.mainwindow, title="Search for ID on disk", label="Enter the spectrum ID:")
             search_for_id = dialog.get()
+            if not search_for_id:
+                return
 
             folder = filedialog.askdirectory()
             if not folder:
@@ -158,28 +162,85 @@ class MenuEditMixin:
                                         mode='content')
 
             # Get the IDs
-            ids_in_files = []
-            i = 0
-            found = False
-            for item in data:
-                #item = ast.literal_eval(item)
-                #content = item.get('ids', None)
-                #i+=1
-                #if content is not None:
-                #    if search_for_id in content:
-                #        found = True
-                #        break
-                pass
-            if found:
-                print('Found in nr', data['path'][i])
+            content = data.get('content')
+            found_in = []
+            names = []
+            for key, value in content.items():
+                if search_for_id in value:
+                    found_in.append(key)
+                    names.append(Path(key).name)
 
-
-            if not data:
+            if not names:
+                Error.show(master = self.mainwindow,
+                           title = 'Search fo ID',
+                           info = f'The ID {search_for_id} was not found in the ele files on disk')
+            select = SelectItems(master=self.mainwindow,
+                                 title='ID found in the projects:',
+                                 items=names,
+                                 multiple_selections=False
+                                 )
+            selected = select.get()
+            if selected is None:
                 return
 
+            idx = names.index(selected)
+            try:
+                file = found_in[idx]
+            except IndexError:
+                Error.show(master = self.mainwindow,
+                           title = 'Error',
+                           info = 'Internal error. Selected file was not found.')
+                return
+            self.load_project(filename = file)
 
+        elif find_by == 'nameondisk':
 
+            Error.show(master=self.mainwindow, info='This is not implemented yet!')
+            return
+            # Ask for directory
+            dialog = SingleDialog(master=self.mainwindow, title="Search for data name on disk", label="Enter the spectrum name:")
+            search_for_id = dialog.get()
+            if not search_for_id:
+                return
 
+            folder = filedialog.askdirectory()
+            if not folder:
+                return
+
+            data = self._scan_for_files(folder=folder,
+                                        mode='content')
+
+            # Get the IDs
+            # content = data.get('content')
+            # found_in = []
+            # names = []
+            # for key, value in content.items():
+            #     if search_for_id in value:
+            #         found_in.append(key)
+            #         names.append(Path(key).name)
+            #
+            # if not names:
+            #     Error.show(master=self.mainwindow,
+            #                title='Search fo ID',
+            #                info=f'The ID {search_for_id} was not found in the ele files on disk')
+            # select = SelectItems(master=self.mainwindow,
+            #                      title='ID found in the projects:',
+            #                      items=names,
+            #                      multiple_selections=False
+            #                      )
+            # selected = select.get()
+            # if selected is None:
+            #     return
+            #
+            # idx = names.index(selected)
+            # try:
+            #     file = found_in[idx]
+            # except IndexError:
+            #     Error.show(master=self.mainwindow,
+            #                title='Error',
+            #                info='Internal error. Selected file was not found.')
+            #     return
+            # self.load_project(filename=file)
 
     def _scan_for_files(self, folder, mode = 'projectname'):
         folder = Path(folder)
@@ -188,6 +249,7 @@ class MenuEditMixin:
         except Exception as e:
             Error.show(master = self.mainwindow, title='Search on disk', info='Error while searchin for files', details=e)
             return None
+
 
         # Collect info.txt from each file
         results = {}
@@ -215,7 +277,6 @@ class MenuEditMixin:
         elif mode == 'content':
             zwrot = {'content':results,
                      'path': ele_files}
-
         return zwrot
 
     def edit_values_in_table(self, which ='first'):
