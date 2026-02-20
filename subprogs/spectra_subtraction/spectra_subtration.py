@@ -323,12 +323,12 @@ class SpectraSubtraction(Methods, WindowGUI):
         self.shift_x_by = self.custom_widget(self.builder.get_object("ctkentry3", self.mainwindow))
 
         # Bind Enter and Return
-        self.multiply_y_by.bind("<Return>", self.value_entered)
-        self.multiply_y_by.bind("<KP_Enter>", self.value_entered)
-        self.shift_x_by.bind("<Return>", self.value_entered)
-        self.shift_x_by.bind("<KP_Enter>", self.value_entered)
-        self.shift_y_by.bind("<Return>", self.value_entered)
-        self.shift_y_by.bind("<KP_Enter>", self.value_entered)
+        self.multiply_y_by.bind("<Return>", self.value_entered_manually)
+        self.multiply_y_by.bind("<KP_Enter>", self.value_entered_manually)
+        self.shift_x_by.bind("<Return>", self.value_entered_manually)
+        self.shift_x_by.bind("<KP_Enter>", self.value_entered_manually)
+        self.shift_y_by.bind("<Return>", self.value_entered_manually)
+        self.shift_y_by.bind("<KP_Enter>", self.value_entered_manually)
 
         # Set validation for Entry boxes
         self.set_validation_for_ctkentries(list_of_entries = [self.multiply_y_by, self.shift_y_by, self.shift_x_by])
@@ -351,6 +351,9 @@ class SpectraSubtraction(Methods, WindowGUI):
             self.eleana.selections['s_dsp'] = False
             self.app.check_second_show.deselect()
 
+    def value_entered_manually(self, event):
+        self.value_entered(event)
+        self.ok_clicked()
 
     def value_entered(self, event):
         self.values['multiply_y'] = float(self.multiply_y_by.get())

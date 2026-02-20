@@ -6,8 +6,7 @@ class AuxilaryAxesMixin:
 
     def auxilary_axes(self):
         ''' Changes in status of auxilary axes '''
-
-        self.eleana.gui_state.auxilary_axes = bool(self.app.check_aux)
+        self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
         if self.eleana.gui_state.auxilary_axes:
             self.aux_reset_frame.grid()
         else:
@@ -40,27 +39,21 @@ class AuxilaryAxesMixin:
     def apply_scaling(self):
         ''' Multiply scales in selected data according to the scaling factor '''
 
-        # Check if first and second is selected and on
-        fir = False if self.eleana.selections['first'] < 0 else True
-        fon = bool(self.eleana.selections['f_dsp'])
-        first = fir and fon
-
-        sec = False if self.eleana.selections['second'] < 0 else True
-        son = bool(self.eleana.selections['s_dsp'])
-        second = sec and son
-
-        if not first or not second:
+        second = False if self.eleana.selections['second'] < 0 else True
+        is_on = bool(self.eleana.selections['s_dsp'])
+        if second and is_on:
+            self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
+        else:
             info = CTkMessagebox(master=self.mainwindow,
-                             message='Both First and Second mus be displayed to activate auxilary axes.',
-                             icon='warning',
-                             title="Apply scaling")
-
+                                 message='Both First and Second mus be displayed to activate auxilary axes.',
+                                 icon='warning',
+                                 title="Auxilary axes")
             return
-
 
         index = self.eleana.selections['first']
         if index < 0:
             return
+
         main_x_scale = self.grapher.ax.get_xlim()
         auxi_x_scale = self.grapher.aux_ax.get_xlim()
 
@@ -73,7 +66,8 @@ class AuxilaryAxesMixin:
         factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
         delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
 
-        dialog = CTkMessagebox(title = 'Apply scalling',
+        dialog = CTkMessagebox(master = self.mainwindow,
+                                title = 'Apply scalling',
                                message = 'Select data to calculate',
                                option_3="First",
                                 option_1 = 'All in group',
@@ -81,7 +75,6 @@ class AuxilaryAxesMixin:
                                 )
 
         response = dialog.get()
-        indexes = []
         if response is None:
             return
         elif response == "First":
@@ -91,6 +84,7 @@ class AuxilaryAxesMixin:
         elif response == "Select from list":
             group = self.eleana.selections['group']
             items = []
+            indexes = []
             for idx in self.eleana.assignmentToGroups[group]:
                 items.append(self.eleana.dataset[idx].name_nr)
 
@@ -100,16 +94,21 @@ class AuxilaryAxesMixin:
                                 group = group,
                                 items = items
                                 )
-            indexes = select.get()
+            names = select.get()
+            if indexes is None:
+                return
+            for name in names:
+                idx = self.eleana.get_index_by_name(name)
+                if idx:
+                    indexes.append(self.eleana.get_index_by_name(name))
 
-        if not indexes:
-            return
         self._apply_scaling_operation(indexes = indexes,
-                                      factor_y = factor_y,
                                       factor_x = factor_x,
+                                      factor_y = factor_y,
                                       delta_x = delta_x,
                                       delta_y = delta_y
                                       )
+
 
     def _apply_scaling_operation(self, indexes, factor_x, delta_x, factor_y, delta_y):
 
@@ -123,7 +122,6 @@ class AuxilaryAxesMixin:
             data.x = data.x - delta_x
 
             data.name = data.name + ':RESCALED'
-
             self.eleana.results_dataset.append(data)
 
         self.update.dataset_list()
@@ -132,34 +130,3 @@ class AuxilaryAxesMixin:
         self.result_selected(data.name)
         self.sel_result.set(data.name)
 
-    # def apply_scaling(self):
-    #     ''' Multiply scales in selected data according to the scaling factor '''
-    #     index = self.eleana.selections['first']
-    #     if index < 0:
-    #         return
-    #     # data = copy.deepcopy(self.eleana.dataset[index])
-    #     main_x_scale = self.grapher.ax.get_xlim()
-    #     auxi_x_scale = self.grapher.aux_ax.get_xlim()
-    #
-    #     main_y_scale = self.grapher.ax.get_ylim()
-    #     auxi_y_scale = self.grapher.aux_ax.get_ylim()
-    #
-    #     factor_y = (auxi_y_scale[1] - auxi_y_scale[0]) / (main_y_scale[1] - main_y_scale[0])
-    #     delta_y = main_y_scale[0] * factor_y - auxi_y_scale[0]
-    #     # data.y = data.y * factor_y
-    #     # data.y = data.y - delta_y
-    #
-    #     factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
-    #     delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
-    #
-    #     # data.x = data.x * factor_x
-    #     # data.x = data.x - delta_x
-    #     #
-    #     # data.name = data.name + ':RESCALED'
-    #
-    #     self.eleana.results_dataset.append(data)
-    #     self.update.dataset_list()
-    #     self.update.all_lists()
-    #
-    #     self.result_selected(data.name)
-    #     self.sel_result.set(data.name)

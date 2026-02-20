@@ -83,39 +83,64 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
         self.mouse_over_widget = False
         self.bind("<Enter>", lambda e: self.set_mouse_over_widget(True))
         self.bind("<Leave>", lambda e: self.set_mouse_over_widget(False))
+
         # Scroll mouse bind
-        self.bind("<MouseWheel>", self.on_mouse_wheel)  # Windows i macOS
-        self.bind("<Button-4>", self.wheel_up)  # Linux
-        self.bind("<Button-5>", self.wheel_down)  # Linux
+        # self.bind("<MouseWheel>", self.on_mouse_wheel)  # Windows i macOS
+        # self.bind("<Button-4>", self.wheel_up)  # Linux
+        # self.bind("<Button-5>", self.wheel_down)  # Linux
+
+        # Scroll mouse bind — cross-platform
+        self.bind("<MouseWheel>", self._on_mousewheel_windows)  # Windows / macOS
+        self.bind("<Button-4>", self._on_mousewheel_linux)  # Linux scroll up
+        self.bind("<Button-5>", self._on_mousewheel_linux)  # Linux scroll down
+
+        # ALSO bind directly to internal canvas (important!)
+        self._parent_canvas.bind("<MouseWheel>", self._on_mousewheel_windows)
+        self._parent_canvas.bind("<Button-4>", self._on_mousewheel_linux)
+        self._parent_canvas.bind("<Button-5>", self._on_mousewheel_linux)
 
     def set_mouse_over_widget(self, value):
         self.mouse_over_widget = value
 
-    def on_mouse_wheel(self, event):
-        if event.delta > 0:
-            self.wheel_up(event)
-        else:
-            self.wheel_down(event)
+    def _on_mousewheel_windows(self, event):
+        #if not self.mouse_over_widget:
+        #    return
+        # Windows: delta = ±120
+        self._parent_canvas.yview_scroll(int(-event.delta / 120), "units")
 
-    def wheel_down(self, event):
-        if not self.mouse_over_widget:
-            return
-        if self._scrollbar:
-            current_position = self._scrollbar.get()[1]
-            if current_position < 1.0:
-                new_position = min(current_position + 0.01, 1.0)
-                self._scrollbar.set(new_position - 0.01, new_position)
-        self._parent_canvas.yview("scroll", int(100 / 20), "units")
+    def _on_mousewheel_linux(self, event):
+        #if not self.mouse_over_widget:
+        #    return
+        if event.num == 4:  # scroll up
+            self._parent_canvas.yview_scroll(-1, "units")
+        elif event.num == 5:  # scroll down
+            self._parent_canvas.yview_scroll(1, "units")
 
-    def wheel_up(self, event):
-        if not self.mouse_over_widget:
-            return
-        if self._scrollbar:
-            current_position = self._scrollbar.get()[0]
-            if current_position > 0.0:
-                new_position = max(current_position - 0.01, 0.0)
-                self._scrollbar.set(new_position, new_position + 0.01)
-        self._parent_canvas.yview("scroll", -int(100 / 20), "units")
+    # def on_mouse_wheel(self, event):
+    #     if event.delta > 0:
+    #         self.wheel_up(event)
+    #     else:
+    #         self.wheel_down(event)
+
+    # def wheel_down(self, event):
+    #     if not self.mouse_over_widget:
+    #         return
+    #     if self._scrollbar:
+    #         current_position = self._scrollbar.get()[1]
+    #         if current_position < 1.0:
+    #             new_position = min(current_position + 0.01, 1.0)
+    #             self._scrollbar.set(new_position - 0.01, new_position)
+    #     self._parent_canvas.yview("scroll", int(100 / 20), "units")
+    #
+    # def wheel_up(self, event):
+    #     if not self.mouse_over_widget:
+    #         return
+    #     if self._scrollbar:
+    #         current_position = self._scrollbar.get()[0]
+    #         if current_position > 0.0:
+    #             new_position = max(current_position - 0.01, 0.0)
+    #             self._scrollbar.set(new_position, new_position + 0.01)
+    #     self._parent_canvas.yview("scroll", -int(100 / 20), "units")
 
     def update_listvar(self):
         values = list(eval(self.listvariable.get()))
@@ -226,6 +251,10 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                                                       text_color=self.text_color, font=self.font,
                                                       hover_color=self.hover_color, **args)
         self.buttons[index].configure(command=lambda num=index: self.select(num))
+        self.buttons[index].bind("<MouseWheel>", self._on_mousewheel_windows)
+        self.buttons[index].bind("<Button-4>", self._on_mousewheel_linux)
+        self.buttons[index].bind("<Button-5>", self._on_mousewheel_linux)
+
         self.buttons[index].pack(padx=0, pady=(0, 5), fill="x", expand=True)
 
     def delete(self, index, last=None):
