@@ -195,12 +195,10 @@ class MenuEditMixin:
 
         elif find_by == 'nameondisk':
 
-            Error.show(master=self.mainwindow, info='This is not implemented yet!')
-            return
             # Ask for directory
             dialog = SingleDialog(master=self.mainwindow, title="Search for data name on disk", label="Enter the spectrum name:")
-            search_for_id = dialog.get()
-            if not search_for_id:
+            search_for_name = dialog.get()
+            if not search_for_name:
                 return
 
             folder = filedialog.askdirectory()
@@ -209,6 +207,34 @@ class MenuEditMixin:
 
             data = self._scan_for_files(folder=folder,
                                         mode='content')
+
+            # Extract
+            parsed_names = {}
+            for key, value in data['content'].items():
+                try:
+                    value = value.split('"names":')
+                    value = value[1].split('"stk_names":')
+
+                    value = ast.literal_eval(value[0])
+                    names = value[0]
+                except Exception as e:
+                    names = None
+                if names:
+                    parsed_names[key] = names
+
+            # Use rapid fuzz for searching
+            for filename, names in parsed_names.items():
+                i = False
+                best = rapidfuzz.process.extract(query=search_for_name, choices=names)
+
+                found_names = [name[0] for name in best]
+                indexes = []
+                for found_name in found_names:
+                    idx = self.eleana.get_index_by_name(found_name)
+                    if idx is not None:
+                        indexes.append(self.eleana.get_index_by_name(found_name))
+                if not indexes:
+                    Error.show(info="No data found. Please try again.")
 
             # Get the IDs
             # content = data.get('content')
