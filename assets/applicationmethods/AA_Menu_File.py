@@ -23,7 +23,6 @@ class MenuFileMixin:
                 recent = self.eleana.paths['last_projects'][recent]
             except IndexError:
                 Error.show(title = 'Error', info = "The project could not be found on list.")
-        collected_errors = []
         project = self.load.load_project(recent)
         self.main_menubar.create_showplots_menu()
         if not project:

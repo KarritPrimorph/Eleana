@@ -63,7 +63,7 @@ from subprogs.group_edit.move_to_group import MoveToGroup
 from subprogs.user_input.TwoListSelection import TwoListSelection
 
 # Methods
-from assets.applicationmethods.AA_Menu_FIle import MenuFileMixin
+from assets.applicationmethods.AA_Menu_File import MenuFileMixin
 from assets.applicationmethods.AB_Menu_Edit import MenuEditMixin
 from assets.applicationmethods.AC_Menu_Analysis import MenuAnalysisMixin
 from assets.applicationmethods.AD_Menu_Modifications import MenuModificationsMixin

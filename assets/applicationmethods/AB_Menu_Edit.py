@@ -201,7 +201,7 @@ class MenuEditMixin:
             if not search_for_name:
                 return
 
-            folder = filedialog.askdirectory()
+            folder = filedialog.askdirectory(master = self.mainwindow)
             if not folder:
                 return
 
@@ -222,58 +222,54 @@ class MenuEditMixin:
                 if names:
                     parsed_names[key] = names
 
+
+            question = CTkMessagebox(master = self.mainwindow, title = "Sensitivity",
+                                     message = "Select the matching score cut-off",
+                                     option_1 = '>= 0',
+                                     option_2 = '>= 50',
+                                     option_3 = '>= 90',
+                                     icon = 'question')
+
+            answer = question.get()
+            if answer is None:
+                return
+            elif answer == '>= 0':
+                get_if_score_larger = 0
+            elif answer == '>= 50':
+                get_if_score_larger = 50
+            elif answer == '>= 90':
+                get_if_score_larger = 90
+
             # Use rapid fuzz for searching
+            collected_files = []
             for filename, names in parsed_names.items():
-                i = False
-                best = rapidfuzz.process.extract(query=search_for_name, choices=names)
+                best = rapidfuzz.process.extractOne(
+                    query=search_for_name,
+                    choices=names,
+                    score_cutoff=get_if_score_larger
+                )
 
-                found_names = [name[0] for name in best]
-                indexes = []
-                for found_name in found_names:
-                    idx = self.eleana.get_index_by_name(found_name)
-                    if idx is not None:
-                        indexes.append(self.eleana.get_index_by_name(found_name))
-                if not indexes:
-                    Error.show(info="No data found. Please try again.")
+                if best:
+                    collected_files.append(filename)
 
-            # Get the IDs
-            # content = data.get('content')
-            # found_in = []
-            # names = []
-            # for key, value in content.items():
-            #     if search_for_id in value:
-            #         found_in.append(key)
-            #         names.append(Path(key).name)
-            #
-            # if not names:
-            #     Error.show(master=self.mainwindow,
-            #                title='Search fo ID',
-            #                info=f'The ID {search_for_id} was not found in the ele files on disk')
-            # select = SelectItems(master=self.mainwindow,
-            #                      title='ID found in the projects:',
-            #                      items=names,
-            #                      multiple_selections=False
-            #                      )
-            # selected = select.get()
-            # if selected is None:
-            #     return
-            #
-            # idx = names.index(selected)
-            # try:
-            #     file = found_in[idx]
-            # except IndexError:
-            #     Error.show(master=self.mainwindow,
-            #                title='Error',
-            #                info='Internal error. Selected file was not found.')
-            #     return
-            # self.load_project(filename=file)
+            project_names = [pr for pr in collected_files]
+            select = SelectItems(master=self.mainwindow,
+                                 title='Select project to load',
+                                 items=project_names,
+                                 multiple_selections=False
+                                 )
+            selected = select.get()
+            if selected is None:
+                return
+            self.load_project(filename=selected)
+
 
     def _scan_for_files(self, folder, mode = 'projectname'):
         folder = Path(folder)
         try:
             ele_files = [p for p in folder.rglob("*.ele") if p.is_file()]
         except Exception as e:
-            Error.show(master = self.mainwindow, title='Search on disk', info='Error while searchin for files', details=e)
+            Error.show(master = self.mainwindow, title='Search on disk', info='Error while searching for files', details=e)
             return None
 
 

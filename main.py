@@ -6,8 +6,8 @@ from tkinterdnd2 import TkinterDnD
 from screeninfo import get_monitors
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 5.06   # Set the Eleana version. This will be stored in self.eleana.version
-DATE = "25/01/2026"     # Set the date of the release
+ELEANA_VERSION = 5.10   # Set the Eleana version. This will be stored in self.eleana.version
+DATE = "23/02/2026"     # Set the date of the release
 INTERPRETER = sys.executable  # Defines python version
 DEVEL = True  # To display information in development set to True
 
