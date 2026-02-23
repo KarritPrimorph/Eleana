@@ -1,6 +1,6 @@
 {
 "LINUX_BUILD"  :    5.10,
 "LINUX_DATE"    :   "23/02/2026",
-"WINDOWS_BUILD" :   5.02,
-"WINDOWS_DATE"  :   "11/07/2026"
+"WINDOWS_BUILD" :   5.10,
+"WINDOWS_DATE"  :   "23/02/2026"
 }
