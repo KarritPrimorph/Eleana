@@ -288,7 +288,7 @@ class MenuFileMixin:
     def export_spreadsheet(self, group = True, clipboard = False):
 
         ''' Export: Export Spreadsheet to folder
-                  : Export Selected to Spreadsheed'''
+                  : Export Selected to Spreadsheet'''
 
         if group:
             current_group = self.sel_group.get()

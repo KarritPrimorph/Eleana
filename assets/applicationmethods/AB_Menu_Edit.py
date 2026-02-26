@@ -239,6 +239,8 @@ class MenuEditMixin:
                 get_if_score_larger = 50
             elif answer == '>= 90':
                 get_if_score_larger = 90
+            else:
+                return
 
             # Use rapid fuzz for searching
             collected_files = []
@@ -580,6 +582,42 @@ class MenuEditMixin:
         self.mainwindow.clipboard_clear()
         self.mainwindow.clipboard_append(text_output)
         self.mainwindow.update()
+
+
+    ''' Copy selected: AA_MenuFile.py -> export_spreadsheet() '''
+
+    def delete_selected_data(self, index_to_delete=None):
+
+        ''' Delete selected data '''
+
+        av_data = self.sel_first._values
+        av_data.pop(0)
+        # Open dialog if index_to_delete was not set
+        if index_to_delete is None:
+            select_data = SelectData(master=self.mainwindow, title='Select data', group=self.eleana.selections['group'],
+                                      items=av_data)
+            response = select_data.get()
+            if response == None:
+                return
+            # Get indexes of selected data to remove
+            indexes = self.get_indexes_by_name(response)
+        # Delete data with selected indexes or given by index_to_delete
+        else:
+            indexes = [index_to_delete]
+        indexes.sort(reverse=True)
+        for each in indexes:
+            self.eleana.dataset.pop(each)
+        # Set all data to None
+        self.eleana.set_selections('first', -1)
+        self.eleana.set_selections('second', -1)
+        self.sel_first.set('None')
+        self.sel_first.set('None')
+        self.comparison_settings['indexes'] = []
+        self.update.dataset_list()
+        self.update.group_list()
+        self.update.all_lists()
+        self.grapher.plot_graph()
+
 
     def quick_paste(self, event=None):
 

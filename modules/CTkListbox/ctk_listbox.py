@@ -109,7 +109,8 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
         self._parent_canvas.yview_scroll(int(-event.delta / 120), "units")
 
     def _on_mousewheel_linux(self, event):
-        #if not self.mouse_over_widget:
+        if event is None:
+            return
         #    return
         if event.num == 4:  # scroll up
             self._parent_canvas.yview_scroll(-1, "units")
