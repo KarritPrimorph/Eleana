@@ -323,11 +323,6 @@ class Application(MenuFileMixin,
         self.configure_paths()
         self.configure_graph()
 
-        # # Create loader/saver/exporter
-        self.load = Load(eleana = self.eleana, callbacks = loadsave_callbacks)
-        self.save = Save(eleana = self.eleana)
-        self.export = Export(eleana = self.eleana)
-
         # Create Update module
         self.update = Update(eleana = self.eleana,
                              widgetsIDs = update_callbacks(self)['gui_references'],
@@ -360,60 +355,68 @@ class Application(MenuFileMixin,
     '''
     def _on_drop_files(self, event):
         ''' After dropping the file into the Window'''
-        accept = False
-        spc_type = ''
-        files = shlex.split(event.data)
-        skip_messeges = False
-        auto = False
-        for file in files:
-            file_type = file[-3:].lower()
-            if file_type == 'dta' or file_type == 'dsc':
-                self.import_elexsys(filename = file)
-            elif file_type == 'ele':
+        if getattr(self, "_import_running", False):
+            return
+        self._import_running = True
 
-                self.load_project(filename = file)
-            elif file_type == 'par':
-                self.import_EMX(filename = file)
-            elif file_type == 'spc':
-                if not accept:
-                    ask = CTkMessagebox(title='Importing SPC', message = 'Choose the file type of SPC', option_1 = 'Shimadzu', option_2 = 'Bruker')
-                    spc_type = ask.get()
-                    accept = True
-                if spc_type == 'Bruker':
+        try:
+            accept = False
+            spc_type = ''
+            files = shlex.split(event.data)
+            skip_messeges = False
+            auto = False
+            for file in files:
+                file_type = file[-3:].lower()
+                if file_type == 'dta' or file_type == 'dsc':
+                    self.import_elexsys(filename = file)
+                elif file_type == 'ele':
+
+                    self.load_project(filename = file)
+                elif file_type == 'par':
                     self.import_EMX(filename = file)
-                else:
-                    self.import_shimadzu_spc(filename = file)
-            elif file_type == 'lsx':
-                if len(files) > 1:
-                    Error.show(title = "", info = "Please upload files one at a time")
-                    return
-                self.import_excel(filename = file)
-            elif file_type == 'txt' or file_type == 'dta' or file_type == 'csv':
-                if len(files) > 1:
-                    Error.show(title = "", info = "Please upload files one at a time")
-                    return
-                self.import_ascii(filename = file)
-            elif file_type == 'bka':
-                self.import_biokine(filename = file, skip_messeges = skip_messeges)
-                skip_messeges = True
-            elif file_type == 'spe':
-                self.import_magnettech1(filename = file)
-            elif file_type == 'dat' or file_type == 'txt' or file_type == 'csv':
-                self.import_ascii(filename = file, auto = auto)
-                if auto is False:
-                    dialog = CTkMessagebox(master = self.mainwindow,
-                                           message = 'Do you want to automatically load the rest of the files using the same import parameters?',
-                                           option_1 = 'Cancel',
-                                           option_2 = 'No',
-                                           option_3 = 'Yes')
-                    response = dialog.get()
-                    if response == 'Yes':
-                        auto = True
-                    elif response == "Cancel":
-                        break
+                elif file_type == 'spc':
+                    if not accept:
+                        ask = CTkMessagebox(title='Importing SPC', message = 'Choose the file type of SPC', option_1 = 'Shimadzu', option_2 = 'Bruker')
+                        spc_type = ask.get()
+                        accept = True
+                    if spc_type == 'Bruker':
+                        self.import_EMX(filename = file)
                     else:
-                        auto = False
-
+                        self.import_shimadzu_spc(filename = file)
+                elif file_type == 'lsx':
+                    if len(files) > 1:
+                        Error.show(title = "", info = "Please upload files one at a time")
+                        self._import_running = False
+                        return
+                    self.import_excel(filename = file)
+                elif file_type == 'txt' or file_type == 'dat' or file_type == 'csv':
+                    if len(files) > 1:
+                        Error.show(title = "", info = "Please upload files one at a time")
+                        self._import_running = False
+                        return
+                    self.import_ascii(filename = file)
+                elif file_type == 'bka':
+                    self.import_biokine(filename = file, skip_messeges = skip_messeges)
+                    skip_messeges = True
+                elif file_type == 'spe':
+                    self.import_magnettech1(filename = file)
+                elif file_type == 'dat' or file_type == 'txt' or file_type == 'csv':
+                    self.import_ascii(filename = file, auto = auto)
+                    if auto is False:
+                        dialog = CTkMessagebox(master = self.mainwindow,
+                                               message = 'Do you want to automatically load the rest of the files using the same import parameters?',
+                                               option_1 = 'Cancel',
+                                               option_2 = 'No',
+                                               option_3 = 'Yes')
+                        response = dialog.get()
+                        if response == 'Yes':
+                            auto = True
+                        elif response == "Cancel":
+                            break
+                        else:
+                            auto = False
+        finally:
+            self._import_running = False
 
     def check_for_updates(self, timeout=3):
         ''' Check if update is available. '''
@@ -422,21 +425,24 @@ class Application(MenuFileMixin,
             r = requests.get(url, timeout=timeout)
             r.raise_for_status()
             text = r.text.strip()
-            online_info = json.loads(text)
+            try:
+                online_info = json.loads(text)
+            except json.JSONDecodeError:
+                return
 
             if sys.platform == 'linux':
                 BUILD = 'LINUX_BUILD'
                 DATE = 'LINUX_DATE'
             else:
                 BUILD = 'WINDOWS_BUILD'
-                DATE = 'WINDWOS_DATE'
+                DATE = 'WINDOWS_DATE'
 
             current_build = float(online_info.get(BUILD, 0))
             build_date = online_info.get(DATE, '')
 
             if self.eleana.version < current_build:
-                update_show = CTkMessagebox(icon = 'check', title='Update info',
-                                message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}'),
+                CTkMessagebox(icon = 'check', title='Update info',
+                                message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}')
         except Exception as e:
             print("Unable to download online info", e)
 
@@ -496,73 +502,6 @@ class Application(MenuFileMixin,
             self.check_indexed_x.select()
         else:
             self.check_indexed_x.deselect()
-        #
-    # def auxilary_axes(self):
-    #     ''' Changes in status of auxilary axes '''
-    #     second = False if self.eleana.selections['second'] < 0 else True
-    #     is_on = bool(self.eleana.selections['s_dsp'])
-    #     if second and is_on:
-    #         self.eleana.gui_state.auxilary_axes = bool(self.check_auxilary_axes.get())
-    #     else:
-    #         self.eleana.gui_state.auxilary_axes = False
-    #
-    #     if self.eleana.gui_state.auxilary_axes:
-    #         self.aux_reset_frame.grid()
-    #     else:
-    #         self.aux_reset_frame.grid_remove()
-    #     self.grapher.toggle_aux_axis()
-    #
-    #
-    # def reset_auxilary_axes(self):
-    #     ''' Set scales in auxilary to main axes'''
-    #     self.grapher.plot_graph()
-    #     self.grapher.on_mouse_release()
-    #
-    # def reset_auxilary_x(self):
-    #     ''' Set x axis in auxilary scale the sami as in main'''
-    #     x_lim = self.grapher.aux_ax.get_xlim()
-    #     self.grapher.ax.set_xlim(x_lim)
-    #     self.grapher.canvas.draw_idle()
-    #     self.grapher.on_mouse_release()
-    #
-    # def reset_auxilary_y(self):
-    #     ''' Set y axis in auxilary scale the sami as in main'''
-    #     y_lim = self.grapher.aux_ax.get_ylim()
-    #     self.grapher.ax.set_ylim(y_lim)
-    #     self.grapher.canvas.draw_idle()
-    #     self.grapher.on_mouse_release()
-    #
-    # def apply_scaling(self):
-    #     ''' Multiply scales in selected data according to the scaling factor '''
-    #     index = self.eleana.selections['first']
-    #     if index < 0:
-    #         return
-    #     data = copy.deepcopy(self.eleana.dataset[index])
-    #     main_x_scale = self.grapher.ax.get_xlim()
-    #     auxi_x_scale = self. grapher.aux_ax.get_xlim()
-    #
-    #     main_y_scale = self.grapher.ax.get_ylim()
-    #     auxi_y_scale = self. grapher.aux_ax.get_ylim()
-    #
-    #     factor_y = (auxi_y_scale[1] - auxi_y_scale[0]) / (main_y_scale[1] - main_y_scale[0])
-    #     delta_y = main_y_scale[0] * factor_y - auxi_y_scale[0]
-    #     data.y = data.y * factor_y
-    #     data.y = data.y - delta_y
-    #
-    #     factor_x = (auxi_x_scale[1] - auxi_x_scale[0]) / (main_x_scale[1] - main_x_scale[0])
-    #     delta_x = main_x_scale[0] * factor_x - auxi_x_scale[0]
-    #
-    #     data.x = data.x * factor_x
-    #     data.x = data.x - delta_x
-    #
-    #     data.name = data.name + ':RESCALED'
-    #
-    #     self.eleana.results_dataset.append(data)
-    #     self.update.dataset_list()
-    #     self.update.all_lists()
-    #
-    #     self.result_selected(data.name)
-    #     self.sel_result.set(data.name)
 
     def configure_paths(self):
         '''This method creates standard Eleana folder in user directory.
@@ -962,9 +901,14 @@ class Application(MenuFileMixin,
                 return
         if data_indexes is None:
             return
-        data_indexes = sorted(data_indexes, reverse=True)
-        for index in data_indexes:
-            self.eleana.dataset.pop(index)
+
+        data_indexes = set(data_indexes or [])
+
+        self.eleana.dataset = [
+            item for i, item in enumerate(self.eleana.dataset)
+            if i not in data_indexes
+        ]
+
         group_list = self.eleana.assignmentToGroups['<group-list/>']
         if group in group_list:
             group_list.remove(group)
@@ -1672,7 +1616,11 @@ class Application(MenuFileMixin,
             if response == 'Cancel':
                 return
 
-        self.delete_data_from_group(skip_questions=True)
+        try:
+            self.delete_data_from_group(skip_questions=True)
+        except Exception as e:
+            print("Application.py: ", e)
+
         self.all_results_to_current_group()
 
     #@check_busy
@@ -1782,57 +1730,6 @@ class Application(MenuFileMixin,
             indexes.append(index)
         return indexes
 
-    ''' *****************************************
-    *            METHODS FOR MENU               *
-    ******************************************'''
-
-
-    # --------------------------------------------
-    # MENU: Analysis
-    # --------------------------------------------
-    # def integrate_region(self):
-    #     ''' Integration of the selected range '''
-    #     #self.integrate_region = IntegrateRegion(self, which = 'first')
-    #     integrate_region = IntegrateRegion(self, which='first')
-
-
-    # def normalize(self):
-    #     ''' Normalization of the amplitutes'''
-    #     normalize = Normalize(self, which='first')
-
-    # def curve_fit(self):
-    #     curve_fit = CurveFit(self, which = 'first')
-
-    # def delete_selected_data(self, index_to_delete=None):
-    #     av_data = self.sel_first._values
-    #     av_data.pop(0)
-    #     # Open dialog if index_to_delete was not set
-    #     if index_to_delete is None:
-    #         select_data = SelectData(master=self.mainwindow, title='Select data', group=self.eleana.selections['group'],
-    #                                   items=av_data)
-    #         response = select_data.get()
-    #         if response == None:
-    #             return
-    #         # Get indexes of selected data to remove
-    #         indexes = self.get_indexes_by_name(response)
-    #     # Delete data with selected indexes or given by index_to_delete
-    #     else:
-    #         indexes = [index_to_delete]
-    #     indexes.sort(reverse=True)
-    #     for each in indexes:
-    #         self.eleana.dataset.pop(each)
-    #     # Set all data to None
-    #     self.eleana.set_selections('first', -1)
-    #     self.eleana.set_selections('second', -1)
-    #     self.sel_first.set('None')
-    #     self.sel_first.set('None')
-    #     self.comparison_settings['indexes'] = []
-    #     self.update.dataset_list()
-    #     self.update.group_list()
-    #     self.update.all_lists()
-    #     self.update.gui_widgets()
-    #     self.comparison_view()
-
     def delete_data(self, which, dialog=True):
         if which == 'result':
             self.delete_sel_result()
@@ -1880,22 +1777,22 @@ class Application(MenuFileMixin,
         self.update.dataset_list()
         self.update.all_lists()
 
-    def clear_results(self, skip_question = True):
-        if not skip_question:
-            quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear results",
-                                        message="Are you sure you want to clear the entire dataset in the results?",
-                                        icon="warning", option_1="No", option_2="Yes")
-            response = quit_dialog.get()
-        else:
-            response = 'Yes'
-
-        if response == "Yes":
-            self.eleana.results_dataset.clear()
-            self.eleana.selections['result'] = -1
-            self.sel_result.configure(values=['None'])
-            self.r_stk.configure(values=[])
-            self.resultFrame.grid_remove()
-            self.grapher.plot_graph(switch_cursors=False)
+    # def clear_results(self, skip_question = True):
+    #     if not skip_question:
+    #         quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear results",
+    #                                     message="Are you sure you want to clear the entire dataset in the results?",
+    #                                     icon="warning", option_1="No", option_2="Yes")
+    #         response = quit_dialog.get()
+    #     else:
+    #         response = 'Yes'
+    #
+    #     if response == "Yes":
+    #         self.eleana.results_dataset.clear()
+    #         self.eleana.selections['result'] = -1
+    #         self.sel_result.configure(values=['None'])
+    #         self.r_stk.configure(values=[])
+    #         self.resultFrame.grid_remove()
+    #         self.grapher.plot_graph(switch_cursors=False)
 
     def clear_all_annotations(self):
         self.grapher.clear_all_annotations()
@@ -1978,564 +1875,6 @@ class Application(MenuFileMixin,
         else:
             self.sel_result.set('None')
         self.grapher.plot_graph()
-
-    # def find(self, find_by):
-    #     print("FIND")
-
-    # def clear_dataset(self, dialog = True):
-    #     if dialog:
-    #         quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear dataset",
-    #                                 message="Are you sure you want to clear the entire dataset?",
-    #                                 icon="warning", option_1="No", option_2="Yes")
-    #         response = quit_dialog.get()
-    #     else:
-    #         response = 'Yes'
-    #
-    #     if response == "Yes":
-    #         self.resultFrame.grid_remove()
-    #         self.firstComplex.grid_remove()
-    #         self.firstStkFrame.grid_remove()
-    #         self.secondComplex.grid_remove()
-    #         self.secondStkFrame.grid_remove()
-    #         self.eleana.dataset.clear()
-    #         self.eleana.results_dataset.clear()
-    #
-    #         self.eleana.selections = {'group':'All',
-    #                   'first':-1, 'second':-1, 'result':-1,
-    #                   'f_cpl':'re','s_cpl':'re', 'r_cpl':'re',
-    #                   'f_stk':0, 's_stk':0, 'r_stk':0,
-    #                   'f_dsp':True, 's_dsp':True ,'r_dsp':True
-    #                   }
-    #         self.update.dataset_list()
-    #         self.update.group_list()
-    #         self.update.all_lists()
-    #         self.update.gui_widgets()
-    #         self.gui_to_selections()
-    #
-    #         self.sel_graph_cursor(value = 'None', clear_annotations = True)
-
-    # def preferences(self):
-    #     ''' Open window for editing preferences '''
-    #     #preferences = PreferencesApp(self.mainwindow, self.grapher, self.color_theme, self.gui_appearence)
-    #     preferences = PreferencesApp(master = self.mainwindow, eleana = self.eleana, grapher = self.grapher)
-    #     response = preferences.get()
-
-
-    # def rescan_dataset(self, show_errors = True):
-    #     try:
-    #         self.update.dataset_list()
-    #     except:
-    #         pass
-    #     try:
-    #         self.update.groups()
-    #     except:
-    #         self.update.all_lists()
-    #     try:
-    #         self.gui_to_selections()
-    #     except:
-    #         pass
-
-    # def load_project(self, event=None, recent=None, filename = None):
-    #     ''' Load project created with the Application '''
-    #     if filename:
-    #         recent = filename
-    #     if recent is not None and filename is None:
-    #         try:
-    #             recent = self.eleana.paths['last_projects'][recent]
-    #         except IndexError:
-    #             Error.show(title = 'Error', info = "The project could not be found on list.")
-    #     collected_errors = []
-    #     project = self.load.load_project(recent)
-    #     self.main_menubar.create_showplots_menu()
-    #     if not project:
-    #         return
-    #     self.eleana.create_missing_id()
-    #     self.update.dataset_list()
-    #     self.update.groups()
-    #     self.update.all_lists()
-    #     path_to_file = Path(self.eleana.paths['last_projects'][0])
-    #     name = path_to_file.name
-    #     self.mainwindow.title(name + ' - Eleana')
-    #     self.eleana.paths['last_project_dir'] = str(Path(path_to_file).parent)
-    #     self.main_menubar.last_projects_menu()
-    #     self.main_menubar.create_showplots_menu()
-    #
-    #     # Set Selections according eleana.selections
-    #     self.gui_to_selections()
-    #
-    #     # Add custom annotations to graph
-    #     if self.eleana.settings.grapher['custom_annotations']:
-    #         try:
-    #             cursor_mode = self.eleana.settings.grapher['custom_annotations'][0]['mode']
-    #         except KeyError:
-    #             cursor_mode = 'Free select'
-    #         self.sel_graph_cursor(value=cursor_mode, clear_annotations=False)
-    #         self.grapher.updateAnnotationList()
-    #         self.sel_cursor_mode.set(cursor_mode)
-
-    # def load_recent(self, selected_value_text):
-    #     """ Load a project selected from Last Projects Menu"""
-    #     index = selected_value_text.split('. ')
-    #     index = int(index[0])
-    #     index = index - 1
-    #     recent = self.eleana.paths['last_projects'][index]
-    #     self.load_project(recent=recent)
-    #     self.eleana.paths['last_project_dir'] = Path(recent).parent
-    #     self.grapher.plot_graph()
-
-    # def save_as(self, filename = None):
-    #     file_saved = self.eleana.save_project(filename)
-    #     if not file_saved:
-    #         return
-    #     else:
-    #         # Perform update to place the item into menu
-    #         self.main_menubar.last_projects_menu()
-    #         self.mainwindow.title(Path(file_saved).name[:-9] + ' - Eleana')
-    #
-    # def save_current(self, event=None):
-    #     win_title = self.mainwindow.title()
-    #     if win_title == 'new project - Eleana':
-    #         self.save_as(filename = None)
-    #     else:
-    #         file = win_title[:-13]
-    #         file = file + '.ele'
-    #         filename = Path(self.eleana.paths['last_project_dir'], file)
-    #         self.save_as(filename)
-
-    '''******************************************
-              IMPORT EXTERNAL DATA             
-    *********************************************'''
-
-    # def drag_and_drop_files(self):
-    #     ''' Display drag and drop window for files'''
-    #     files = FileDropWindow(master = self.mainwindow, callbacks = main_menubar_callbacks(self))
-
-    # def import_more_formats(self, filename = None, type = None):
-    #     if type is None:
-    #         items = ['1. Flasher UJ (*.ele)',
-    #                  #'2. Low-temperature UV spectrophotometer UJ',
-    #                  #'3. SR curve (Pulse Spectrometer UJ)',
-    #                  #'4. Low-temperature UV spectrophotometer UJ',
-    #                  ]
-    #         dialog = SelectItems(master = self.mainwindow,
-    #                              title = "Select appropriate file format",
-    #                              items = items, multiple_selections=False )
-    #         response = dialog.get()
-    #         response = response.split('.')[0]
-    #     if response == '1':
-    #         type = 'flasher'
-    #     else:
-    #         Error.show(master = self.mainwindow, info = 'Not implemented yet')
-    #         return
-    #
-    #     self.load.loadOther(filename=filename, type = type)
-    #     self.update.dataset_list()
-    #     self.update.all_lists()
-    #     self.eleana.save_paths()
-    #     last_in_list = self.sel_first._values
-    #     self.first_selected(last_in_list[-1])
-
-
-
-    # def import_elexsys(self, filename = None):
-    #     ''' Open window that loads the spectra '''
-    #     try:
-    #         self.load.loadElexsys(filename = filename)
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         last_in_list = self.sel_first._values
-    #         self.first_selected(last_in_list[-1])
-    #     except Exception as e:
-    #         Error.show(title = "Error loading Elexsys file.", info = e)
-    #
-    # def import_EMX(self, filename = None):
-    #     try:
-    #         self.load.loadEMX(filename = filename)
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading EMX file.", info=e)
-    #
-    # def import_magnettech1(self, filename = None):
-    #     try:
-    #         self.load.loadMagnettech(mscope = 1, filename = filename)
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Magnettech file.", info=e)
-    #
-    # def import_magnettech2(self):
-    #     try:
-    #         self.load.loadMagnettech(mscope = 2)
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Magnettech file.", info=e)
-    #
-    # def import_biokine(self, filename = None, skip_messeges = False):
-    #     self.mainwindow.config(cursor = "watch")
-    #     try:
-    #         self.load.loadbiokine(filename = filename, skip_messeges = skip_messeges)
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         last_in_list = self.sel_first._values
-    #         self.first_selected(last_in_list[-1])
-    #         self.mainwindow.config(cursor="arrow")
-    #     except Exception as e:
-    #         self.mainwindow.config(cursor="arrow")
-    #         Error.show(title="Error loading BioKine file.", info=e)
-    #
-    # def import_adani_dat(self):
-    #     try:
-    #         self.load.loadAdaniDat()
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Adani dat file.", info=e)
-    #
-    # def import_shimadzu_spc(self, filename = None):
-    #     try:
-    #         self.load.loadShimadzuSPC(filenames = [filename])
-    #         self.update.dataset_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Shimadzu spc file.", info=e)
-    #
-    # def import_ascii(self, clipboard=None, filename = None, auto = False):
-    #     try:
-    #         self.load.loadAscii(master = self.mainwindow, clipboard = clipboard, filename = filename, auto = auto)
-    #         self.update.dataset_list()
-    #         self.update.group_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Ascii file.", info=e)
-    #
-    # def import_excel(self, filename = None):
-    #     try:
-    #         x = [['', ''], ['', '']]
-    #         headers = ['A', 'B']
-    #         empty = pandas.DataFrame(x, columns=headers)
-    #         table = CreateFromTable(eleana=self.eleana, master=self.mainwindow, df=empty, loadOnStart='excel', excelfile = filename)
-    #         response = table.get()
-    #         self.update.dataset_list()
-    #         self.update.group_list()
-    #         self.update.all_lists()
-    #         self.eleana.save_paths()
-    #         self.first_selected(self.sel_first._values[-1])
-    #     except Exception as e:
-    #         Error.show(title="Error loading Excel file.", info=e)
-
-    # def quick_copy(self, event = None):
-    #     curves = self.grapher.ax.get_lines()
-    #     the_longest = 0
-    #     collected_list = []
-    #
-    #     for curve in curves:
-    #         label = curve.get_label()
-    #         x_data = [str(element) for element in curve.get_xdata()]
-    #         if x_data:
-    #             x_data.insert(0, f'{label} [X]')
-    #             collected_list.append(x_data)
-    #             y_data = [str(element) for element in curve.get_ydata()]
-    #             y_data.insert(0, f'{label} [Y]')
-    #             collected_list.append(y_data)
-    #             length = len(x_data)
-    #
-    #             if length > the_longest:
-    #                 the_longest = length
-    #
-    #     # Replenish shorter lists with empty strings
-    #     even_collected_list = []
-    #     for row in collected_list:
-    #         row_length = len(row)
-    #         diff = the_longest - row_length
-    #         if diff > 0:
-    #             row.extend([""] * diff)
-    #         even_collected_list.append(row)
-    #
-    #     # Transpose list
-    #     transposed_data = list(map(list, zip(*even_collected_list)))
-    #     text_output = "\n".join("\t".join(row) for row in transposed_data)
-    #     self.mainwindow.clipboard_clear()
-    #     self.mainwindow.clipboard_append(text_output)
-    #     self.mainwindow.update()
-
-    # def quick_paste(self, event=None):
-    #     text = self.mainwindow.clipboard_get()
-    #     self.import_ascii(text)
-
-    # def export_first(self):
-    #     self.export.csv('first')
-    #
-    # def export_group(self):
-    #     self.export.group_csv(self.eleana.selections['group'])
-    #
-    # def export_spreadsheet(self, group = True, clipboard = False):
-    #
-    #     if group:
-    #         current_group = self.sel_group.get()
-    #         if current_group == 'All':
-    #             indexes_to_export = list(range(len(self.eleana.dataset)))
-    #         else:
-    #             indexes_to_export = self.eleana.assignmentToGroups.get(current_group)
-    #     else:
-    #         av_data = self.sel_first._values
-    #         av_data.pop(0)
-    #         # Open dialog if index_to_delete was not set
-    #         select_data = SelectData(master=self.mainwindow, title='Select data',
-    #                                  group=self.eleana.selections['group'],
-    #                                  items=av_data)
-    #         response = select_data.get()
-    #         if response == None:
-    #             return
-    #         indexes_to_export = self.get_indexes_by_name(response)
-    #
-    #     if not indexes_to_export:
-    #         return
-    #
-    #     full_table = []
-    #     for index in indexes_to_export:
-    #         data = self.eleana.dataset[index]
-    #         col_x = None
-    #         col_y = None
-    #         col_z = None
-    #         is_2D = False
-    #         # Single spectrum
-    #         if data.type == 'single 2D' and not data.complex:
-    #             col_x = [data.name + ' [X]'] + data.x.tolist()
-    #             col_y = [data.name + ' [Y]'] + data.y.tolist()
-    #         elif data.type == 'single 2D' and data.complex:
-    #             col_x = [data.name + ' [X]'] + list(data.x)
-    #             col_rey = [data.name + ' [Re Y]'] + data.y.real.tolist()
-    #             col_imy = [data.name + ' [Im Y]'] + data.y.imag.tolist()
-    #             col_y = [col_rey, col_imy]
-    #             is_2D = True
-    #         elif data.type == 'stack 2D' and not data.complex:
-    #             col_x = [data.name + ' [X]'] + list(data.x)
-    #             col_y = []
-    #             i = 0
-    #             for stk_name in data.stk_names:
-    #                 col_y_single = [data.name + ':' + stk_name + ' [Y]'] + data.y[i].tolist()
-    #                 col_y.append(col_y_single)
-    #                 i += 1
-    #
-    #             col_z = [data.name + ' [Z]'] + data.z.tolist()
-    #             col_y.append(col_z)
-    #             is_2D = True
-    #         elif data.type == 'stack 2D' and data.complex:
-    #             col_x = [data.name + ' [X]'] + list(data.x)
-    #             col_y = []
-    #             i = 0
-    #             for stk_name in data.stk_names:
-    #                 col_y_single_re = [data.name + ':' + stk_name + ' [Re Y]'] + data.y[i].real.tolist()
-    #                 col_y_single_im = [data.name + ':' + stk_name + ' [Im Y]'] + data.y[i].imag.tolist()
-    #                 col_y.append(col_y_single_re)
-    #                 col_y.append(col_y_single_im)
-    #                 i += 1
-    #             col_z = [data.name + ' [Z]'] + data.z.tolist()
-    #             col_y.append(col_z)
-    #             is_2D = True
-    #
-    #         else:
-    #             Error.show(title = 'Export spreadsheet CVS', info = 'Data not supported yet.')
-    #             return
-    #         # Add columns
-    #         if col_x:
-    #             full_table.append(col_x)
-    #         if col_y:
-    #             if is_2D:
-    #                 full_table.extend(col_y)
-    #             else:
-    #                 full_table.append(col_y)
-    #
-    #         max_len = max(len(r) for r in full_table)
-    #         filled_rows = [r + [""] * (max_len - len(r)) for r in full_table]
-    #         transposed = list(map(list, zip(*filled_rows)))
-    #
-    #     if clipboard:
-    #         text_output = "\n".join("\t".join(str(item) for item in row) for row in transposed)
-    #         self.mainwindow.clipboard_clear()
-    #         self.mainwindow.clipboard_append(text_output)
-    #         self.mainwindow.update()
-    #     else:
-    #         filename = filedialog.asksaveasfilename(
-    #             defaultextension=".csv",
-    #             filetypes=[("CSV files", "*.csv"), ("All files", "*.*")],
-    #             title="Save spreadsheet CSV"
-    #         )
-    #
-    #         if filename:  # If canceled
-    #             try:
-    #                 with open(filename, "w", newline="") as f:
-    #                     writer = csv.writer(f)
-    #                     writer.writerows(transposed)
-    #                     self.eleana.paths['last_export_dir'] = filename
-    #                     self.eleana.save_paths()
-    #             except Exception as e:
-    #                 Error.show(title='Export Spreadsheet', info = 'Error while saving csv speadsheet.', details = e)
-
-    # --- Quit (also window close by clicking on X)
-    # def close_application(self, event=None):
-    #     quit_dialog = CTkMessagebox(master = self.mainwindow, title="Quit", message="Do you want to close the program?",
-    #                                 icon="warning", option_1="No", option_2="Yes")
-    #     response = quit_dialog.get()
-    #     if response == "Yes":
-    #         # # Save current settings:
-    #         self.eleana.save_paths()
-    #         self.eleana.save_settings()
-    #         #self.mainwindow.iconify()
-    #         # Close all static_plot windows from self.eleana.active_static_windows
-    #         if self.eleana.storage.static_plots:
-    #             for window_nr in self.eleana.storage.static_plots:
-    #                 close_cmd = "self.grapher.static_plot_" + str(window_nr) + ".cancel()"
-    #                 try:
-    #                     exec(close_cmd)
-    #                 except:
-    #                     print("Error: " + close_cmd)
-    #         self.mainwindow.destroy()
-    #         if self.root is not None:
-    #             self.root.destroy()
-
-    # def edit_values_in_table(self, which ='first'):
-    #     if which == 'first' or which == 'second':
-    #         index_in_data = self.eleana.selections[which]
-    #     if index_in_data < 0:
-    #         Error.show(info = 'No data selected to edit.')
-    #         return
-    #
-    #     data = self.eleana.dataset[index_in_data]
-    #     x_header = f"{data.parameters['name_x']} [{data.parameters['unit_x']}]"
-    #     if data.type == 'single 2D' or data.type == "":
-    #         y_header = f"{data.parameters.get('name_y', '')} [{data.parameters.get('unit_y', '')}]"
-    #         headers = [x_header, y_header]
-    #     elif data.type == 'stack 2D':
-    #         headers = [x_header]
-    #         headers.extend(data.stk_names)
-    #     else:
-    #         Error.show(info = "Data type not specified. Expected 'single 2D' or 'stack 2D'")
-    #         return
-    #
-    #     table = EditValuesInTable(eleana_app=self.eleana,
-    #                             master=self.mainwindow,
-    #                             x = data.x,
-    #                             y = data.y,
-    #                             #name = data.name,
-    #                             #window_title = f"Edit {data.name}",
-    #                             column_names = headers,
-    #                             complex = data.complex
-    #                             )
-    #     response = table.get()
-    #     if response is None:
-    #         return
-    #     data.x = response[0]
-    #     data.y = response[1]
-    #     self.update.dataset_list()
-    #     self.update.group_list()
-    #     self.update.all_lists()
-    #     self.grapher.plot_graph()
-
-    # def notes(self):
-    #     notepad = Notepad(master=self.mainwindow, title="Edit notes", text=self.eleana.notes)
-    #     response = notepad.get()
-    #     if response == None:
-    #         return
-    #     else:
-    #         self.eleana.notes = response
-
-    # def transpose_stack(self):
-    #     ''' Transpose the stack 2D data'''
-    #     selected = self.eleana.selections['first']
-    #     if selected < 0:
-    #         selected = self.eleana.selections['second']
-    #     if selected < 0:
-    #         return
-    #
-    #     data = self.eleana.dataset[selected]
-    #     if data.type != 'stack 2D':
-    #         Error.show(title = 'Transpose stack', info='The selected data is not a stack.' )
-    #         return
-    #
-    #     self.mainwindow.config(cursor="watch")
-    #     # Transpose y and change axes
-    #     y_axis = data.y.T
-    #     x_axis = data.z
-    #     z_axis = data.x
-    #
-    #     # Swap names and units
-    #     name_x = data.parameters.get('name_z', '')
-    #     name_z = data.parameters.get('name_x', '')
-    #     unit_x = data.parameters.get('unit_z', '')
-    #     unit_z = data.parameters.get('unit_z', '')
-    #
-    #     stk_names = []
-    #     for i in z_axis:
-    #         name = name_z + ' ' + str(i) + ' ' + unit_z
-    #         stk_names.append(name)
-    #
-    #     data.x = x_axis
-    #     data.y = y_axis
-    #     data.z = z_axis
-    #     data.parameters['name_x'] = name_x
-    #     data.parameters['name_z'] = name_z
-    #     data.parameters['unit_x'] = unit_x
-    #     data.parameters['unit_z'] = unit_z
-    #     data.stk_names = stk_names
-    #
-    #     self.update.dataset_list()
-    #     self.update.group_list()
-    #     self.update.all_lists()
-    #     self.grapher.plot_graph()
-    #     self.mainwindow.config(cursor="arrow")
-
-
-    # def average_stack(self):
-    #     selected = self.eleana.selections['first']
-    #     if selected < 0:
-    #         selected = self.eleana.selections['second']
-    #     if selected < 0:
-    #         return
-    #
-    #     data = copy.deepcopy(self.eleana.dataset[selected])
-    #     if data.type != 'stack 2D':
-    #         Error.show(title='Average stack', info='The selected data is not a stack.')
-    #         return
-    #
-    #     self.mainwindow.config(cursor="watch")
-    #     # Transpose y and change axes
-    #     data.y = np.mean(data.y, axis=0)
-    #     data.z = None
-    #
-    #     # Swap names and units
-    #     data.parameters.pop('name_z', None)
-    #     data.parameters.pop('unit_z', None)
-    #
-    #     data.type = 'single 2D'
-    #     data.stk_names = []
-    #
-    #     data.name = data.name + ':AVG'
-    #     self.eleana.results_dataset.append(data)
-    #
-    #     self.update.dataset_list()
-    #     self.update.group_list()
-    #     self.update.all_lists()
-    #     positions = self.sel_result._values
-    #     self.result_selected(positions[-1])
-    #     self.sel_result.set(positions[-1])
-    #     self.mainwindow.config(cursor="arrow")
 
     def extract_from_stack(self, which = None):
         if which is None:
@@ -2893,33 +2232,6 @@ class Application(MenuFileMixin,
         return response
 
 
-    '''***********************************************
-    *           METHODS FOR CONTEXT MENU             *
-    ***********************************************'''
-
-    # def stack_to_group(self, which):
-    #     if which == 'any':
-    #         index = self.eleana.selections['first']
-    #         if index < 0:
-    #             index = self.eleana.selections['second']
-    #             if index < 0:
-    #                 return
-    #     else:
-    #         index = self.eleana.selections[which]
-    #     if index < 0:
-    #         return
-    #     data = copy.deepcopy(self.eleana.dataset[index])
-    #     if not data.type == 'stack 2D':
-    #         CTkMessagebox(master = self.mainwindow, title="Conversion to group", message="The data you selected is not a 2D stack")
-    #     else:
-    #         convert_stack_to_group = StackToGroup(master = self.mainwindow, eleana = self.eleana, index = index)
-    #         response = convert_stack_to_group.get()
-    #         if response == None:
-    #              return
-    #         self.update.dataset_list()
-    #         self.update.group_list()
-    #         self.update.all_lists()
-
     def delete_single_stk_data(self, which):
         ''' Remove single data from stk stack '''
         if which == 'first':
@@ -2993,21 +2305,6 @@ class Application(MenuFileMixin,
         text = Notepad(self.mainwindow, title=name, text=comment)
         response = text.get()
         self.eleana.dataset[index].comment = response
-
-    # def edit_parameters(self, which='first'):
-    #     idx = self.eleana.selections.get(which, - 1)
-    #     if idx < 0:
-    #         return
-    #     par_to_edit = self.eleana.dataset[idx].parameters
-    #     name_nr = self.eleana.dataset[idx].name_nr
-    #     edit_par = EditParameters(master = self.mainwindow, parameters = par_to_edit, name = name_nr)
-    #     response = edit_par.get()
-    #
-    #     if response:
-    #         self.eleana.dataset[idx].parameters = response
-    #         self.grapher.plot_graph()
-    #     else:
-    #         return
 
     def execute_command(self, event):
         if event.keysym == "Up":

@@ -1,0 +1,5 @@
+1. Uzyto Set offset do całej grupy
+2. Replace group
+3  Pojawiła się bląd z indeksem i zniknęły wszystkie dane z dataset
+4. Jest problem z replace_group
+

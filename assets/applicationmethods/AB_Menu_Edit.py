@@ -676,6 +676,27 @@ class MenuEditMixin:
 
             self.sel_graph_cursor(value = 'None', clear_annotations = True)
 
+    def clear_results(self, skip_question = True):
+
+        ''' Clear results'''
+
+        if not skip_question:
+            quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear results",
+                                        message="Are you sure you want to clear the entire dataset in the results?",
+                                        icon="warning", option_1="No", option_2="Yes")
+            response = quit_dialog.get()
+        else:
+            response = 'Yes'
+
+        if response == "Yes":
+            self.eleana.results_dataset.clear()
+            self.eleana.selections['result'] = -1
+            self.sel_result.configure(values=['None'])
+            self.r_stk.configure(values=[])
+            self.resultFrame.grid_remove()
+            self.grapher.plot_graph(switch_cursors=False)
+
+
     def first_to_group(self):
 
         ''' Assign first to group '''
