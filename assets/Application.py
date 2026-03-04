@@ -466,7 +466,7 @@ class Application(MenuFileMixin,
         except Exception as e:
             self.eleana.set_default_settings()
             self.eleana.save_settings()
-            print(e)
+
 
         # --------- Set default values in GUI -------
         self.sel_group.configure(values=['All'])

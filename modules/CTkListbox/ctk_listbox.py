@@ -1,15 +1,11 @@
-"""
-Custom ListBox for customtkinter
-Author: Akash Bora
-"""
-
+import tkinter as tk
 import customtkinter
 
 
-class CTkListbox(customtkinter.CTkScrollableFrame):
+class CTkListbox(customtkinter.CTkFrame):
 
     def __init__(self,
-                 master: any,
+                 master,
                  height: int = 100,
                  width: int = 200,
                  hightlight_color: str = "default",
@@ -19,368 +15,163 @@ class CTkListbox(customtkinter.CTkScrollableFrame):
                  select_color: str = "default",
                  hover_color: str = "default",
                  border_width: int = 3,
-                 font: tuple = "default",
+                 font: tuple = "Arial 10",
                  multiple_selection: bool = False,
                  listvariable=None,
                  hover: bool = True,
                  command=None,
                  justify="left",
-                 disable_selection = False,
-                 gui_appearance = None,
+                 disable_selection=False,
+                 gui_appearance=None,
                  **kwargs):
+
+        super().__init__(master, width=width, height=height,
+                         fg_color=fg_color, border_width=border_width)
+
+        self.command = command
+        self.multiple = multiple_selection
+        self.disable_selection = disable_selection
 
         if not gui_appearance:
             gui_appearance = customtkinter.get_appearance_mode()
 
-        self.disable_selection = disable_selection
         if gui_appearance.lower() == 'light':
-           text_color = '#151515'
-           select_color = '#777'
-           hover_color = '#888'
-           fg_color = "#ccc"
+            default_bg = "#f0f0f0"
+            default_fg = "#151515"
+            default_select = "#999999"
         else:
-            text_color = '#eaeaea'
-            select_color = '#bbbbbb'
-            hover_color = '#555'
-            fg_color = '#333'
+            default_bg = "#2b2b2b"
+            default_fg = "#eaeaea"
+            default_select = "#3a7ebf"
 
-        super().__init__(master, width=width, height=height, fg_color=fg_color, border_width=border_width, **kwargs)
-        self._scrollbar.grid_configure(padx=(0, border_width + 4))
-        self._scrollbar.configure(width=12)
+        self.text_color = default_fg if text_color == "default" else text_color
+        self.select_color = default_select if select_color == "default" else select_color
+        self.font = ("Segoe UI", 13) if font == "default" else font
 
-        if bg_color:
-            super().configure(bg_color=bg_color)
+        selectmode = tk.MULTIPLE if self.multiple else tk.SINGLE
 
-        self.select_color = customtkinter.ThemeManager.theme["CTkButton"][
-            "fg_color"] if select_color == "default" else select_color
-        self.text_color = customtkinter.ThemeManager.theme["CTkButton"][
-            "text_color"] if text_color == "default" else text_color
-        self.hover_color = customtkinter.ThemeManager.theme["CTkButton"][
-            "hover_color"] if hover_color == "default" else hover_color
-        self.font = (customtkinter.ThemeManager.theme["CTkFont"]["family"], 13) if font == "default" else font
-        if justify == "left":
-            self.justify = "w"
-        elif justify == "right":
-            self.justify = "e"
-        else:
-            self.justify = "c"
-        self.buttons = {}
-        self.command = command
-        self.multiple = multiple_selection
-        self.selected = None
-        self.hover = hover
-        self.end_num = 0
-        self.selections = []
+        # 🔥 Prawdziwy Listbox (wydajny)
+        self.listbox = tk.Listbox(
+            self,
+            selectmode=selectmode,
+            bg=default_bg,
+            fg=self.text_color,
+            selectbackground=self.select_color,
+            selectforeground="white",
+            highlightthickness=0,
+            borderwidth=0,
+            activestyle="none",
+            font=self.font,
+            justify=justify
+        )
 
+        # 🔥 Ładny CTk scrollbar
+        self.scrollbar = customtkinter.CTkScrollbar(
+            self, command=self.listbox.yview)
+        self.listbox.configure(yscrollcommand=self.scrollbar.set)
+
+        self.listbox.pack(side="left", fill="both", expand=True)
+        self.scrollbar.pack(side="right", fill="y")
+
+        # Event
+        self.listbox.bind("<<ListboxSelect>>", self._on_select)
+
+        # Obsługa listvariable
         if listvariable:
             self.listvariable = listvariable
-            self.listvariable.trace_add('write', lambda a, b, c: self.update_listvar())
+            self.listvariable.trace_add(
+                'write', lambda a, b, c: self.update_listvar())
             self.update_listvar()
 
-        super().bind("<Destroy>", lambda e: self.unbind_all("<Configure>"))
+    # -------------------------------------------------
+    # API zgodne z poprzednią wersją
+    # -------------------------------------------------
 
-        # Mouse over widget bind
-        self.mouse_over_widget = False
-        self.bind("<Enter>", lambda e: self.set_mouse_over_widget(True))
-        self.bind("<Leave>", lambda e: self.set_mouse_over_widget(False))
+    def insert(self, index, option, **kwargs):
+        self.listbox.insert(index, option)
 
-        # Scroll mouse bind
-        # self.bind("<MouseWheel>", self.on_mouse_wheel)  # Windows i macOS
-        # self.bind("<Button-4>", self.wheel_up)  # Linux
-        # self.bind("<Button-5>", self.wheel_down)  # Linux
+    def delete(self, index, last=None):
+        if str(index).lower() == "all":
+            self.listbox.delete(0, tk.END)
+        else:
+            self.listbox.delete(index, last)
 
-        # Scroll mouse bind — cross-platform
-        self.bind("<MouseWheel>", self._on_mousewheel_windows)  # Windows / macOS
-        self.bind("<Button-4>", self._on_mousewheel_linux)  # Linux scroll up
-        self.bind("<Button-5>", self._on_mousewheel_linux)  # Linux scroll down
+    def size(self):
+        return self.listbox.size()
 
-        # ALSO bind directly to internal canvas (important!)
-        self._parent_canvas.bind("<MouseWheel>", self._on_mousewheel_windows)
-        self._parent_canvas.bind("<Button-4>", self._on_mousewheel_linux)
-        self._parent_canvas.bind("<Button-5>", self._on_mousewheel_linux)
+    def get(self, index=None):
+        if index is None:
+            sel = self.listbox.curselection()
+            if not sel:
+                return None
+            if self.multiple:
+                return [self.listbox.get(i) for i in sel]
+            return self.listbox.get(sel[0])
+        else:
+            if str(index).lower() == "all":
+                return list(self.listbox.get(0, tk.END))
+            return self.listbox.get(index)
 
-    def set_mouse_over_widget(self, value):
-        self.mouse_over_widget = value
-
-    def _on_mousewheel_windows(self, event):
-        #if not self.mouse_over_widget:
-        #    return
-        # Windows: delta = ±120
-        self._parent_canvas.yview_scroll(int(-event.delta / 120), "units")
-
-    def _on_mousewheel_linux(self, event):
-        if event is None:
-            return
-        #    return
-        if event.num == 4:  # scroll up
-            self._parent_canvas.yview_scroll(-1, "units")
-        elif event.num == 5:  # scroll down
-            self._parent_canvas.yview_scroll(1, "units")
-
-    # def on_mouse_wheel(self, event):
-    #     if event.delta > 0:
-    #         self.wheel_up(event)
-    #     else:
-    #         self.wheel_down(event)
-
-    # def wheel_down(self, event):
-    #     if not self.mouse_over_widget:
-    #         return
-    #     if self._scrollbar:
-    #         current_position = self._scrollbar.get()[1]
-    #         if current_position < 1.0:
-    #             new_position = min(current_position + 0.01, 1.0)
-    #             self._scrollbar.set(new_position - 0.01, new_position)
-    #     self._parent_canvas.yview("scroll", int(100 / 20), "units")
-    #
-    # def wheel_up(self, event):
-    #     if not self.mouse_over_widget:
-    #         return
-    #     if self._scrollbar:
-    #         current_position = self._scrollbar.get()[0]
-    #         if current_position > 0.0:
-    #             new_position = max(current_position - 0.01, 0.0)
-    #             self._scrollbar.set(new_position, new_position + 0.01)
-    #     self._parent_canvas.yview("scroll", -int(100 / 20), "units")
-
-    def update_listvar(self):
-        values = list(eval(self.listvariable.get()))
-        self.delete("all")
-        for i in values:
-            self.insert("END", option=i)
+    def curselection(self):
+        return self.listbox.curselection()
 
     def select(self, index):
         if self.disable_selection:
             return
-        """Select the option."""
-        for options in self.buttons.values():
-            if options.winfo_exists():
-                options.configure(fg_color="transparent")
-        if self.multiple:
-            if self.buttons[index] in self.selections:
-                self.selections.remove(self.buttons[index])
-                if self.buttons[index].winfo_exists():
-                    self.buttons[index].configure(fg_color="transparent", hover=False)
-                    self.after(100, lambda: self.buttons[index].configure(hover=self.hover))
-            else:
-                self.selections.append(self.buttons[index])
-            for i in self.selections:
-                if i.winfo_exists():
-                    i.configure(fg_color=self.select_color, hover=False)
-                    self.after(100, lambda button=i: button.configure(hover=self.hover))
-        else:
-            self.selected = self.buttons[index]
-            if self.selected.winfo_exists():
-                self.selected.configure(fg_color=self.select_color, hover=False)
-                self.after(100, lambda: self.selected.configure(hover=self.hover))
-
-        if self.command:
-            self.command(self.get())
-
-    def activate(self, index):
-        if str(index).lower() == "all":
-            if self.multiple:
-                for i in self.buttons:
-                    self.select(i)
-            return
-        elif isinstance(index, str):
-            elements = [btn.cget("text") for btn in self.buttons.values()]
-            if index in elements:
-                idx = elements.index(index)
-                index = idx
-        selected = list(self.buttons.keys())[index]
-        self.select(selected)
-
-    def curselection(self):
-        index = 0
-        if self.multiple:
-            indexes = []
-            for i in self.buttons.values():
-                if i in self.selections:
-                    indexes.append(index)
-                index += 1
-            return tuple(indexes)
-
-        else:
-            for i in self.buttons.values():
-                if i == self.selected:
-                    return index
-                else:
-                    index += 1
-
-    def bind(self, key, func):
-        #super().bind_all(key, lambda e: func(self.get()), add="+")
-        super().bind(key, lambda e: func(self.get()), add="+")
+        self.listbox.selection_set(index)
+        self._trigger_command()
 
     def deselect(self, index):
-        """Deselect the option."""
-        if self.disable_selection:
-            return
-        if not self.multiple:
-            if self.selected and self.selected.winfo_exists():
-                self.selected.configure(fg_color="transparent")
-            self.selected = None
-            return
-        if self.buttons[index] in self.selections:
-            self.selections.remove(self.buttons[index])
-            if self.buttons[index].winfo_exists():
-                self.buttons[index].configure(fg_color="transparent")
+        self.listbox.selection_clear(index)
+
+    def activate(self, index):
+        self.select(index)
 
     def deactivate(self, index):
-        if str(index).lower() == "all":
-            for i in self.buttons:
-                self.deselect(i)
+        self.deselect(index)
+
+    def move_up(self, index):
+        if index <= 0:
             return
-        elif isinstance(index, str):
-            if index in self.listvariable:
-                idx = self.listvariable.index(index)
-                index = idx
-        selected = list(self.buttons.keys())[index]
-        self.deselect(selected)
+        text = self.listbox.get(index)
+        self.listbox.delete(index)
+        self.listbox.insert(index - 1, text)
+        self.select(index - 1)
 
-    def insert(self, index, option, **args):
-        """ add new option in the listbox """
-
-        if str(index).lower() == "end":
-            index = f"END{self.end_num}"
-            self.end_num += 1
-
-        if index in self.buttons:
-            self.buttons[index].destroy()
-
-        self.buttons[index] = customtkinter.CTkButton(self, text=option, fg_color="transparent", anchor=self.justify,
-                                                      text_color=self.text_color, font=self.font,
-                                                      hover_color=self.hover_color, **args)
-        self.buttons[index].configure(command=lambda num=index: self.select(num))
-        self.buttons[index].bind("<MouseWheel>", self._on_mousewheel_windows)
-        self.buttons[index].bind("<Button-4>", self._on_mousewheel_linux)
-        self.buttons[index].bind("<Button-5>", self._on_mousewheel_linux)
-
-        self.buttons[index].pack(padx=0, pady=(0, 5), fill="x", expand=True)
-
-    def delete(self, index, last=None):
-        """ delete options from the listbox """
-
-        if str(index).lower() == "all":
-            for i in self.buttons:
-                self.buttons[i].destroy()
-            self.buttons = {}
-            self.end_num = 0
+    def move_down(self, index):
+        if index >= self.size() - 1:
             return
-
-        if str(index).lower() == "end":
-            index = f"END{self.end_num}"
-            self.end_num -= 1
-        else:
-            if int(index) == len(self.buttons):
-                index = len(self.buttons) - 1
-            if int(index) > len(self.buttons):
-                return
-            if not last:
-                index = list(self.buttons.keys())[int(index)]
-
-        if last:
-            if str(last).lower() == "end":
-                last = len(self.buttons) - 1
-            elif int(last) >= len(self.buttons):
-                last = len(self.buttons) - 1
-
-            deleted_list = []
-            for i in range(index, int(last) + 1):
-                list(self.buttons.values())[i].destroy()
-                deleted_list.append(list(self.buttons.keys())[i])
-            for i in deleted_list:
-                del self.buttons[i]
-        else:
-            self.buttons[index].destroy()
-            del self.buttons[index]
-
-    def size(self):
-        """ return total number of items in the listbox """
-        return len(self.buttons.keys())
-
-    def get(self, index=None):
-        """ get the selected value """
-        if index:
-            if str(index).lower() == "all":
-                return list(item.cget("text") for item in self.buttons.values())
-            else:
-                index = list(self.buttons.keys())[int(index)]
-                return self.buttons[index].cget("text")
-        else:
-            if self.multiple:
-                return [x.cget("text") for x in self.selections] if len(self.selections) > 0 else None
-            else:
-                return self.selected.cget("text") if self.selected is not None else None
+        text = self.listbox.get(index)
+        self.listbox.delete(index)
+        self.listbox.insert(index + 1, text)
+        self.select(index + 1)
 
     def configure(self, **kwargs):
-        """ configurable options of the listbox """
-
-        if "hover_color" in kwargs:
-            self.hover_color = kwargs.pop("hover_color")
-            for i in self.buttons.values():
-                i.configure(hover_color=self.hover_color)
-        if "highlight_color" in kwargs:
-            self.select_color = kwargs.pop("highlight_color")
-            if self.selected: self.selected.configure(fg_color=self.select_color)
-            if len(self.selections) > 0:
-                for i in self.selections:
-                    i.configure(fg_color=self.select_color)
         if "text_color" in kwargs:
-            self.text_color = kwargs.pop("text_color")
-            for i in self.buttons.values():
-                i.configure(text=self.text_color)
+            self.listbox.config(fg=kwargs.pop("text_color"))
+        if "highlight_color" in kwargs:
+            self.listbox.config(
+                selectbackground=kwargs.pop("highlight_color"))
         if "font" in kwargs:
-            self.font = kwargs.pop("font")
-            for i in self.buttons.values():
-                i.configure(font=self.font)
+            self.listbox.config(font=kwargs.pop("font"))
         if "command" in kwargs:
             self.command = kwargs.pop("command")
 
         super().configure(**kwargs)
 
-    def move_up(self, index):
-        """ Move the option up in the listbox """
-        if index > 0:
-            current_key = list(self.buttons.keys())[index]
-            previous_key = list(self.buttons.keys())[index - 1]
+    def update_listvar(self):
+        values = list(eval(self.listvariable.get()))
+        self.delete("all")
+        for i in values:
+            self.insert(tk.END, i)
 
-            # Store the text of the button to be moved
-            current_text = self.buttons[current_key].cget("text")
+    # -------------------------------------------------
 
-            # Update the text of the buttons
-            self.buttons[current_key].configure(text=self.buttons[previous_key].cget("text"))
-            self.buttons[previous_key].configure(text=current_text)
+    def _on_select(self, event):
+        if self.command:
+            self._trigger_command()
 
-            # Clear the selection from the current option
-            self.deselect(current_key)
-
-            # Update the selection
-            self.select(previous_key)
-
-            # Update the scrollbar position
-            if self._parent_canvas.yview() != (0.0, 1.0):
-                self._parent_canvas.yview("scroll", -int(100 / 6), "units")
-
-    def move_down(self, index):
-        """ Move the option down in the listbox """
-        if index < len(self.buttons) - 1:
-            current_key = list(self.buttons.keys())[index]
-            next_key = list(self.buttons.keys())[index + 1]
-
-            # Store the text of the button to be moved
-            current_text = self.buttons[current_key].cget("text")
-
-            # Update the text of the buttons
-            self.buttons[current_key].configure(text=self.buttons[next_key].cget("text"))
-            self.buttons[next_key].configure(text=current_text)
-
-            # Clear the selection from the current option
-            self.deselect(current_key)
-
-            # Update the selection
-            self.select(next_key)
-
-            # Update the scrollbar position
-            if self._parent_canvas.yview() != (0.0, 1.0):
-                self._parent_canvas.yview("scroll", int(100 / 6), "units")
+    def _trigger_command(self):
+        value = self.get()
+        if self.command:
+            self.command(value)

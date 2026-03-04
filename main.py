@@ -4,6 +4,7 @@ import customtkinter as ctk
 from PIL import Image
 from tkinterdnd2 import TkinterDnD
 from screeninfo import get_monitors
+from tkinter import font
 
 # BASIC CONFIGURATION
 ELEANA_VERSION = 5.10   # Set the Eleana version. This will be stored in self.eleana.version
@@ -17,6 +18,7 @@ DEVEL = True  # To display information in development set to True
 
 if hasattr(sys, "_MEIPASS"):
     os.chdir(sys._MEIPASS)
+
 
 ''' Create ROOT window '''
 root = TkinterDnD.Tk()
@@ -131,6 +133,7 @@ if __name__ == "__main__":
         warnings.simplefilter('ignore', np.exceptions.RankWarning)
 
     ''' Create Main instances '''
+
     eleana = Eleana(version=ELEANA_VERSION, devel=DEVEL)
     # sound = Sound()
     cmd = CommandProcessor()
