@@ -50,7 +50,7 @@ class CTkListbox(customtkinter.CTkFrame):
 
         selectmode = tk.MULTIPLE if self.multiple else tk.SINGLE
 
-        # 🔥 Prawdziwy Listbox (wydajny)
+        # tk.listbox widget
         self.listbox = tk.Listbox(
             self,
             selectmode=selectmode,
@@ -62,10 +62,11 @@ class CTkListbox(customtkinter.CTkFrame):
             borderwidth=0,
             activestyle="none",
             font=self.font,
-            justify=justify
+            justify=justify,
+            exportselection=False,
         )
 
-        # 🔥 Ładny CTk scrollbar
+        # Scrollbr
         self.scrollbar = customtkinter.CTkScrollbar(
             self, command=self.listbox.yview)
         self.listbox.configure(yscrollcommand=self.scrollbar.set)
@@ -88,7 +89,10 @@ class CTkListbox(customtkinter.CTkFrame):
     # -------------------------------------------------
 
     def insert(self, index, option, **kwargs):
-        self.listbox.insert(index, option)
+        try:
+            self.listbox.insert(index, option)
+        except tk.TclError:
+            self.listbox.insert(tk.END, option)
 
     def delete(self, index, last=None):
         if str(index).lower() == "all":
