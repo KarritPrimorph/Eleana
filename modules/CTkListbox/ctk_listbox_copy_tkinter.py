@@ -9,14 +9,12 @@ class CTkListbox(customtkinter.CTkFrame):
                  height: int = 100,
                  width: int = 200,
                  hightlight_color: str = "default",
-                 fg_color: str = "#505050",
+                 fg_color: str = "transparent",
                  bg_color: str = None,
                  text_color: str = "default",
                  select_color: str = "default",
                  hover_color: str = "default",
-                 border_width: int = 2,
-                 border_color: str = "#505050",
-                 padding: int = 4,
+                 border_width: int = 3,
                  font: tuple = "Arial 10",
                  multiple_selection: bool = False,
                  listvariable=None,
@@ -27,15 +25,8 @@ class CTkListbox(customtkinter.CTkFrame):
                  gui_appearance=None,
                  **kwargs):
 
-        super().__init__(
-            master,
-            width=width,
-            height=height,
-            fg_color=fg_color,
-            border_width=border_width,
-            border_color=border_color,
-            corner_radius=0
-        )
+        super().__init__(master, width=width, height=height,
+                         fg_color=fg_color, border_width=border_width)
 
         self.command = command
         self.multiple = multiple_selection
@@ -48,37 +39,20 @@ class CTkListbox(customtkinter.CTkFrame):
             default_bg = "#f0f0f0"
             default_fg = "#151515"
             default_select = "#999999"
-            scrollbar_color = "#cfcfcf"
         else:
             default_bg = "#2b2b2b"
             default_fg = "#eaeaea"
             default_select = "#3a7ebf"
-            scrollbar_color = "#404040"
 
         self.text_color = default_fg if text_color == "default" else text_color
         self.select_color = default_select if select_color == "default" else select_color
-        self.font = ("Segoe UI", 10) if font == "default" else font
+        self.font = ("Segoe UI", 13) if font == "default" else font
 
         selectmode = tk.MULTIPLE if self.multiple else tk.SINGLE
 
-        # -------------------------------------------------
-        # INNER FRAME (margines wokół listy)
-        # -------------------------------------------------
-
-        self.inner = customtkinter.CTkFrame(
-            self,
-            fg_color=default_bg,
-            corner_radius=4
-        )
-
-        self.inner.pack(fill="both", expand=True, padx=padding, pady=padding)
-
-        # -------------------------------------------------
-        # TK LISTBOX
-        # -------------------------------------------------
-
+        # tk.listbox widget
         self.listbox = tk.Listbox(
-            self.inner,
+            self,
             selectmode=selectmode,
             bg=default_bg,
             fg=self.text_color,
@@ -92,34 +66,18 @@ class CTkListbox(customtkinter.CTkFrame):
             exportselection=False,
         )
 
-        # -------------------------------------------------
-        # SCROLLBAR (ciemny)
-        # -------------------------------------------------
-
+        # Scrollbr
         self.scrollbar = customtkinter.CTkScrollbar(
-            self.inner,
-            command=self.listbox.yview,
-            fg_color=scrollbar_color,
-            button_color="#707070",
-            button_hover_color="#909090",
-            width=10
-        )
-
+            self, command=self.listbox.yview)
         self.listbox.configure(yscrollcommand=self.scrollbar.set)
 
         self.listbox.pack(side="left", fill="both", expand=True)
         self.scrollbar.pack(side="right", fill="y")
 
-        # -------------------------------------------------
-        # EVENT
-        # -------------------------------------------------
-
+        # Event
         self.listbox.bind("<<ListboxSelect>>", self._on_select)
 
-        # -------------------------------------------------
-        # LISTVARIABLE
-        # -------------------------------------------------
-
+        # Obsługa listvariable
         if listvariable:
             self.listvariable = listvariable
             self.listvariable.trace_add(
@@ -127,7 +85,7 @@ class CTkListbox(customtkinter.CTkFrame):
             self.update_listvar()
 
     # -------------------------------------------------
-    # API
+    # API zgodne z poprzednią wersją
     # -------------------------------------------------
 
     def insert(self, index, option, **kwargs):
@@ -146,36 +104,25 @@ class CTkListbox(customtkinter.CTkFrame):
         return self.listbox.size()
 
     def get(self, index=None):
-
         if index is None:
-
             sel = self.listbox.curselection()
-
             if not sel:
                 return None
-
             if self.multiple:
                 return [self.listbox.get(i) for i in sel]
-
             return self.listbox.get(sel[0])
-
         else:
-
             if str(index).lower() == "all":
                 return list(self.listbox.get(0, tk.END))
-
             return self.listbox.get(index)
 
     def curselection(self):
         return self.listbox.curselection()
 
     def select(self, index):
-
         if self.disable_selection:
             return
-
         self.listbox.selection_set(index)
-
         self._trigger_command()
 
     def deselect(self, index):
@@ -187,42 +134,48 @@ class CTkListbox(customtkinter.CTkFrame):
     def deactivate(self, index):
         self.deselect(index)
 
-    def configure(self, **kwargs):
+    def move_up(self, index):
+        if index <= 0:
+            return
+        text = self.listbox.get(index)
+        self.listbox.delete(index)
+        self.listbox.insert(index - 1, text)
+        self.select(index - 1)
 
+    def move_down(self, index):
+        if index >= self.size() - 1:
+            return
+        text = self.listbox.get(index)
+        self.listbox.delete(index)
+        self.listbox.insert(index + 1, text)
+        self.select(index + 1)
+
+    def configure(self, **kwargs):
         if "text_color" in kwargs:
             self.listbox.config(fg=kwargs.pop("text_color"))
-
         if "highlight_color" in kwargs:
             self.listbox.config(
                 selectbackground=kwargs.pop("highlight_color"))
-
         if "font" in kwargs:
             self.listbox.config(font=kwargs.pop("font"))
-
         if "command" in kwargs:
             self.command = kwargs.pop("command")
 
         super().configure(**kwargs)
 
     def update_listvar(self):
-
         values = list(eval(self.listvariable.get()))
-
         self.delete("all")
-
         for i in values:
             self.insert(tk.END, i)
 
     # -------------------------------------------------
 
     def _on_select(self, event):
-
         if self.command:
             self._trigger_command()
 
     def _trigger_command(self):
-
         value = self.get()
-
         if self.command:
             self.command(value)
