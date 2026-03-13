@@ -1,9 +1,8 @@
 <?xml version='1.0' encoding='utf-8'?>
-<interface version="1.5" author="PygubuDesigner 0.41.4">
+<interface version="1.4" author="PygubuDesigner 0.41.4">
   <project>
     <settings />
     <customwidgets />
-    <resources />
   </project>
   <object class="tk.Toplevel" id="EleanaWindow" named="True">
     <property name="geometry">1600x1300</property>
@@ -156,7 +155,7 @@
                                             <property name="fg_color">#505050</property>
                                             <property name="height">20</property>
                                             <property name="state">normal</property>
-                                            <property name="text" translatable="yes">▲</property>
+                                            <property name="text" translatable="yes">▼</property>
                                             <property name="text_color">#799da2</property>
                                             <property name="width">20</property>
                                             <layout manager="grid">
@@ -174,7 +173,7 @@
                                             <property name="corner_radius">0</property>
                                             <property name="fg_color">#505050</property>
                                             <property name="height">20</property>
-                                            <property name="text" translatable="yes">▼</property>
+                                            <property name="text" translatable="yes">▲</property>
                                             <property name="text_color">#799da2</property>
                                             <property name="width">20</property>
                                             <layout manager="grid">
@@ -309,7 +308,7 @@
                                                 <property name="command" type="command" cbtype="simple">first_up_clicked</property>
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
-                                                <property name="text" translatable="yes">▲</property>
+                                                <property name="text" translatable="yes">▼</property>
                                                 <property name="text_color">#c6484c</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -328,7 +327,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▼</property>
+                                                <property name="text" translatable="yes">▲</property>
                                                 <property name="text_color">#c6484c</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -419,7 +418,7 @@
                                                 <property name="height">20</property>
                                                 <property name="hover">False</property>
                                                 <property name="state">normal</property>
-                                                <property name="text" translatable="yes">▲</property>
+                                                <property name="text" translatable="yes">▼</property>
                                                 <property name="text_color">#c6484c</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -437,7 +436,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▼</property>
+                                                <property name="text" translatable="yes">▲</property>
                                                 <property name="text_color">#c6484c</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -806,9 +805,34 @@
                                         <property name="fg_color">#424242</property>
                                         <property name="text" translatable="yes">SWAP</property>
                                         <layout manager="grid">
-                                          <property name="column">0</property>
+                                          <property name="column">3</property>
+                                          <property name="padx">4</property>
                                           <property name="row">0</property>
                                           <property name="sticky">nsew</property>
+                                        </layout>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="customtkinter.CTkButton" id="ctkbutton2">
+                                        <property name="command" type="command" cbtype="simple">quick_subtraction</property>
+                                        <property name="text" translatable="yes">SUBTRACT </property>
+                                        <property name="width">60</property>
+                                        <layout manager="grid">
+                                          <property name="column">0</property>
+                                          <property name="padx">4</property>
+                                          <property name="row">0</property>
+                                        </layout>
+                                      </object>
+                                    </child>
+                                    <child>
+                                      <object class="customtkinter.CTkButton" id="ctkbutton3">
+                                        <property name="command" type="command" cbtype="simple">quick_addition</property>
+                                        <property name="text" translatable="yes">ADD</property>
+                                        <property name="width">90</property>
+                                        <layout manager="grid">
+                                          <property name="column">1</property>
+                                          <property name="padx">4</property>
+                                          <property name="row">0</property>
                                         </layout>
                                       </object>
                                     </child>
@@ -900,7 +924,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▲</property>
+                                                <property name="text" translatable="yes">▼</property>
                                                 <property name="text_color">#20acdc</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -917,7 +941,7 @@
                                                 <property name="command" type="command" cbtype="simple">second_down_clicked</property>
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
-                                                <property name="text" translatable="yes">▼</property>
+                                                <property name="text" translatable="yes">▲</property>
                                                 <property name="text_color">#20acdc</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -986,7 +1010,7 @@
                                             <property name="corner_radius">0</property>
                                             <property name="fg_color">#505050</property>
                                             <property name="height">20</property>
-                                            <property name="text" translatable="yes">▲</property>
+                                            <property name="text" translatable="yes">▼</property>
                                             <property name="text_color">#20acdc</property>
                                             <property name="width">20</property>
                                             <layout manager="grid">
@@ -1003,7 +1027,7 @@
                                             <property name="command" type="command" cbtype="simple">s_stk_down_clicked</property>
                                             <property name="corner_radius">0</property>
                                             <property name="fg_color">#505050</property>
-                                            <property name="text" translatable="yes">▼</property>
+                                            <property name="text" translatable="yes">▲</property>
                                             <property name="text_color">#20acdc</property>
                                             <property name="width">20</property>
                                             <layout manager="grid">
@@ -1184,7 +1208,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▲</property>
+                                                <property name="text" translatable="yes">▼</property>
                                                 <property name="text_color">#3c9b59</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -1202,7 +1226,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▼</property>
+                                                <property name="text" translatable="yes">▲</property>
                                                 <property name="text_color">#3c9b59</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -1303,7 +1327,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▲</property>
+                                                <property name="text" translatable="yes">▼</property>
                                                 <property name="text_color">#3c9b59</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -1321,7 +1345,7 @@
                                                 <property name="corner_radius">0</property>
                                                 <property name="fg_color">#505050</property>
                                                 <property name="height">20</property>
-                                                <property name="text" translatable="yes">▼</property>
+                                                <property name="text" translatable="yes">▲</property>
                                                 <property name="text_color">#3c9b59</property>
                                                 <property name="width">20</property>
                                                 <layout manager="grid">
@@ -1634,7 +1658,7 @@
                                     <child>
                                       <object class="customtkinter.CTkCheckBox" id="check_autoscale_X" named="True">
                                         <property name="border_width">2</property>
-                                        <property name="command" type="command" cbtype="simple">switch_autoscale_x</property>
+                                        <property name="command" type="command" cbtype="simple">switch_autoscale</property>
                                         <property name="corner_radius">20</property>
                                         <property name="text" translatable="yes">Autoscale X</property>
                                         <layout manager="grid">
@@ -1649,7 +1673,7 @@
                                     <child>
                                       <object class="customtkinter.CTkCheckBox" id="check_autoscale_Y" named="True">
                                         <property name="border_width">2</property>
-                                        <property name="command" type="command" cbtype="simple">switch_autoscale_y</property>
+                                        <property name="command" type="command" cbtype="simple">switch_autoscale</property>
                                         <property name="corner_radius">20</property>
                                         <property name="text" translatable="yes">Autoscale Y</property>
                                         <layout manager="grid">
@@ -1764,7 +1788,7 @@
                                             <property name="command" type="command" cbtype="simple">auxilary_axes</property>
                                             <property name="corner_radius">20</property>
                                             <property name="text" translatable="yes"> </property>
-                                            <property name="width">20</property>
+                                            <property name="width">30</property>
                                             <layout manager="grid">
                                               <property name="column">0</property>
                                               <property name="padx">5</property>

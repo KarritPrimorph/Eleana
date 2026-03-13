@@ -38,6 +38,7 @@ from assets.applicationmethods.GUI_Auxilary_axes import AuxilaryAxesMixin
 from modules.CTkListbox import CTkListbox
 from modules.CTkMessagebox import CTkMessagebox
 from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+from modules.MyCombobox.MyCombobox import MyCombobox
 
 # Import Eleana specific classes
 from assets.Menu import MainMenu
@@ -133,9 +134,12 @@ class Application(MenuFileMixin,
         # Create references to Widgets and Frames
         self.switch_comparison = builder.get_object("switch_comp_view", self.mainwindow)
         self.sel_group = builder.get_object("sel_group", self.mainwindow)
-        self.sel_first = builder.get_object("sel_first", self.mainwindow)
-        self.sel_second = builder.get_object("sel_second", self.mainwindow)
-        self.sel_result = builder.get_object("sel_result", self.mainwindow)
+
+        #self.sel_second = builder.get_object("sel_second", self.mainwindow)
+        #self.sel_second.grid_remove()
+
+        #self.sel_result = builder.get_object("sel_result", self.mainwindow)
+        #self.sel_result.grid_remove()
 
         # Frames must be configured due to a bug in Pygubu
         self.selectionsFrame = builder.get_object("selectionsFrame", self.mainwindow)
@@ -144,6 +148,7 @@ class Application(MenuFileMixin,
         self.graphButtons = builder.get_object('graphButtons', self.mainwindow)
 
         self.listFrame = ctk.CTkFrame(master=self.selectionsFrame)
+
         self.firstFrame = builder.get_object("firstFrame", self.mainwindow)
         self.secondFrame = builder.get_object("secondFrame", self.mainwindow)
         self.resultFrame = builder.get_object("resultFrame", self.mainwindow)
@@ -158,14 +163,92 @@ class Application(MenuFileMixin,
         self.graphFrame.columnconfigure(0, weight=1)
 
         self.swapFrame = builder.get_object('swapFrame', self.mainwindow)
-        self.f_stk = builder.get_object('f_stk', self.mainwindow)
-        self.s_stk = builder.get_object('s_stk', self.mainwindow)
-        self.r_stk = builder.get_object('r_stk', self.mainwindow)
+        #self.f_stk = builder.get_object('f_stk', self.mainwindow)
+
+
+        #self.s_stk = builder.get_object('s_stk', self.mainwindow)
+        #self.r_stk = builder.get_object('r_stk', self.mainwindow)
         self.btn_clear_results = builder.get_object('btn_clear_results', self.mainwindow)
         self.check_first_show = builder.get_object('check_first_show', self.mainwindow)
         self.check_second_show = builder.get_object('check_second_show', self.mainwindow)
         self.check_result_show = builder.get_object('check_result_show', self.mainwindow)
         self.annotationsFrame = builder.get_object('annotationsFrame', self.mainwindow)
+
+
+        # Replace CTkComboboxes with MyCombobox
+        # FIRST
+        self.sel_first = MyCombobox(master=self.firstFrame, command = self.first_selected, values = ['None'], width=200, border_color="#c6484c")
+        self.sel_first.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_first.set(value='None')
+        # First STK
+        self.f_stk = MyCombobox(master=self.firstStkFrame, command=self.f_stk_selected, values=['None'], width=200,
+                                    border_color="#c6484c")
+        self.f_stk.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+
+        # SECOND
+        self.sel_second = MyCombobox(master = self.secondFrame, command = self.second_selected, values = ['None'], width=200, border_color="#20acdc")
+        self.sel_second.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_second.set(value='None')
+        # SECOND STK
+        self.s_stk = MyCombobox(master=self.secondStkFrame, command=self.s_stk_selected, values=['None'], width=200,
+                                     border_color="#20acdc")
+        self.s_stk.grid(
+            row=2,
+            column=0,
+            columnspan=3,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.s_stk.set(value='None')
+
+
+        # RESULT
+        self.sel_result = MyCombobox(master=self.resultFrame, values=['None'], command = self.result_selected, width=200, border_color="#3c9b59")
+        self.sel_result.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_result.set(value='None')
+        # RESULT STK
+        self.r_stk = MyCombobox(master=self.resultStkFrame, values=['None'], command=self.result_selected, width=200,
+                                     border_color="#3c9b59")
+        self.r_stk.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.r_stk.set(value='None')
+
+
 
         # Modification Panel FIRST
         self.first_modFrame = builder.get_object('first_modFrame', self.mainwindow)
