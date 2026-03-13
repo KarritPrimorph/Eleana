@@ -7,8 +7,8 @@ from screeninfo import get_monitors
 from tkinter import font
 
 # BASIC CONFIGURATION
-ELEANA_VERSION = 5.10   # Set the Eleana version. This will be stored in self.eleana.version
-DATE = "23/02/2026"     # Set the date of the release
+ELEANA_VERSION = 5.20   # Set the Eleana version. This will be stored in self.eleana.version
+DATE = "13/03/2026"     # Set the date of the release
 INTERPRETER = sys.executable  # Defines python version
 DEVEL = True  # To display information in development set to True
 

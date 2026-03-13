@@ -713,7 +713,7 @@ class SubMethods_07:
 
 
 
-    def do_calc_stk_data(self):
+    def do_calc_stk_data(self, calculate):
         ''' Gets each stk from stack 2D and send to calculate '''
         # Clear current working data and prepare result if needed:
         self.data_for_calculations = []

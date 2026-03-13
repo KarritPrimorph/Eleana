@@ -174,14 +174,14 @@ class MyCombobox(customtkinter.CTkFrame):
 
         widget = event.widget
 
-        if widget is self.entry:
-            return
-
-        if widget is getattr(self.listbox, "listbox", None):
-            return
+        # sprawdzamy czy kliknięto gdzieś w popupie
+        parent = widget
+        while parent is not None:
+            if parent == self.popup:
+                return
+            parent = parent.master
 
         self.close_dropdown()
-
     # -------------------------------------------------
 
     def _on_escape(self, event=None):
