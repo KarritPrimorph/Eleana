@@ -133,7 +133,8 @@ class Application(MenuFileMixin,
 
         # Create references to Widgets and Frames
         self.switch_comparison = builder.get_object("switch_comp_view", self.mainwindow)
-        self.sel_group = builder.get_object("sel_group", self.mainwindow)
+        #self.sel_group = builder.get_object("sel_group", self.mainwindow)
+
 
         #self.sel_second = builder.get_object("sel_second", self.mainwindow)
         #self.sel_second.grid_remove()
@@ -176,6 +177,19 @@ class Application(MenuFileMixin,
 
 
         # Replace CTkComboboxes with MyCombobox
+        # FIRST
+        self.sel_group = MyCombobox(master=self.groupFrame, command=self.group_selected, values=['All'], width=200,
+                                    border_color="#799da2")
+        self.sel_group.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_group.set(value='All')
+
         # FIRST
         self.sel_first = MyCombobox(master=self.firstFrame, command = self.first_selected, values = ['None'], width=200, border_color="#c6484c")
         self.sel_first.grid(

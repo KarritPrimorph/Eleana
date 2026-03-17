@@ -10,8 +10,8 @@
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 # See the GNU Lesser General Public License for more details.
+
 from pathlib import Path
-from modules.CTkScrollableDropdown import CTkScrollableDropdown
 from assets.Error import Error
 
 PROJECT_PATH = Path(__file__).parent.parent
@@ -26,26 +26,6 @@ class Update:
 
         # scroll_start defines minimum numer of items in combobox when scroll in list is activated
         self.scroll_start = scroll_start
-        #self.active_scrollable_dropdowns = {}
-        self.dropdowns = {}
-
-        # Attach Scrollable dropdowns to Comboboxes
-        attach_scrollabledropdown = [
-                     ['sel_group' , 'All'],
-                     ['sel_first', 'None'],
-                     ['sel_second', 'None'],
-                     ['sel_result', 'None'],
-                     ['f_stk', 'None'],
-                     ['s_stk', 'None'],
-                     ['r_stk', 'None']
-                     ]
-        for element in attach_scrollabledropdown:
-            self.dropdowns[element[0]] = CTkScrollableDropdown(attach=self.widgetsIDs[element[0]],
-                                                            values=[element[1]],
-                                                            justify="left",
-                                                            button_color="transparent",
-                                       command=lambda selection, cb = element[0]: self.callbacks.get('scrollable_dropdown')(selection=selection, combobox = cb))
-
 
     def group_list(self):
         ''' This scans for groups and creates assignments in eleana.assignmentToGroups'''
@@ -104,18 +84,15 @@ class Update:
             i += 1
 
     def list_in_combobox(self, comboboxID):
-        box = self.dropdowns[comboboxID]
-        original_box = self.widgetsIDs[comboboxID]
+        box = self.widgetsIDs[comboboxID]
         comboboxList = ['None']
         if comboboxID == 'sel_group':
             list_of_groups = self.eleana.assignmentToGroups['<group-list/>']
             box.configure(values = list_of_groups)
-            original_box.configure(values = list_of_groups)
             return
 
         if len(self.eleana.dataset) == 0:
             box.configure(values=comboboxList)
-            original_box.configure(values=comboboxList)
             return
 
         # Fill list in FIRST or SECOND
@@ -133,7 +110,6 @@ class Update:
                     item = self.eleana.dataset[each].name_nr
                     comboboxList.append(item)
             box.configure(values=comboboxList)
-            original_box.configure(values=comboboxList)
             return
 
         # Fill list in RESULT
@@ -145,7 +121,6 @@ class Update:
             for each in self.eleana.results_dataset:
                 comboboxList.append(each.name)
             box.configure(values=comboboxList)
-            original_box.configure(values=comboboxList)
             return
 
         # Fill list in f_stk if the data is type of stack
@@ -157,10 +132,8 @@ class Update:
             if self.eleana.dataset[index].type == 'stack 2D':
                 stk_list = self.eleana.dataset[index].stk_names
                 box.configure(values=stk_list)
-                original_box.configure(values=stk_list)
                 self.widgetsIDs['firstStkFrame'].grid()
                 box.set(stk_list[0])
-                original_box.set(stk_list[0])
             else:
                 self.widgetsIDs['firstStkFrame'].grid_remove()
             return
@@ -173,10 +146,8 @@ class Update:
             if self.eleana.dataset[index].type == 'stack 2D':
                 stk_list = self.eleana.dataset[index].stk_names
                 box.configure(values=stk_list)
-                original_box.configure(values=stk_list)
                 self.widgetsIDs['secondStkFrame'].grid()
                 box.set(stk_list[0])
-                original_box.set(stk_list[0])
             else:
                 self.widgetsIDs['secondStkFrame'].grid_remove()
             return
@@ -189,10 +160,8 @@ class Update:
             if self.eleana.results_dataset[index].type == 'stack 2D':
                 stk_list = self.eleana.results_dataset[index].stk_names
                 box.configure(values=stk_list)
-                original_box.configure(values=stk_list)
                 self.widgetsIDs['resultStkFrame'].grid()
                 box.set(stk_list[0])
-                original_box.set(stk_list[0])
             else:
                 self.widgetsIDs['resultStkFrame'].grid_remove()
             return
@@ -213,7 +182,6 @@ class Update:
 
         try:
             first = self.eleana.dataset[first_nr]
-            # f_stk = self.eleana.selections['f_stk']
         except IndexError:
             pass
 
@@ -332,5 +300,3 @@ class Update:
         self.eleana.assignmentToGroups = assignToGroups
         for key in group_assignments.keys():
             self.eleana.assignmentToGroups[key] = group_assignments[key]
-
-
