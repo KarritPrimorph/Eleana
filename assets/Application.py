@@ -283,7 +283,7 @@ class Application(MenuFileMixin,
         self.first_mod_panel_8 = builder.get_object('first_mod_panel_8', self.mainwindow)
         self.first_mod_panel_8.grid_remove()
 
-        # Place CTkSpinboxex
+        # Place CTkSpinboxes
         self.ctkframe8  = builder.get_object('ctkframe8', self.mainwindow)
         self.first_mod_panel_1 = CTkSpinbox(master = self.ctkframe8, min_value=-1000000000, max_value=1000000000, step_value=1,  scroll_value = 1)
         self.first_mod_panel_1.grid(row=0, column=1, sticky="ew")

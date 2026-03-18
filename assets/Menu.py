@@ -635,14 +635,14 @@ class ContextMenu:
         self.callbacks = callbacks
         self.master = master
 
-        # References to GUI in the main applicationcwindow
+        # References to GUI in the main application window
         self.groupFrame = gui_references['groupFrame']
         self.sel_group = gui_references['sel_group']
         self.firstFrame = gui_references['firstFrame']
         self.sel_first =  gui_references['sel_first']
         self.firstStkFrame = gui_references['firstStkFrame']
         self.f_stk = gui_references["f_stk"]
-        self.secondFrame = gui_references["seconFrame"]
+        self.secondFrame = gui_references["secondFrame"]
         self.sel_second = gui_references["sel_second"]
         self.secondStkFrame = gui_references["secondStkFrame"]
         self.s_stk = gui_references["s_stk"]
@@ -657,32 +657,32 @@ class ContextMenu:
         ''' References to Widgets '''
         # GROUPS
         self.groupFrame.bind("<Button-3>", self.show_context_menu_group)
-        self.sel_group.bind("<Button-3>", self.show_context_menu_group)
+        self.sel_group.entry.bind("<Button-3>", self.show_context_menu_group)
         self.context_menu_group = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font=self.font)
 
         # FIRST
         self.firstFrame.bind("<Button-3>", self.show_context_menu_first)
-        self.sel_first.bind("<Button-3>", self.show_context_menu_first)
+        self.sel_first.entry.bind("<Button-3>", self.show_context_menu_first)
         self.context_menu_first = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font = self.font)
 
         # FIRST STK
         self.firstStkFrame.bind("<Button-3>", self.show_context_menu_first_stk)
-        self.f_stk.bind("<Button-3>", self.show_context_menu_first_stk)
+        self.f_stk.entry.bind("<Button-3>", self.show_context_menu_first_stk)
         self.context_menu_first_stk = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font=self.font)
 
         # SECOND
         self.secondFrame.bind("<Button-3>", self.show_context_menu_second)
-        self.sel_second.bind("<Button-3>", self.show_context_menu_second)
+        self.sel_second.entry.bind("<Button-3>", self.show_context_menu_second)
         self.context_menu_second = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font = self.font)
 
         # SECOND STK
         self.secondStkFrame.bind("<Button-3>", self.show_context_menu_second_stk)
-        self.s_stk.bind("<Button-3>", self.show_context_menu_second_stk)
+        self.s_stk.entry.bind("<Button-3>", self.show_context_menu_second_stk)
         self.context_menu_second_stk = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font=self.font)
 
         # RESULT
         self.resultFrame.bind("<Button-3>", self.show_context_menu_result)
-        self.sel_result.bind("<Button-3>", self.show_context_menu_result)
+        self.sel_result.entry.bind("<Button-3>", self.show_context_menu_result)
         self.context_menu_result = tk.Menu(self.master, tearoff=0, bg=self.bg, fg=self.fg, font = self.font)
 
         # Build context menu for FIRST

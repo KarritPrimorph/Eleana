@@ -97,7 +97,7 @@ def contextmenu_callbacks(inst):
                     "sel_first": inst.sel_first,
                     "firstStkFrame": inst.firstStkFrame,
                     "f_stk": inst.f_stk,
-                    "seconFrame": inst.secondFrame,
+                    "secondFrame": inst.secondFrame,
                     "sel_second": inst.sel_second,
                     "secondStkFrame": inst.secondStkFrame,
                     "s_stk": inst.s_stk,
