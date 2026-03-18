@@ -216,9 +216,12 @@ class EditDataclassInTable:
         text = event.text
         try:
             value = float(text)
-        except:
-            Error.show(info = "Could not convert value to float. See column {col}.")
-            return
+        except ValueError:
+            try:
+                value = complex(text)
+            except ValueError:
+                Error.show(info = f"Could not convert value to number. See row {row} and column {col}.")
+                return
 
         if col == 0:
             data = self.eleana.dataset[self.original_index].x

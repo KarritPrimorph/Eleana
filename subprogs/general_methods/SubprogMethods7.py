@@ -441,7 +441,7 @@ class SubMethods_07:
                 self.original_data2.clear()
                 self.original_data2 = None
 
-            if isinstance(self.data_for_calculations, list):
+            if isinstance(self.data_for_calculations, list) and calculate:
                 self.data_for_calculations.clear()
                 self.data_for_calculations = None
 
