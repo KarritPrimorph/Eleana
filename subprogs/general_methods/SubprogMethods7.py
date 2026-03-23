@@ -36,6 +36,7 @@ class SubMethods_07:
     def __init__(self, app_weak=None, commandline=False, which = 'first', close_subprogs = None):
 
         # Add created instance to the list
+        SubMethods_07._instances = [ref for ref in SubMethods_07._instances if ref() is not None]
         SubMethods_07._instances.append(weakref.ref(self))
 
         ''' Start init '''
@@ -88,7 +89,7 @@ class SubMethods_07:
             # Set snap to plot if necesarry:
             self.eleana.settings.grapher['snap_to'] = self.subprog_cursor.get('snap_to', 'none')
 
-            if cursor_type != 'none' or cursor_type != '':
+            if cursor_type not in ('none', ''):
                 # Configure cursor
                 self.subprog_cursor['previous'] = copy.copy(self.grapher.current_cursor_mode['label'])
                 self.grapher.cursor_limit = self.subprog_cursor.get('limit', 0)
@@ -152,7 +153,10 @@ class SubMethods_07:
 
     @property
     def app(self):
-        return self.__app()
+        app = self.__app()
+        if app is None:
+            raise RuntimeError("Application reference lost")
+        return app
 
     @app.setter
     def app(self, value):
@@ -163,14 +167,18 @@ class SubMethods_07:
 
     @property
     def master(self):
-        return self.app.mainwindow
+        app = self.app
+        if app is None:
+            return getattr(self, "_master", None)
+        return app.mainwindow
 
     @master.setter
     def master(self, value):
-        if self.app is None:
+        app = self.app
+        if app is None:
             self._master = value
         else:
-            self.app.mainwindow = value
+            app.mainwindow = value
 
     @property
     def eleana(self):
@@ -238,7 +246,7 @@ class SubMethods_07:
     def cancel(self, event=None):
         ''' Close the window with self.response = None '''
         self._destroying = True
-        print('restore', self.subprog_cursor['previous'])
+        #print('restore', self.subprog_cursor['previous'])
         DEVEL = copy.copy(self.eleana.devel_mode)
 
         # Unregister observer
@@ -357,9 +365,9 @@ class SubMethods_07:
             if value is None:
                 try:
                     self.grapher.clear_all_annotations()
-                except:
+                except Exception:
                     if self.eleana.devel_mode:
-                        print("Subprogmethods2.data_changed() - Clear all annotations failed")
+                        print("Subprogmethods.data_changed() - Clear all annotations failed")
             self.after_data_changed(variable=variable, value=value)
             return False
         elif variable == 'f_stk' or variable == 's_stk':
@@ -394,26 +402,16 @@ class SubMethods_07:
         return True
 
     def clear_memory_after(self):
+        """Release references to calculation data to free memory."""
         self.data_for_calculations = None
         self.original_data1 = None
         self.original_data2 = None
-        del self.data_for_calculations
-        del self.original_data1
-        del self.original_data2
-        gc.collect()
+
+        if self.eleana.devel_mode:
+            gc.collect()
 
     # STANDARD METHODS FOR SUBPROG GUI BUTTONS
     # -------------------------------------------------
-
-    # def ok_clicked(self, calculate = True):
-    #     ''' [-OK-] button
-    #         This is standard function in SubprogMethods '''
-    #
-    #     try:
-    #         self._ok_clicked_in_idle(calculate = calculate)
-    #     except:
-    #         self.eleana.busy = False
-    #     self.eleana.busy = False
 
     def ok_clicked(self, calculate=True):
         """Main method for calculations executed after GUI idle"""
@@ -445,18 +443,6 @@ class SubMethods_07:
                 self.data_for_calculations.clear()
                 self.data_for_calculations = None
 
-        # self.after_ok_clicked()
-        # if not calculate:
-        #     return
-        # self.show_results_matching_first()
-
-        # Clear memory
-        #self.original_data1 = None
-        #self.original_data2 = None
-        #self.data_for_calculations = None
-
-        # self.eleana.busy = False
-
     def process_group_clicked(self, calculate = True):
         ''' [-Process Group-] button
             This is standard function in SubprogMethods '''
@@ -470,27 +456,21 @@ class SubMethods_07:
             self.perform_group_calculations(calculate=calculate)
             self.show_results_matching_first()
             self.after_process_group_clicked()
-        except Exception:
-            raise Exception
+        except Exception as e:
+            raise e
         finally:
             self.set_mouse_state(state='')
             self.eleana.busy = False
 
             # --- SAFE CLEANUP ---
             if self.original_data1 is not None:
-                self.original_data1.clear()
                 self.original_data1 = None
 
             if self.original_data2 is not None:
-                self.original_data2.clear()
                 self.original_data2 = None
 
             if isinstance(self.data_for_calculations, list):
-                self.data_for_calculations.clear()
                 self.data_for_calculations = None
-
-        #self.show_results_matching_first()
-        #self.after_process_group_clicked()
 
     def show_report_clicked(self):
         ''' [-Show Report-] button
@@ -501,8 +481,10 @@ class SubMethods_07:
             return
         self.eleana.busy = True
         self.set_mouse_state(state='')
-        self.show_report()
-        self.eleana.busy = False
+        try:
+            self.show_report()
+        finally:
+            self.eleana.busy = False
 
     def clear_report_clicked(self):
         ''' [-Show Report-] button
@@ -693,12 +675,6 @@ class SubMethods_07:
                     self.after_result_show_on_graph()
                     return False
 
-        # If operation is performed directly on dataset then replace
-        # if self.subprog_settings.get('result') == 'dataset':
-        #     self.app.replace_group(ask = False)
-        #     self.app.clear_results(skip_question = True)
-        #     return
-
         # After processing
         self.eleana.selections = copy_selections
         self.subprog_settings = copy_of_subprog_settings
@@ -712,7 +688,6 @@ class SubMethods_07:
         self.show_report()
 
 
-
     def do_calc_stk_data(self, calculate):
         ''' Gets each stk from stack 2D and send to calculate '''
         # Clear current working data and prepare result if needed:
@@ -722,14 +697,14 @@ class SubMethods_07:
         x_data1 = copy.copy(self.original_data1.x)
         y_data1 = copy.copy(self.original_data1.y[self.stk_index])
         z_data1 = copy.copy(self.original_data1.z)
-        name1 = copy.copy(self.original_data1.name)
+        name1 = self.original_data1.name
         name1 = name1 + '/' + copy.copy(self.original_data1.stk_names[self.stk_index])
-        complex1 = copy.copy(self.original_data1.complex)
-        datatype1 = copy.copy(self.original_data1.type)
-        origin1 = copy.copy(self.original_data1.origin)
-        comment1 = copy.copy(self.original_data1.comment)
+        complex1 = self.original_data1.complex
+        datatype1 = self.original_data1.type
+        origin1 = self.original_data1.origin
+        comment1 = self.original_data1.comment
         parameters1 = copy.copy(self.original_data1.parameters)
-        id1 = copy.copy(self.original_data1.id)
+        id1 = self.original_data1.id
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -744,12 +719,12 @@ class SubMethods_07:
                   'y': y_data1,
                   'z': z_data1,
                   'name': name1,
-                  'stk_value': z_data1[self.stk_index],
+                  'stk_value': copy.copy(z_data1[self.stk_index]),
                   'complex': complex1,
                   'type': datatype1,
                   'origin': origin1,
                   'comment': comment1,
-                  'parameters': parameters1,
+                  'parameters': copy.copy(parameters1),
                   'id': id1
                   }
         self.data_for_calculations.append(data_1)
@@ -764,12 +739,12 @@ class SubMethods_07:
                               'z': z_data1_orig,
                               'name': name1,
                               'stk_value': copy.copy(z_data1[self.stk_index]),
-                              'complex': copy.copy(complex1),
-                              'type': copy.copy(datatype1),
-                              'origin': copy.copy(origin1),
-                              'comment': copy.copy(comment1),
-                              'parameters': copy.deepcopy(parameters1),
-                              'id': copy.copy(id1)
+                              'complex': complex1,
+                              'type': datatype1,
+                              'origin': origin1,
+                              'comment': comment1,
+                              'parameters': copy.copy(parameters1),
+                              'id': id1
                               }
             self.data_for_calculations.append(data_1_orig)
 
@@ -781,13 +756,13 @@ class SubMethods_07:
                 x_data2 = copy.copy(self.original_data2.x)
                 y_data2 = copy.copy(self.original_data2.y)
                 z_data2 = copy.copy(self.original_data2.z)
-                name2 = copy.copy(self.original_data2.name)
-                complex2 = copy.copy(self.original_data1.complex)
-                datatype2 = copy.copy(self.original_data1.type)
-                origin2 = copy.copy(self.original_data1.origin)
-                comment2 = copy.copy(self.original_data1.comment)
+                name2 = self.original_data2.name
+                complex2 = self.original_data1.complex
+                datatype2 = self.original_data1.type
+                origin2 = self.original_data1.origin
+                comment2 = self.original_data1.comment
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
-                id2 = copy.copy(self.original_data1.id)
+                id2 = self.original_data1.id
                 # Extract the data in x and y
                 x_data2, y_data2 = self.extract_region_xy(x=x_data2, y=y_data2)
                 if y_data2.size == 0:
@@ -800,12 +775,12 @@ class SubMethods_07:
                               'z': z_data2,
                               'name': name2,
                               'stk_value': copy.copy(z_data2[self.stk_index]),
-                              'complex': copy.copy(complex2),
-                              'type': copy.copy(datatype2),
-                              'origin': copy.copy(origin2),
-                              'comment': copy.copy(comment2),
+                              'complex': complex2,
+                              'type': datatype2,
+                              'origin': origin2,
+                              'comment': comment2,
                               'parameters': copy.copy(parameters2),
-                              'id': copy.copy(id2)
+                              'id': id2
                               }
                 except:
                     # Skip setting 'stk_value'
@@ -1006,11 +981,11 @@ class SubMethods_07:
         x_data1 = copy.copy(self.original_data1.x)
         y_data1 = copy.copy(self.original_data1.y)
         z_data1 = copy.copy(self.original_data1.z)
-        name1 = copy.copy(self.original_data1.name) + self.subprog_settings.get('name_suffix', '')
-        complex1 = copy.copy(self.original_data1.complex)
-        datatype1 = copy.copy(self.original_data1.type)
-        origin1 = copy.copy(self.original_data1.origin)
-        comment1 = copy.copy(self.original_data1.comment)
+        name1 = self.original_data1.name + self.subprog_settings.get('name_suffix', '')
+        complex1 = self.original_data1.complex
+        datatype1 = self.original_data1.type
+        origin1 = self.original_data1.origin
+        comment1 = self.original_data1.comment
         parameters1 = copy.deepcopy(self.original_data1.parameters)
 
         # Extract the data in x and y if needed
@@ -1062,11 +1037,11 @@ class SubMethods_07:
                 x_data2 = copy.copy(self.original_data2.x)
                 y_data2 = copy.copy(self.original_data2.y)
                 z_data2 = copy.copy(self.original_data2.z)
-                name2 = copy.copy(self.original_data2.name)
-                complex2 = copy.copy(self.original_data1.complex)
-                datatype2 = copy.copy(self.original_data1.type)
-                origin2 = copy.copy(self.original_data1.origin)
-                comment2 = copy.copy(self.original_data1.comment)
+                name2 = self.original_data2.name
+                complex2 = self.original_data1.complex
+                datatype2 = self.original_data1.type
+                origin2 = self.original_data1.origin
+                comment2 = self.original_data1.comment
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
 
                 # Extract the data in x and y
@@ -1135,7 +1110,6 @@ class SubMethods_07:
         self.stk_index = -1
         self.create_result()
         self.clear_memory_after()
-
         return True
 
     def extract_region_xy(self, x, y):
@@ -1479,48 +1453,13 @@ class SubMethods_07:
                 return
 
         self.grapher.on_click_in_plot(point = annotation['point'])
-        #self.eleana.settings.grapher['custom_annotations'].append(copy.deepcopy(annotation))
-        #self.grapher.draw_plot()
-    # event = SimpleNamespace(
-    #         inaxes = True,
-    #         button = 1,
-    #         xdata =
-    #     )
-
-
-        # annots = self.eleana.settings.grapher['custom_annotations']
-        # i = 0
-        # for annot in annots:
-        #     xy = annot['point']
-        #     self.grapher.on_click_in_plot(event = None, point = xy)
-            #number_ = str(i) if self.grapher.style_of_annotation['number'] else ''
-
-
-
-            # self.grapher.ax.annotate(text=self.grapher.style_of_annotation['text'] + number_,
-            #                  xy=xy, arrowprops=self.grapher.style_of_annotation['arrowprops']
-            #                  )
-            # self.grapher.ax.annotate(text=self.grapher.style_of_annotation['text'] + number_,
-            #                          xy=xy,
-            #                          xytext=self.grapher.xytext_position(xy),
-            #                          arrowprops=self.grapher.style_of_annotation['arrowprops'],
-            #                          bbox=self.grapher.style_of_annotation['bbox'],
-            #                          fontsize=self.grapher.style_of_annotation['fontsize'],
-            #                          color=self.grapher.style_of_annotation['color']
-            #                          )
-
-
-        #self.grapher.put_custom_annotations()
-
-        #    i += 1
-        #self.grapher.canvas.draw_idle()
 
     def remove_custom_annotations_from_graph(self):
         ''' Remove all annotations added to the graph '''
         for child in self.grapher.ax.get_children():
             if isinstance(child, plt.Annotation):
                 child.remove()
-        self.grapher.canvas.draw()
+        self.grapher.canvas.draw_idle()
 
     def set_custom_annotation(self, point, snap=True, which='first'):
         ''' Create annotation programmatically at the specified (x, y) point. '''
@@ -1559,8 +1498,6 @@ class SubMethods_07:
                         'stk_index': stk_index,
                         'point': (x_coord, y_coord),
                         'nr': number_}
-        #self.eleana.settings.grapher['custom_annotations'].append(custom_annot)
-        #self.add_custom_annotation_entry(custom_annot)
         return custom_annot
 
     def add_custom_annotation_entry(self, annotation):
@@ -1645,7 +1582,7 @@ class SubMethods_07:
             self.subprog_storage_data.append(to_save)
         else:
             if self.eleana.devel_mode:
-                print('SubprogMethods5:store, if RESTORE is False or to_save parameter is None')
+                print('SubprogMethods:store, if RESTORE is False or to_save parameter is None')
 
     def save_storage_on_close(self):
         ''' Create entry for all subprog storge values in
@@ -1666,7 +1603,7 @@ class SubMethods_07:
         subprog_field = self.eleana.storage.subprog_settings.get(self.subprog_id, None)
         if subprog_field is None:
             return None
-        to_restore = next(line[element] for line in subprog_field if element in line)
+        to_restore = next((line[element] for line in subprog_field if element in line), None)
         return to_restore
 
     # DECORATORS FOR ERROR HANDLING

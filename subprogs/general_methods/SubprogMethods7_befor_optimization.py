@@ -8,25 +8,6 @@ import matplotlib.pyplot as plt
 import gc
 import weakref
 
-'''
-======================================================
-==                                                  ==
-==            SUBPROG METHODS VERSION               ==
-==                       7                          ==
-==                                                  ==
-====================================================== 
-'''
-
-# def check_busy(method):
-#     @wraps(method)
-#     def wrapper(self, *args, **kwargs):
-#         if self.eleana.busy:
-#             if self.eleana.devel_mode:
-#                 print(f"{Path(__file__).name}, {method.__name__}: self.eleana.busy = True")
-#             return  # Breaks a method execution
-#         return method(self, *args, **kwargs)  # Go to a method
-#     return wrapper
-
 class SubMethods_07:
 
     ''' This list is only for debugging'''
@@ -36,6 +17,7 @@ class SubMethods_07:
     def __init__(self, app_weak=None, commandline=False, which = 'first', close_subprogs = None):
 
         # Add created instance to the list
+        SubMethods_07._instances = [ref for ref in SubMethods_07._instances if ref() is not None]
         SubMethods_07._instances.append(weakref.ref(self))
 
         ''' Start init '''
@@ -88,7 +70,7 @@ class SubMethods_07:
             # Set snap to plot if necesarry:
             self.eleana.settings.grapher['snap_to'] = self.subprog_cursor.get('snap_to', 'none')
 
-            if cursor_type != 'none' or cursor_type != '':
+            if cursor_type not in ('none', ''):
                 # Configure cursor
                 self.subprog_cursor['previous'] = copy.copy(self.grapher.current_cursor_mode['label'])
                 self.grapher.cursor_limit = self.subprog_cursor.get('limit', 0)
@@ -238,6 +220,7 @@ class SubMethods_07:
     def cancel(self, event=None):
         ''' Close the window with self.response = None '''
         self._destroying = True
+        print('restore', self.subprog_cursor['previous'])
         DEVEL = copy.copy(self.eleana.devel_mode)
 
         # Unregister observer
@@ -349,8 +332,7 @@ class SubMethods_07:
             self.data_label.configure(text=name)
 
 
-
-        collect_custom_annotations = copy.copy(self.eleana.settings.grapher['custom_annotations'])
+        #collect_custom_annotations = copy.copy(self.eleana.settings.grapher['custom_annotations'])
         if variable == "first" and value is None:
             self.app.mainwindow.configure(cursor="")
             self.grapher.canvas.get_tk_widget().config(cursor="")
@@ -405,41 +387,59 @@ class SubMethods_07:
     # STANDARD METHODS FOR SUBPROG GUI BUTTONS
     # -------------------------------------------------
 
-    def ok_clicked(self, calculate = True):
-        ''' [-OK-] button
-            This is standard function in SubprogMethods '''
-        if getattr(self, "_destroying", False):
-            return
-        if self.eleana.busy:
-            return
+    # def ok_clicked(self, calculate = True):
+    #     ''' [-OK-] button
+    #         This is standard function in SubprogMethods '''
+    #
+    #     try:
+    #         self._ok_clicked_in_idle(calculate = calculate)
+    #     except:
+    #         self.eleana.busy = False
+    #     self.eleana.busy = False
 
-        self.mainwindow.after_idle(lambda: self._ok_clicked_in_idle(calculate=calculate))
+    def ok_clicked(self, calculate=True):
+        """Main method for calculations executed after GUI idle"""
 
-    def _ok_clicked_in_idle(self, calculate = True):
-        ''' This is the main method for calculations executed after GUI idle'''
         self.eleana.busy = True
+        self.set_mouse_state(state='watch')
+
         try:
-            self.start_single_calculations(calculate = calculate)
-        except Exception as e:
+            self.start_single_calculations(calculate=calculate)
+            self.after_ok_clicked()
+
+            if calculate:
+                self.show_results_matching_first()
+
+        finally:
             self.eleana.busy = False
             self.set_mouse_state(state='')
-            #raise e
 
-        self.set_mouse_state(state='')
-        self.set_mouse_state(state='')
-        self.after_ok_clicked()
-        if not calculate:
-            return
-        self.show_results_matching_first()
+            # --- SAFE CLEANUP ---
+            if self.original_data1 is not None:
+                self.original_data1.clear()
+                self.original_data1 = None
+
+            if self.original_data2 is not None:
+                self.original_data2.clear()
+                self.original_data2 = None
+
+            if isinstance(self.data_for_calculations, list) and calculate:
+                self.data_for_calculations.clear()
+                self.data_for_calculations = None
+
+        # self.after_ok_clicked()
+        # if not calculate:
+        #     return
+        # self.show_results_matching_first()
 
         # Clear memory
-        self.original_data1 = None
-        self.original_data2 = None
-        self.data_for_calculations = None
-        gc.collect()
-        self.eleana.busy = False
+        #self.original_data1 = None
+        #self.original_data2 = None
+        #self.data_for_calculations = None
 
-    def process_group_clicked(self):
+        # self.eleana.busy = False
+
+    def process_group_clicked(self, calculate = True):
         ''' [-Process Group-] button
             This is standard function in SubprogMethods '''
         if self.eleana.busy:
@@ -448,15 +448,31 @@ class SubMethods_07:
             return
         self.eleana.busy = True
         self.set_mouse_state(state='watch')
+        try:
+            self.perform_group_calculations(calculate=calculate)
+            self.show_results_matching_first()
+            self.after_process_group_clicked()
+        except Exception:
+            raise Exception
+        finally:
+            self.set_mouse_state(state='')
+            self.eleana.busy = False
 
+            # --- SAFE CLEANUP ---
+            if self.original_data1 is not None:
+                self.original_data1.clear()
+                self.original_data1 = None
 
-        self.perform_group_calculations()
+            if self.original_data2 is not None:
+                self.original_data2.clear()
+                self.original_data2 = None
 
-        self.set_mouse_state(state='')
-        self.eleana.busy = False
+            if isinstance(self.data_for_calculations, list):
+                self.data_for_calculations.clear()
+                self.data_for_calculations = None
 
-        self.show_results_matching_first()
-        self.after_process_group_clicked()
+        #self.show_results_matching_first()
+        #self.after_process_group_clicked()
 
     def show_report_clicked(self):
         ''' [-Show Report-] button
@@ -505,7 +521,8 @@ class SubMethods_07:
         skip_report_show = True
         #self.set_mouse_state("watch")
         # Create result_dataset if add or replace is set
-        if self.subprog_settings.get('result') == 'add' and calculate:
+        mode = self.subprog_settings.get('result')
+        if mode == 'add' or mode == 'dataset' and calculate:
             # Simply add the result to the eleana.results_dataset
             self.result_data = copy.deepcopy(self.original_data1)
 
@@ -521,7 +538,7 @@ class SubMethods_07:
             self.eleana.results_dataset.append(self.result_data)
             self.current_index_in_results = len(self.eleana.results_dataset) - 1
 
-        elif self.subprog_settings.get('result') == 'replace' and calculate:
+        elif mode == 'replace' and calculate:
             # The replace mode was set
             self.result_data = copy.deepcopy(self.original_data1)
             self.result_data.name = self.result_data.name + self.subprog_settings.get('name_suffix', '')
@@ -543,6 +560,8 @@ class SubMethods_07:
                 # Replace the last data in results_dataset
                 self.current_index_in_results = len(self.eleana.results_dataset) - 1
                 self.eleana.results_dataset[self.current_index_in_results] = self.result_data
+
+
         else:
             # Do not create results
             self.result_data = None
@@ -585,7 +604,7 @@ class SubMethods_07:
                 self.data_label.configure(text=self.original_data1.name_nr)
                 if group_processing == False:
                     self.app.mainwindow.update()
-            status = self.do_calc_single2D(calculate)
+            status = self.do_calc_single2D(calculate = calculate)
             if status:
                 self.consecutive_number += 1
             else:
@@ -619,7 +638,7 @@ class SubMethods_07:
             self.show_report()
         return True
 
-    def perform_group_calculations(self):
+    def perform_group_calculations(self, calculate):
         required_cursors = self.subprog_cursor.get('cursor_required', 0)
         nr_of_annotations = len(self.eleana.settings.grapher['custom_annotations'])
         if required_cursors > nr_of_annotations:
@@ -649,13 +668,18 @@ class SubMethods_07:
             self.eleana.selections['first'] = each
             status1 = self.get_data(group_processing = True)
             if status1:
-                status2 = self.perform_single_calculations(calculate = True, group_processing=True)
+                status2 = self.perform_single_calculations(calculate = calculate, group_processing=True)
                 if not status2:
                     self.eleana.selections = copy_selections
                     self.subprog_settings = copy_of_subprog_settings
                     self.after_result_show_on_graph()
                     return False
 
+        # If operation is performed directly on dataset then replace
+        # if self.subprog_settings.get('result') == 'dataset':
+        #     self.app.replace_group(ask = False)
+        #     self.app.clear_results(skip_question = True)
+        #     return
 
         # After processing
         self.eleana.selections = copy_selections
@@ -669,10 +693,9 @@ class SubMethods_07:
         self.after_calculations()
         self.show_report()
 
-        # Collect garbage
-        gc.collect()
 
-    def do_calc_stk_data(self):
+
+    def do_calc_stk_data(self, calculate):
         ''' Gets each stk from stack 2D and send to calculate '''
         # Clear current working data and prepare result if needed:
         self.data_for_calculations = []
@@ -688,6 +711,7 @@ class SubMethods_07:
         origin1 = copy.copy(self.original_data1.origin)
         comment1 = copy.copy(self.original_data1.comment)
         parameters1 = copy.copy(self.original_data1.parameters)
+        id1 = copy.copy(self.original_data1.id)
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -707,7 +731,8 @@ class SubMethods_07:
                   'type': datatype1,
                   'origin': origin1,
                   'comment': comment1,
-                  'parameters': parameters1
+                  'parameters': parameters1,
+                  'id': id1
                   }
         self.data_for_calculations.append(data_1)
 
@@ -725,7 +750,8 @@ class SubMethods_07:
                               'type': copy.copy(datatype1),
                               'origin': copy.copy(origin1),
                               'comment': copy.copy(comment1),
-                              'parameters': copy.deepcopy(parameters1)
+                              'parameters': copy.deepcopy(parameters1),
+                              'id': copy.copy(id1)
                               }
             self.data_for_calculations.append(data_1_orig)
 
@@ -743,6 +769,7 @@ class SubMethods_07:
                 origin2 = copy.copy(self.original_data1.origin)
                 comment2 = copy.copy(self.original_data1.comment)
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
+                id2 = copy.copy(self.original_data1.id)
                 # Extract the data in x and y
                 x_data2, y_data2 = self.extract_region_xy(x=x_data2, y=y_data2)
                 if y_data2.size == 0:
@@ -759,7 +786,8 @@ class SubMethods_07:
                               'type': copy.copy(datatype2),
                               'origin': copy.copy(origin2),
                               'comment': copy.copy(comment2),
-                              'parameters': copy.copy(parameters2)
+                              'parameters': copy.copy(parameters2),
+                              'id': copy.copy(id2)
                               }
                 except:
                     # Skip setting 'stk_value'
@@ -772,7 +800,8 @@ class SubMethods_07:
                               'type': datatype2,
                               'origin': origin2,
                               'comment': comment2,
-                              'parameters': parameters2
+                              'parameters': parameters2,
+                              'id': id2
                               }
                 self.data_for_calculations.append(data_2)
 
@@ -790,7 +819,8 @@ class SubMethods_07:
                                    'type': datatype2,
                                    'origin': origin2,
                                    'comment': comment2,
-                                   'parameters': parameters2
+                                   'parameters': parameters2,
+                                   'id': id2
                                    }
                     self.data_for_calculations.append(data_2_orig)
                     del data_2_orig
@@ -826,6 +856,7 @@ class SubMethods_07:
         origin1 = copy.copy(self.original_data1.origin)
         comment1 = copy.copy(self.original_data1.comment)
         parameters1 = copy.deepcopy(self.original_data1.parameters)
+        id1 = copy.copy(self.original_data1.id)
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -844,7 +875,8 @@ class SubMethods_07:
                   'type': datatype1,
                   'origin': origin1,
                   'comment': comment1,
-                  'parameters': parameters1
+                  'parameters': parameters1,
+                  'id': id1
                   }
         self.data_for_calculations.append(data_1)
 
@@ -862,7 +894,8 @@ class SubMethods_07:
                            'type': datatype1,
                            'origin': origin1,
                            'comment': comment1,
-                           'parameters': parameters1
+                           'parameters': parameters1,
+                           'id': id1
                            }
             self.data_for_calculations.append(data_1_orig)
             del data_1_orig
@@ -881,6 +914,7 @@ class SubMethods_07:
                 origin2 = copy.copy(self.original_data1.origin)
                 comment2 = copy.copy(self.original_data1.comment)
                 parameters2 = copy.deepcopy(self.original_data1.parameters)
+                id2 = copy.copy(self.original_data1.id)
 
                 # Extract the data in x and y
                 x_data2, y_data2 = self.extract_region_xy(x=x_data2, y=y_data2)
@@ -893,10 +927,11 @@ class SubMethods_07:
                           'type': datatype2,
                           'origin': origin2,
                           'comment': comment2,
-                          'parameters': parameters2
+                          'parameters': parameters2,
+                          'id': id2
                           }
                 self.data_for_calculations.append(data_2)
-                del data_2
+
 
                 # Add original data
                 if self.regions.get('orig_in_odd_idx'):
@@ -912,10 +947,11 @@ class SubMethods_07:
                                    'type': datatype2,
                                    'origin': origin2,
                                    'comment': comment2,
-                                   'parameters': parameters2
+                                   'parameters': parameters2,
+                                   'id': id2
                                    }
                     self.data_for_calculations.append(data_2_orig)
-                    data_2_orig
+
             else:
                 Error.show(info='If the first data is 2D, the second must also be 2D, not a stack.', details='')
                 return False
@@ -923,6 +959,7 @@ class SubMethods_07:
             self.data_for_calculations.append(None)
 
         # Go to calculate function
+
         if calculate is False:
             return
         row_to_report = self.calculate()
@@ -933,11 +970,11 @@ class SubMethods_07:
                 Error.show(title=name1, info=self.subprog_cursor.get('cursor_outside_text'))
             return False
 
+
         if isinstance(row_to_report, list):
             if self.report['create']:
                 self.add_to_report(row=row_to_report)
         self.create_result()
-        #self.set_mouse_state(state='')
         return True
 
     def stack_calc(self, calculate):
@@ -1180,10 +1217,13 @@ class SubMethods_07:
     # ------------------------------------------------
 
     def show_results_matching_first(self):
+        if self.subprog_settings.get('result') == 'dataset':
+            return
+
         if self.subprog_settings.get('result'):
             self.app.update.list_in_combobox('sel_result')
             self.app.update.list_in_combobox('r_stk')
-            self.app.mainwindow.update()
+            #self.app.mainwindow.update_idle()
             first_list = self.app.sel_first._values
             selected_first = self.app.sel_first.get()
             position_in_list = first_list.index(selected_first)
@@ -1192,6 +1232,7 @@ class SubMethods_07:
                 result_selected = result_list[position_in_list]
             except IndexError:
                 result_selected = result_list[-1]
+
             self.app.sel_result.set(result_selected)
 
             # Switch on Result Show
@@ -1247,7 +1288,6 @@ class SubMethods_07:
         if result_create not in ['add', 'replace', 'dataset']:
             return  # Do nothing if result should not be created
 
-
         # Calculate index where spectrum must be inserted:
         results_dataset = self.eleana.results_dataset
         list_of_results = [obj.name for obj in results_dataset]
@@ -1290,16 +1330,18 @@ class SubMethods_07:
                 results_dataset[index_in_result].origin = copy.copy(new_result.origin)
                 results_dataset[index_in_result].comment = copy.copy(new_result.comment)
                 results_dataset[index_in_result].parameters = copy.copy(new_result.parameters)
-        self.app.update.list_in_combobox(comboboxID='sel_result')
 
-        new_result = None
-        gc.collect()
+        if result_create != 'dataset':
+            self.app.update.list_in_combobox(comboboxID='sel_result')
 
         # If operation should be performed on the dataset directly
         if result_create == 'dataset':
-            self.show_results_matching_first()
-            self.__app().replace_first(ask =False)
-            self.__app().clear_results(skip_question = True)
+            dataset_index = self.eleana.selections['first']
+            if dataset_index < 0:
+                return
+
+            self.eleana.dataset[dataset_index] = new_result
+            self.grapher.plot_graph(switch_cursors = False)
         return
 
     def update_results_list(self, results):
@@ -1574,7 +1616,6 @@ class SubMethods_07:
             self.grapher.canvas.get_tk_widget().config(cursor=state)
             self.app.mainwindow.configure(cursor=state)
         return
-
 
     # STORE AND RESTORE SETTINGS
     # -------------------------------------------------
