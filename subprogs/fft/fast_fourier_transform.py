@@ -231,7 +231,7 @@ WINDOW_FUNCTIONS = {
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
-    from assets.Eleana import Eleana
+    from core.Eleana import Eleana
 else:
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS

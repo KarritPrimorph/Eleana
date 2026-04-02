@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import pathlib
 import pygubu
-from modules.CTkListbox import *
+from lib.CTkListbox import *
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "select_data.ui"
 

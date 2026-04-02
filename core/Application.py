@@ -1,0 +1,2448 @@
+# Eleana
+# Copyright (C) 2026 Marcin Sarewicz
+#
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Lesser General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+# See the GNU Lesser General Public License for more details.
+
+from pathlib import Path
+import sys
+import copy
+import io
+import re
+import shlex
+from functools import wraps
+
+import numpy as np
+import pygubu
+import tkinter as tk
+import pickle
+import time
+import customtkinter as ctk
+import requests
+import json
+from tkinterdnd2 import DND_FILES
+from core.Menu import ContextMenu
+from scipy.interpolate import CubicSpline
+
+from core.applicationmethods.GUI_Auxilary_axes import AuxilaryAxesMixin
+
+''' ELEANA MODULES '''
+# Import lib from "/lib" folder
+from lib.CTkListbox import CTkListbox
+from lib.CTkMessagebox import CTkMessagebox
+from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
+from lib.MyCombobox.MyCombobox import MyCombobox
+
+# Import Eleana specific classes
+from core.Menu import MainMenu
+from core.Callbacks import main_menubar_callbacks, contextmenu_callbacks, grapher_callbacks
+from core.Callbacks import update_callbacks, loadsave_callbacks
+
+from core.Grapher import Grapher
+from core.IconToWidget import IconToWidget
+from core.LoadSave import Load, Save, Export
+from core.Update import Update
+from core.DataClasses import BaseDataModel
+from core.Error import Error
+from core.Staticplotwindow import Staticplotwindow
+
+''' SUBPROGS '''
+from subprogs.user_input.single_dialog import SingleDialog
+from subprogs.select_data.select_data import SelectData
+from subprogs.select_data.select_items import SelectItems
+from subprogs.notepad.notepad import Notepad
+from subprogs.edit_parameters.edit_parameters import EditParameters
+from subprogs.modify.modify import ModifyData
+from subprogs.group_edit.move_to_group import MoveToGroup
+from subprogs.user_input.TwoListSelection import TwoListSelection
+
+# Methods
+from core.applicationmethods.AA_Menu_File import MenuFileMixin
+from core.applicationmethods.AB_Menu_Edit import MenuEditMixin
+from core.applicationmethods.AC_Menu_Analysis import MenuAnalysisMixin
+from core.applicationmethods.AD_Menu_Modifications import MenuModificationsMixin
+from core.applicationmethods.AE_Menu_EPR import MenuEPRMixin
+from core.applicationmethods.AF_Menu_Tools import MenuToolsMixin
+
+# Widgets used by main application
+from widgets.CTkHorizontalSlider import CTkHorizontalSlider
+
+def check_busy(method):
+    @wraps(method)
+    def wrapper(self, *args, **kwargs):
+        self.mainwindow.configure(cursor="watch")
+        if self.eleana.busy:
+            if self.eleana.devel_mode:
+                print(f"{Path(__file__).name}, {method.__name__}: self.eleana.busy = True")
+            return
+        result = method(self, *args, **kwargs)
+        self.mainwindow.configure(cursor="")
+        #self.after_gui_action(by_method = method.__name__)
+        return result
+    return wrapper
+
+def timeit(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"{func.__name__} executed in {end - start:.4f} seconds")
+        return result
+    return wrapper
+
+# Set paths for core, lib, subprogs and widgets
+PROJECT_PATH = Path(__file__).parent
+PROJECT_UI = PROJECT_PATH / "EleanaGUI.ui"
+
+class Application(MenuFileMixin,
+                  MenuEditMixin,
+                  MenuAnalysisMixin,
+                  MenuModificationsMixin,
+                  MenuEPRMixin,
+                  MenuToolsMixin,
+                  AuxilaryAxesMixin):
+
+    def __init__(self, eleana_instance, command_processor, root=None, splash=None):
+
+        self.root = root
+        # Create reference to eleana and commandprocessor
+        self.eleana = eleana_instance
+        self.notify = self.eleana.notify_on
+        self.commandprocessor = command_processor
+
+        # # START PYGUBU BUILDER
+        self.builder = builder = pygubu.Builder()
+
+        self.builder.add_resource_path(PROJECT_PATH)
+        self.builder.add_from_file(PROJECT_UI)
+
+        # Main widget
+        self.mainwindow = builder.get_object("EleanaWindow", self.root)
+
+        self.mainwindow.iconify()
+        self.mainwindow.withdraw()
+        self.builder.connect_callbacks(self)
+
+        # Create references to Widgets and Frames
+        self.switch_comparison = builder.get_object("switch_comp_view", self.mainwindow)
+        #self.sel_group = builder.get_object("sel_group", self.mainwindow)
+
+
+        #self.sel_second = builder.get_object("sel_second", self.mainwindow)
+        #self.sel_second.grid_remove()
+
+        #self.sel_result = builder.get_object("sel_result", self.mainwindow)
+        #self.sel_result.grid_remove()
+
+        # Frames must be configured due to a bug in Pygubu
+        self.selectionsFrame = builder.get_object("selectionsFrame", self.mainwindow)
+        self.groupFrame = builder.get_object("groupFrame", self.mainwindow)
+        self.rightFrame = builder.get_object("rightFrame", self.mainwindow)
+        self.graphButtons = builder.get_object('graphButtons', self.mainwindow)
+
+        self.listFrame = ctk.CTkFrame(master=self.selectionsFrame)
+
+        self.firstFrame = builder.get_object("firstFrame", self.mainwindow)
+        self.secondFrame = builder.get_object("secondFrame", self.mainwindow)
+        self.resultFrame = builder.get_object("resultFrame", self.mainwindow)
+        self.resultStkFrame = builder.get_object("resultStkFrame", self.mainwindow)
+        self.firstStkFrame = builder.get_object("firstStkFrame", self.mainwindow)
+        self.secondStkFrame = builder.get_object("secondStkFrame", self.mainwindow)
+        self.firstComplex = builder.get_object("firstComplex", self.mainwindow)
+        self.secondComplex = builder.get_object("secondComplex", self.mainwindow)
+        self.resultComplex = builder.get_object("resultComplex", self.mainwindow)
+        self.graphFrame = builder.get_object('graphFrame', self.mainwindow)
+        self.graphFrame.rowconfigure(0, weight=1)
+        self.graphFrame.columnconfigure(0, weight=1)
+
+        self.swapFrame = builder.get_object('swapFrame', self.mainwindow)
+        #self.f_stk = builder.get_object('f_stk', self.mainwindow)
+
+
+        #self.s_stk = builder.get_object('s_stk', self.mainwindow)
+        #self.r_stk = builder.get_object('r_stk', self.mainwindow)
+        self.btn_clear_results = builder.get_object('btn_clear_results', self.mainwindow)
+        self.check_first_show = builder.get_object('check_first_show', self.mainwindow)
+        self.check_second_show = builder.get_object('check_second_show', self.mainwindow)
+        self.check_result_show = builder.get_object('check_result_show', self.mainwindow)
+        self.annotationsFrame = builder.get_object('annotationsFrame', self.mainwindow)
+
+
+        # Replace CTkComboboxes with MyCombobox
+        # FIRST
+        self.sel_group = MyCombobox(master=self.groupFrame, command=self.group_selected, values=['All'], width=200,
+                                    border_color="#799da2")
+        self.sel_group.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_group.set(value='All')
+
+        # FIRST
+        self.sel_first = MyCombobox(master=self.firstFrame, command = self.first_selected, values = ['None'], width=200, border_color="#c6484c")
+        self.sel_first.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_first.set(value='None')
+        # First STK
+        self.f_stk = MyCombobox(master=self.firstStkFrame, command=self.f_stk_selected, values=['None'], width=200,
+                                    border_color="#c6484c")
+        self.f_stk.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+
+        # SECOND
+        self.sel_second = MyCombobox(master = self.secondFrame, command = self.second_selected, values = ['None'], width=200, border_color="#20acdc")
+        self.sel_second.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_second.set(value='None')
+        # SECOND STK
+        self.s_stk = MyCombobox(master=self.secondStkFrame, command=self.s_stk_selected, values=['None'], width=200,
+                                     border_color="#20acdc")
+        self.s_stk.grid(
+            row=2,
+            column=0,
+            columnspan=3,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.s_stk.set(value='None')
+
+
+        # RESULT
+        self.sel_result = MyCombobox(master=self.resultFrame, values=['None'], command = self.result_selected, width=200, border_color="#3c9b59")
+        self.sel_result.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.sel_result.set(value='None')
+        # RESULT STK
+        self.r_stk = MyCombobox(master=self.resultStkFrame, values=['None'], command=self.result_selected, width=200,
+                                     border_color="#3c9b59")
+        self.r_stk.grid(
+            row=1,
+            column=0,
+            columnspan=2,
+            sticky="ew",
+            padx=5,
+            pady=5
+        )
+        self.r_stk.set(value='None')
+
+
+
+        # Modification Panel FIRST
+        self.first_modFrame = builder.get_object('first_modFrame', self.mainwindow)
+        self.first_mod_panel_1 = builder.get_object('first_mod_panel_1', self.mainwindow)
+        self.first_mod_panel_1.grid_remove()
+        self.first_mod_panel_2 = builder.get_object('first_mod_panel_2', self.mainwindow)
+        self.first_mod_panel_2.grid_remove()
+        self.first_mod_panel_3 = builder.get_object('first_mod_panel_3', self.mainwindow)
+        self.first_mod_panel_3.grid_remove()
+        self.first_mod_panel_4 = builder.get_object('first_mod_panel_4', self.mainwindow)
+        self.first_mod_panel_4.grid_remove()
+        self.first_mod_panel_5 = builder.get_object('first_mod_panel_5', self.mainwindow)
+        self.first_mod_panel_5.grid_remove()
+        self.first_mod_panel_6 = builder.get_object('first_mod_panel_6', self.mainwindow)
+        self.first_mod_panel_6.grid_remove()
+        self.first_mod_panel_7 = builder.get_object('first_mod_panel_7', self.mainwindow)
+        self.first_mod_panel_7.grid_remove()
+        self.first_mod_panel_8 = builder.get_object('first_mod_panel_8', self.mainwindow)
+        self.first_mod_panel_8.grid_remove()
+
+        # Place CTkSpinboxes
+        self.ctkframe8  = builder.get_object('ctkframe8', self.mainwindow)
+        self.first_mod_panel_1 = CTkSpinbox(master = self.ctkframe8, min_value=-1000000000, max_value=1000000000, step_value=1,  scroll_value = 1)
+        self.first_mod_panel_1.grid(row=0, column=1, sticky="ew")
+        self.first_mod_panel_2 = CTkSpinbox(master=self.ctkframe8, min_value=0.000000001, max_value=10000000000, command = self.first_mod_step_settings, step_value=1, scroll_value=0)
+        self.first_mod_panel_2.grid(row=1, column=1, sticky="ew")
+        self.first_mod_panel_2.set(1)
+
+        self.ctkframe23 = builder.get_object('ctkframe23', self.mainwindow)
+        self.first_mod_panel_3 = CTkSpinbox(master=self.ctkframe23, min_value=-1000000000, max_value=1000000000, step_value=1, scroll_value=1)
+        self.first_mod_panel_3.grid(row=0, column=1, sticky="ew")
+        self.first_mod_panel_4 = CTkSpinbox(master=self.ctkframe23, min_value=0.000000001, max_value=10000000000, command = self.first_mod_step_settings, step_value=1, scroll_value=0)
+        self.first_mod_panel_4.grid(row=1, column=1, sticky="ew")
+        self.first_mod_panel_4.set(1)
+
+        self.ctkframe19 = builder.get_object('ctkframe19', self.mainwindow)
+        self.first_mod_panel_5 = CTkSpinbox(master=self.ctkframe19, min_value=0, max_value=1000000, step_value=1, scroll_value=1)
+        self.first_mod_panel_5.grid(row=0, column=1, sticky="ew")
+        self.first_mod_panel_6 = CTkSpinbox(master=self.ctkframe19, min_value=0.000000001, max_value=10000000000, command = self.first_mod_step_settings, step_value=1, scroll_value=0)
+        self.first_mod_panel_6.grid(row=1, column=1, sticky="ew")
+        self.first_mod_panel_6.set(1)
+
+        self.ctkframe24 = builder.get_object('ctkframe24', self.mainwindow)
+        self.first_mod_panel_7 = CTkSpinbox(master=self.ctkframe24, min_value=0, max_value=1000000, step_value=1, scroll_value=1)
+        self.first_mod_panel_7.grid(row=0, column=1, sticky="ew")
+        self.first_mod_panel_8 = CTkSpinbox(master=self.ctkframe24, min_value=0.000000001, max_value=10000000000, command = self.first_mod_step_settings, step_value=1, scroll_value=0)
+        self.first_mod_panel_8.grid(row=1, column=1, sticky="ew")
+        self.first_mod_panel_8.set(1)
+
+        # Hide FIRST modifications
+        self.first_modFrame.grid_remove()
+        self.btn_toggle_first_mod = builder.get_object("btn_toggle_first_mod", self.mainwindow)
+
+        # Graph Buttons
+        self.check_autoscale_x = builder.get_object('check_autoscale_X', self.mainwindow)
+        self.check_autoscale_y = builder.get_object('check_autoscale_Y', self.mainwindow)
+        self.check_log_x = builder.get_object('check_log_x', self.mainwindow)
+        self.check_log_y = builder.get_object('check_log_y', self.mainwindow)
+        self.check_indexed_x = builder.get_object('check_indexed_x', self.mainwindow)
+        self.sel_cursor_mode = builder.get_object('sel_cursor_mode', self.mainwindow)
+        self.check_invert_x = builder.get_object('check_invert_x', self.mainwindow)
+        self.btn_clear_cursors = builder.get_object("btn_clear_cursors", self.mainwindow)
+        self.info = builder.get_object('info', self.mainwindow)
+        self.infoframe = builder.get_object('infoframe', self.mainwindow)
+        self.infoframe.grid_remove()
+        self.btn_clear_cursors.grid_remove()
+        self.annotationsFrame.grid_remove()
+
+        # Auxilary axes
+        self.check_auxilary_axes = builder.get_object('check_auxilary_axes', self.mainwindow)
+        self.aux_reset_frame = builder.get_object('aux_reset_frame', self.mainwindow)
+        self.entry_scaling_x = builder.get_object('entry_scaling_x', self.mainwindow)
+        self.entry_scaling_y = builder.get_object('entry_scaling_y', self.mainwindow)
+
+
+        # Command line
+        self.command_line = builder.get_object('command_line', self.mainwindow)
+        self.command_line.bind("<Return>", self.execute_command)
+        self.command_line.bind("<Up>", self.execute_command)
+        self.command_line.bind("<Down>", self.execute_command)
+        self.command_history = {'index': 0, 'lines': []}
+        self.log_field = builder.get_object('log_field', self.mainwindow)
+
+        # Paned windows
+        self.panedwindow2 = builder.get_object('panedwindow2', self.mainwindow)
+        self.panedwindow4 = builder.get_object('panedwindow4', self.mainwindow)
+        self.pane5 = builder.get_object('pane5', self.mainwindow)
+        self.pane9 = builder.get_object('pane9', self.mainwindow)
+        #self.pane6 = builder.get_object('pane6', self.mainwindow)
+
+        self.btn_always_confirm = builder.get_object("btn_always_confirm", self.mainwindow)
+
+        # Widgets for comparison view:
+        self.listbox = CTkListbox(self.listFrame, command=self.list_selected, multiple_selection=True, height=400, gui_appearance=self.eleana.settings.general['gui_appearance'])
+        self.ver_slider = CTkHorizontalSlider('Vertical separation', 'vsep', [0, 1], self.listFrame, self)
+        self.hor_slider = CTkHorizontalSlider('Horizontal separation', 'hsep', [-1, 1], self.listFrame, self)
+
+        ''' CREATE INSTANCES '''
+
+        # Create loader/saver/exporter
+        self.load = Load(eleana=self.eleana, callbacks=loadsave_callbacks(self)['callbacks'])
+        self.save = Save(eleana=self.eleana)
+        self.export = Export(eleana=self.eleana)
+
+        # Create Main Menu
+        self.main_menubar = MainMenu(
+                            master = self.mainwindow,
+                            pixmap_folder = self.eleana.paths['pixmaps'],
+                            eleana = self.eleana,
+                            callbacks=main_menubar_callbacks(self)
+                            )
+        # Create the main menu
+        self.main_menubar.create(master = self.mainwindow)
+
+        # Create context menues
+        self.contextmenu = ContextMenu(master = self.mainwindow,
+                                       eleana = self.eleana,
+                                       gui_references = contextmenu_callbacks(self)['gui_references'],
+                                       callbacks= contextmenu_callbacks(self)['callbacks'],
+                                    )
+
+        # Keyboard bindings
+        self.mainwindow.bind("<Control-c>", self.quick_copy)
+        self.mainwindow.bind("<Control-s>", self.save_current)
+        self.mainwindow.bind("<Control-q>", self.close_application)
+        self.mainwindow.bind("<Control-o>", self.load_project)
+        self.mainwindow.bind("<Control-v>", self.quick_paste)
+
+        # This keeps the information if any information or dialog should be displayed.
+        # This is useful to constantly display the same information in a loop etc.
+        self.info_show = True
+        self.repeated_items = []
+
+        # Comparison view
+        self.comparison_settings = {'vsep': 0, 'hsep': 0, 'indexes': (), 'v_factor': '1', 'h_factor': '1'}
+
+        # Set icons for buttons and widgets
+        IconToWidget.eleana(application = self)
+
+        # Create and configure Grapher
+        self.grapher = Grapher(master = self.graphFrame,
+                               eleana = self.eleana,
+                               gui_references = grapher_callbacks(self)['gui_references'],
+                               callbacks = grapher_callbacks(self)['callbacks']
+                               )
+
+        # Switch off the GUI for Move and Stretch
+        self.auxilary_axes()
+
+        # Configure Main Window
+        #configure = Configure(self.eleana)
+        #configure.main_window(mainwindow=self.mainwindow, style=self.eleana.settings.general)
+        self.configure_main_application_window()
+        self.configure_graph_buttons()
+        self.configure_paths()
+        self.configure_graph()
+
+        # Create Update module
+        self.update = Update(eleana = self.eleana,
+                             widgetsIDs = update_callbacks(self)['gui_references'],
+                             menu_recent = self.main_menubar.menu_recent,
+                             callbacks = update_callbacks(self)['callbacks']
+                             )
+
+        self.gui_to_selections()
+
+        # Configure initial gui states
+        self.update.gui_widgets()
+        self.update.all_lists()
+
+        # Create Recent projects menu
+        self.main_menubar.last_projects_menu()
+
+        # Close splash
+        if splash is not None:
+            splash.destroy()
+
+        # Check for update
+        self.check_for_updates(timeout = 5)
+
+        # Add Drag and Drop functionality
+        self.mainwindow.drop_target_register(DND_FILES)
+        self.mainwindow.dnd_bind("<<Drop>>", self._on_drop_files)
+
+    ''' 
+     ----------    METHODS   -------------
+    '''
+    def _on_drop_files(self, event):
+        ''' After dropping the file into the Window'''
+        if getattr(self, "_import_running", False):
+            return
+        self._import_running = True
+
+        try:
+            accept = False
+            spc_type = ''
+            files = shlex.split(event.data)
+            skip_messeges = False
+            auto = False
+            for file in files:
+                file_type = file[-3:].lower()
+                if file_type == 'dta' or file_type == 'dsc':
+                    self.import_elexsys(filename = file)
+                elif file_type == 'ele':
+
+                    self.load_project(filename = file)
+                elif file_type == 'par':
+                    self.import_EMX(filename = file)
+                elif file_type == 'spc':
+                    if not accept:
+                        ask = CTkMessagebox(title='Importing SPC', message = 'Choose the file type of SPC', option_1 = 'Shimadzu', option_2 = 'Bruker')
+                        spc_type = ask.get()
+                        accept = True
+                    if spc_type == 'Bruker':
+                        self.import_EMX(filename = file)
+                    else:
+                        self.import_shimadzu_spc(filename = file)
+                elif file_type == 'lsx':
+                    if len(files) > 1:
+                        Error.show(title = "", info = "Please upload files one at a time")
+                        self._import_running = False
+                        return
+                    self.import_excel(filename = file)
+                elif file_type == 'txt' or file_type == 'dat' or file_type == 'csv':
+                    if len(files) > 1:
+                        Error.show(title = "", info = "Please upload files one at a time")
+                        self._import_running = False
+                        return
+                    self.import_ascii(filename = file)
+                elif file_type == 'bka':
+                    self.import_biokine(filename = file, skip_messeges = skip_messeges)
+                    skip_messeges = True
+                elif file_type == 'spe':
+                    self.import_magnettech1(filename = file)
+                elif file_type == 'dat' or file_type == 'txt' or file_type == 'csv':
+                    self.import_ascii(filename = file, auto = auto)
+                    if auto is False:
+                        dialog = CTkMessagebox(master = self.mainwindow,
+                                               message = 'Do you want to automatically load the rest of the files using the same import parameters?',
+                                               option_1 = 'Cancel',
+                                               option_2 = 'No',
+                                               option_3 = 'Yes')
+                        response = dialog.get()
+                        if response == 'Yes':
+                            auto = True
+                        elif response == "Cancel":
+                            break
+                        else:
+                            auto = False
+        finally:
+            self._import_running = False
+
+    def check_for_updates(self, timeout=3):
+        ''' Check if update is available. '''
+        url = "https://raw.githubusercontent.com/KarritPrimorph/Eleana/refs/heads/master/current_release.txt"
+        try:
+            r = requests.get(url, timeout=timeout)
+            r.raise_for_status()
+            text = r.text.strip()
+            try:
+                online_info = json.loads(text)
+            except json.JSONDecodeError:
+                return
+
+            if sys.platform == 'linux':
+                BUILD = 'LINUX_BUILD'
+                DATE = 'LINUX_DATE'
+            else:
+                BUILD = 'WINDOWS_BUILD'
+                DATE = 'WINDOWS_DATE'
+
+            current_build = float(online_info.get(BUILD, 0))
+            build_date = online_info.get(DATE, '')
+
+            if self.eleana.version < current_build:
+                CTkMessagebox(icon = 'check', title='Update info',
+                                message = f'The newer version of Eleana ({current_build}, release date: {build_date}) is available!\n Please update!\n\nYour version is: {self.eleana.version}')
+        except Exception as e:
+            print("Unable to download online info", e)
+
+
+    def configure_main_application_window(self):
+        width = self.mainwindow.winfo_screenwidth()  # Get screen width
+        height = self.mainwindow.winfo_screenheight()  # Get screen height
+        self.mainwindow.geometry('800x800')
+        self.mainwindow.geometry(str(width) + 'x' + str(height) + "+0+0")  # Set geometry to max
+
+        # Add icon to the top window bar form pixmaps folder
+        top_window_icon = Path(self.eleana.paths['pixmaps'], "eleana_top_window.png")
+        main_icon = tk.PhotoImage(file=top_window_icon)
+        self.mainwindow.iconphoto(True, main_icon)
+        self.mainwindow.title('new project - Eleana')
+
+        # Set color modes for GUI
+        try:
+            ctk.set_appearance_mode(self.eleana.settings.general['gui_appearance'])
+            ctk.set_default_color_theme(self.eleana.settings.general['color_theme'])
+        except Exception as e:
+            self.eleana.set_default_settings()
+            self.eleana.save_settings()
+
+
+        # --------- Set default values in GUI -------
+        self.sel_group.configure(values=['All'])
+        self.sel_group.set('All')
+        self.sel_first.configure(values=['None'])
+        self.sel_first.set('None')
+        self.sel_second.configure(values=['None'])
+        self.sel_second.set('None')
+        self.sel_result.configure(values=['None', 'yes'])
+        self.sel_result.set('None')
+        self.mainwindow.protocol('WM_DELETE_WINDOW', self.close_application)
+
+    def configure_graph_buttons(self):
+        # -------- Set graph buttons ------------
+        state = self.eleana.gui_state
+        if state.autoscale_x:
+            self.check_autoscale_x.select()
+        else:
+            self.check_autoscale_x.deselect()
+        if state.autoscale_y:
+            self.check_autoscale_y.select()
+        else:
+            self.check_autoscale_y.deselect()
+        if state.log_x:
+            self.check_log_x.select()
+        else:
+            self.check_log_x.deselect()
+        if state.log_y:
+            self.check_log_y.select()
+        else:
+            self.check_log_y.deselect()
+        if state.indexed_x:
+            self.check_indexed_x.select()
+        else:
+            self.check_indexed_x.deselect()
+
+    def configure_paths(self):
+        '''This method creates standard Eleana folder in user directory.
+            If the folder does not exist it will be created.'''
+
+        home_dir = self.eleana.paths['home_dir']
+        eleana_user_dir = Path(home_dir, '.EleanaPy')
+        if not eleana_user_dir.exists():
+            try:
+                eleana_user_dir.mkdir()
+            except:
+                if self.eleana.devel_mode:
+                    print("Cannot create working Eleana folder in your home directory.")
+        try:
+            filename = Path(self.eleana.paths['home_dir'], '.EleanaPy', 'paths.pic')
+            # Read paths.pic
+            file_to_read = open(filename, "rb")
+            paths = pickle.load(file_to_read)
+            self.eleana.paths['last_import_dir'] = paths['last_import_dir']
+            self.eleana.paths['last_project_dir'] = paths['last_project_dir']
+            self.eleana.paths['last_projects'] = paths['last_projects']
+            self.eleana.paths['last_export_dir'] = paths['last_export_dir']
+            file_to_read.close()
+            # Create last project list in the main menu
+            last_projects = self.eleana.paths['last_projects']
+            last_projects = [element for i, element in enumerate(last_projects) if i <= 10]
+            # Write the list to eleana.paths
+            self.eleana.paths['last_projects'] = last_projects
+            # Perform update to place the item into menu
+            #self.update.last_projects_menu()
+        except:
+            pass
+
+    def configure_graph(self):
+        # Bind keyboard Navbar events to function
+        self.grapher.canvas.mpl_connect("key_press_event", lambda event: self.grapher.on_key_press_on_graph(event))
+
+        # Set variables for Graph buttons
+        self.firstComplex.set(value="re")
+        self.secondComplex.set(value="re")
+        self.resultComplex.set(value="re")
+        self.check_first_show.select()
+        self.check_second_show.select()
+        self.check_result_show.select()
+        self.check_autoscale_x.select()
+        self.check_autoscale_y.select()
+        self.check_log_x.deselect()
+        self.check_log_y.deselect()
+        self.check_indexed_x.deselect()
+
+    def scrollable_dropdown(self, selection, combobox):
+        ''' Interconnects CTkScrollableDropdown to standard CTkCombobox'
+            This function translates the events of item selection to event
+            of standard combobox selection
+        '''
+        if combobox == 'sel_first':
+            self.first_selected(selection)
+            self.sel_first.set(selection)
+        elif combobox == 'f_stk':
+            self.f_stk_selected(selection)
+            self.f_stk.set(selection)
+        elif combobox == 'sel_second':
+            self.second_selected(selection)
+            self.sel_second.set(selection)
+        elif combobox == 's_stk':
+            self.s_stk_selected(selection)
+            self.s_stk.set(selection)
+        elif combobox == 'sel_result':
+            self.result_selected(selection)
+            self.sel_result.set(selection)
+        elif combobox == 'r_stk':
+            self.r_stk_selected(selection)
+            self.r_stk.set(selection)
+        elif combobox == 'sel_group':
+            self.group_selected(selection)
+            self.sel_group.set(selection)
+        self.mainwindow.focus_set()
+
+
+    def set_pane_height(self):
+        self.mainwindow.update_idletasks()
+        self.panedwindow2.sashpos(0, 700)
+        self.panedwindow4.sashpos(0, 400)
+        self.pane5.sashpos(0, 1100)
+        self.mainwindow.update_idletasks()
+
+    def run(self, splash=None):
+        self.mainwindow.after(100, self.set_pane_height)
+        self.mainwindow.deiconify()
+        if splash is not None:
+            splash.destroy()
+
+        # Set Application status - Run
+        self.eleana._application_started = True
+        self.mainwindow.mainloop()
+
+    def after_gui_action(self, by_method = None):
+        if self.eleana.active_subprog is None:
+            if self.eleana.devel_mode:
+                print("Subprog Inactive")
+        else:
+            self.eleana.active_subprog.finish_action(by_method)
+
+
+    ''' *********************************************
+    *              COMPARISON VIEW                  *
+    **********************************************'''
+
+    def comparison_view(self):
+        self.info_show = True
+        self.repeated_items = []
+        comparison_mode = bool(self.switch_comparison.get())
+        if comparison_mode:
+            self.graphButtons.grid_remove()
+            self.firstFrame.grid_remove()
+            self.secondFrame.grid_remove()
+            self.resultFrame.grid_remove()
+            self.swapFrame.grid_remove()
+
+            self.listFrame.grid(column=0, row=2, rowspan=3, sticky = "nsew")
+            self.listbox.grid(column=0, columnspan=1, rowspan=4, padx=4, pady=4, row=0, sticky="nsew")
+            self.ver_slider.grid(column=0, columnspan=1, rowspan=3, padx=4, pady=4, row=5, sticky="nsew")
+
+            self.hor_slider.grid(column=0, columnspan=1, rowspan=3, padx=4, pady=4, row=8, sticky="nsew")
+            self.ver_slider.factor.delete(0, 'end')
+            self.ver_slider.factor.insert(0, self.comparison_settings['v_factor'])
+            self.hor_slider.factor.delete(0, 'end')
+            self.hor_slider.factor.insert(0, self.comparison_settings['h_factor'])
+
+            # Get names from group to be used for the list
+            group = self.eleana.selections['group']
+            names_nr = []
+            indexes = []
+            if group == 'All':
+                i = 0
+                while i < len(self.eleana.dataset):
+                    names_nr.append(self.eleana.dataset[i].name_nr)
+                    indexes.append(i)
+                    i += 1
+            else:
+                indexes = self.eleana.assignmentToGroups[group]
+                for i in indexes:
+                    names_nr.append(self.eleana.dataset[i].name_nr)
+            i = 0
+            while i < len(names_nr) - 1:
+                self.listbox.insert(indexes[i], names_nr[i])
+                i += 1
+            try:
+                self.listbox.insert("END", names_nr[i])
+            except:
+                pass
+            if len(self.comparison_settings['indexes']) > 0:
+                for each in self.comparison_settings['indexes']:
+                    self.listbox.activate(each)
+            self.list_selected()
+        else:
+            self.listFrame.grid_remove()
+            self.graphButtons.grid()
+            self.firstFrame.grid()
+            self.secondFrame.grid()
+            self.swapFrame.grid()
+            if len(self.eleana.results_dataset) > 0:
+                self.resultFrame.grid()
+            self.grapher.plot_graph()
+
+    def separate_plots_by(self, direction=None, value=None):
+        self.mainwindow.config(cursor="watch")
+        if direction != None or value != None:
+            self.comparison_settings[direction] = value
+        vsep = np.array([0])
+        vstep = self.comparison_settings['vsep']
+        hsep = np.array([0])
+        hstep = self.comparison_settings['hsep']
+        i = 1
+        while i < len(self.comparison_settings['indexes']):
+            next_h = i * hstep
+            next_v = i * vstep
+            vsep = np.append(vsep, next_v)
+            hsep = np.append(hsep, next_h)
+            i += 1
+        self.grapher.plot_comparison(self.comparison_settings['indexes'], vsep, hsep)
+        self.comparison_settings['v_factor'] = self.ver_slider.factor.get()
+        self.comparison_settings['h_factor'] = self.hor_slider.factor.get()
+        self.mainwindow.config(cursor='arrow')
+
+    def list_selected(self, selected_items=None):
+        if selected_items != None:
+            previous_selection = self.comparison_settings['indexes']
+            self.repeated_items.extend(selected_items)
+            for each in selected_items:
+                index = int(self.eleana.get_index_by_name(each))
+                type = self.eleana.dataset[index].type
+                name_nr = self.eleana.dataset[index].name_nr
+                if name_nr in set(self.repeated_items):
+                    self.info_show = True
+                if type == 'stack 2D' and self.info_show:
+                    info = 'Data "' + name_nr + '" is a 2D stack. You need to convert the stack into a group to display it.'
+                    CTkMessagebox(master = self.mainwindow, title="", message=info)
+                    selected_stack = self.listbox.curselection()
+                    difference = set(selected_stack) - set(previous_selection)
+                    difference = list(difference)
+                    if len(difference) > 0:
+                        self.listbox.deselect(difference[0])
+                    self.info_show = False
+                    return
+            items_list = []
+            for each in selected_items:
+                items_list.append(int(self.eleana.get_index_by_name(each)))
+            items_list.sort()
+            self.comparison_settings['indexes'] = tuple(items_list)
+            self.separate_plots_by()
+        else:
+            self.comparison_settings['indexes'] = ()
+            self.grapher.clear_plot()
+
+    # Handling the FIRST MODIFICATION PANEL
+    # --------------------------------------------
+
+    def toggle_first_mod_panel(self):
+        ''' Hides of shows the first_modFrame upon clicking the toggle button '''
+        if self.first_modFrame.winfo_ismapped():
+            self.first_modFrame.grid_remove()
+            self.btn_toggle_first_mod.configure(text = "[---]")
+        else:
+            self.first_modFrame.grid()
+            self.btn_toggle_first_mod.configure(text=" [-] ")
+            Error.show(info = "This is not implemented yet")
+
+    def first_mod_step_settings(self, value):
+        ''' When modification panel is on an step is changed then it sets the step values
+            are set to spinboxes
+        '''
+        def _set_ranges(widget):
+            v = widget.get()
+            step = widget.step_value
+            if v == step:
+                return False
+            difference = v - step
+            if difference > 0:
+                new_v = (v - step)  * 10
+            elif v == 0:
+                new_v = 1
+            else:
+                new_v = (v + step) / 10
+            if new_v > 1:
+                new_v = int(new_v)
+            widget.step_value = new_v
+            widget.set(value = new_v)
+            return True
+
+        widget_list = (self.first_mod_panel_2, self.first_mod_panel_4, self.first_mod_panel_6, self.first_mod_panel_8)
+        for widget in widget_list:
+            result = _set_ranges(widget=widget)
+            if result:
+                return
+    # -------  END of FIRST MODIFICATION PANEL --------
+
+
+    ''' *********************************************
+    *              COMBOBOX SELECTIONS              *
+    **********************************************'''
+
+    #@check_busy
+    def group_down_clicked(self):
+        current_group = self.sel_group.get()
+        group_list = self.sel_group._values
+        index = group_list.index(current_group)
+        if index == 0:
+            return
+        index -= 1
+        new_group = group_list[index]
+        self.sel_group.set(new_group)
+        self.group_selected(new_group)
+
+    #@check_busy
+    def group_up_clicked(self):
+        current_group = self.sel_group.get()
+        group_list = self.sel_group._values
+        index = group_list.index(current_group)
+        if index == len(group_list) - 1:
+            return
+        index += 1
+        new_group = group_list[index]
+        self.sel_group.set(new_group)
+        self.group_selected(new_group)
+
+    #@check_busy
+    def group_selected(self, value):
+        self.eleana.set_selections('group', value)
+        self.update.all_lists()
+        self.sel_first.set('None')
+        self.sel_second.set('None')
+        self.eleana.set_selections('first', - 1)
+        self.eleana.set_selections('second', -1)
+        self.update.gui_widgets()
+        self.grapher.plot_graph()
+        self.comparison_view()
+
+    #@check_busy
+    def delete_group(self):
+        if self.eleana.busy:
+            if self.eleana.devel_mode:
+                print('delete_group_clicked - blocked by self.eleana.busy')
+            return
+        current_group = self.eleana.selections['group']
+        if current_group == 'All':
+            info = CTkMessagebox(master = self.mainwindow,
+                                 title='',
+                                 message="The group 'All' cannot be removed.",
+                                 icon='cancel')
+            return
+        av_data = self.sel_first._values
+        av_data.pop(0)
+        #self.select_data = SelectData(master=app.mainwindow, title='Select data', group=self.eleana.selections['group'],
+        #                              items=av_data)
+        #names = self.select_data.get()
+
+        select_data = SelectData(master=self.mainwindow, title='Select data', group=self.eleana.selections['group'],
+                                      items=av_data)
+        names = select_data.get()
+
+        if not names:
+            return
+        indexes = self.get_indexes_by_name(names)
+        if not indexes:
+            return
+        for index in indexes:
+            data_groups = self.eleana.dataset[index].groups
+            if current_group in data_groups:
+                data_groups.remove(current_group)
+                self.eleana.dataset[index].groups = data_groups
+        self.update.dataset_list()
+        self.update.groups()
+        self.update.all_lists()
+        if current_group not in self.eleana.assignmentToGroups['<group-list/>']:
+            self.sel_group.set('All')
+            self.eleana.selections['group'] = 'All'
+
+    #@check_busy
+    def data_to_other_group(self, move = True):
+        if self.eleana.selections['group'] == 'All' and move:
+            info = CTkMessagebox(master = self.mainwindow,
+                                 title='', message="Data from the 'All' group cannot be moved to another group. However, you can make an additional assignment.",
+                                icon='cancel')
+            return
+
+        # Select data
+        av_data = self.sel_first._values
+        av_data.pop(0)
+        self.select_data = SelectData(master=self.mainwindow, title='Select data', group=self.eleana.selections['group'],
+                                      items=av_data)
+        names = self.select_data.get()
+        if not names:
+            return
+        indexes = self.get_indexes_by_name(names)
+        if not indexes:
+            return
+        move_to_group = MoveToGroup(self.mainwindow, self)
+        new_group = move_to_group.get()
+
+        if new_group == None:
+            return
+        elif new_group == 'All' and move:
+            info = CTkMessagebox(master = self.mainwindow, title = '', message = "You cannot move data from the group 'All' to another one.", icon='cancel')
+            return
+
+        # Replace current_group with new_group
+        current_group = self.eleana.selections['group']
+        for index in indexes:
+            groups = self.eleana.dataset[index].groups
+            if current_group in groups and move:
+                position = groups.index(current_group)
+                groups[position] = new_group
+                self.eleana.dataset[index].groups = groups
+            elif new_group in groups and not move:
+                return
+            elif new_group not in groups and not move:
+                groups.append(new_group)
+                self.eleana.dataset[index].groups = groups
+            else:
+                return
+        self.update.dataset_list()
+        self.update.groups()
+        self.update.all_lists()
+        self.sel_group.set('All')
+
+    #@check_busy
+    def delete_data_from_group(self, skip_questions=False):
+        group = self.eleana.selections['group']
+        data_indexes = self.eleana.assignmentToGroups.get(group, None)
+        if group == 'All' and not skip_questions:
+            info = CTkMessagebox(master = self.mainwindow, title = 'Delete Data from Group', message = 'You cannot delete data from the group "All". Please use "Delete Dataset" instead.', icon = 'cancel' )
+        elif not skip_questions:
+            info = CTkMessagebox(master = self.mainwindow, title= 'Delete Data from Group', icon="warning", option_1="Cancel", option_2="Delete", message = f'Are you sure you want to delete data from the group "{group}"?')
+            response = info.get()
+            if response == 'Cancel' or not data_indexes:
+                return
+        if data_indexes is None:
+            return
+
+        data_indexes = set(data_indexes or [])
+
+        self.eleana.dataset = [
+            item for i, item in enumerate(self.eleana.dataset)
+            if i not in data_indexes
+        ]
+
+        group_list = self.eleana.assignmentToGroups['<group-list/>']
+        if group in group_list:
+            group_list.remove(group)
+            self.eleana.assignmentToGroups['<group-list/>'] = group_list
+        self.update.dataset_list()
+        self.update.groups()
+        self.sel_group.set('All')
+        self.sel_first.set('None')
+        self.eleana.selections['first'] = -1
+        self.sel_second.set('None')
+        self.eleana.selections['second'] = -1
+        self.update.all_lists()
+        self.update.gui_widgets()
+
+    #@check_busy
+    def convert_group_to_stack(self, all = False):
+        if all:
+            # Convert whole data in the group to a stack
+            indexes = self.eleana.get_indexes_from_group()
+        else:
+            # Ask to select
+            av_data = self.sel_first._values
+            av_data.pop(0)
+            selected_data = SelectData(master=self.mainwindow, title='Select data', group=self.eleana.selections['group'],
+                                      items=av_data)
+            response = selected_data.get()
+            if response == None:
+                return
+            indexes = [self.eleana.get_index_by_name(i) for i in response]
+        # Check if data are of the same type
+        if not indexes:
+            return
+        template = self.eleana.dataset[indexes[0]]
+        stk_names = []
+        list_of_y = []
+        for i in indexes:
+            compared = self.eleana.dataset[i]
+            stk_name = str(i+1) + '_' + template.name
+            stk_names.append(stk_name)
+            y = compared.y
+            list_of_y.append(y)
+            parameters = template.parameters
+            comment = ''
+            if template.type != compared.type:
+                info = CTkMessagebox(master = self.mainwindow, title='Convert to a Stack', message='At least one of the data elements is of a different type (for example, 2D and 3D).')
+                return
+            if template.complex != compared.complex:
+                info = CTkMessagebox(master = self.mainwindow, title='Convert to a Stack', message='At least one of the data elements has a different type of numbers (for example, real and complex).')
+                return
+            if template.x.size != compared.x.size:
+                info = CTkMessagebox(master = self.mainwindow, title='Convert to a Stack', message='At least one of the data elements has a different number of points. You can convert the data to a stack only if all of them are the same size.')
+                return
+            if not np.array_equal(template.x, compared.x):
+                dialog = CTkMessagebox(master = self.mainwindow, title="Convert to Stack", message="The x-axes of the selected items are not identical. You may still proceed, but the differing axes will be replaced with the x-axis from the first item in the list.", icon="warning", option_1="Cancel", option_2="OK")
+                response = dialog.get()
+                if response == 'Cancel':
+                    return
+        # Now create a stack
+        name = self.eleana.selections['group'] + ':TO_STACK'
+        x = template.x
+        y = np.array(list_of_y)
+        new_stack = {'parameters':parameters,
+                'name':name,
+                'stk_names':stk_names,
+                'x':x,
+                'y':y,
+                'origin':'converted from group',
+                'type':'stack 2D',
+                'name_nr':'',
+                'comment':'',
+                'complex':template.complex,
+                'groups':'All',
+                }
+        created_stack = BaseDataModel.from_dict(new_stack)
+        self.add_to_results(created_stack)
+
+    #@check_busy
+    def first_show(self):
+        self.eleana.set_selections('f_dsp', bool(self.check_first_show.get()))
+        selection = self.sel_first.get()
+        if selection == 'None':
+            return
+        #self.first_selected(selection)
+
+        self.grapher.plot_graph(switch_cursors=False)
+        self.grapher.plot_additional_curves()
+
+    #@check_busy
+    def first_down_clicked(self):
+        current_position = self.sel_first.get()
+        list_of_items = self.sel_first._values
+        if current_position == 'None':
+            return
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in sel_first not found')
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.sel_first.set(new_position)
+            self.first_selected(new_position)
+        except IndexError:
+            return
+
+    #@check_busy
+    def first_up_clicked(self):
+        current_position = self.sel_first.get()
+        list_of_items = self.sel_first._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.sel_first.set(new_position)
+            self.first_selected(new_position)
+        except IndexError:
+            return
+
+    #@check_busy
+    def first_complex_clicked(self, value):
+        self.eleana.set_selections('f_cpl', value)
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def first_selected(self, selected_value_text):
+        if selected_value_text == 'None':
+            self.eleana.set_selections('first', -1)
+            self.firstComplex.grid_remove()
+            self.firstStkFrame.grid_remove()
+            self.grapher.plot_graph()
+            return
+        i = 0
+        while i < len(self.eleana.dataset):
+            name = self.eleana.dataset[i].name_nr
+            if name == selected_value_text:
+                self.eleana.set_selections('first', i)
+                self.sel_first.set(name)
+                break
+            i += 1
+        self.update.list_in_combobox('sel_first')
+        self.update.list_in_combobox('f_stk')
+        if self.eleana.dataset[self.eleana.selections['first']].complex:
+            self.firstComplex.grid()
+        else:
+            self.firstComplex.grid_remove()
+        self.eleana.selections['f_stk'] = 0
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+    #@check_busy
+    def f_stk_selected(self, selected_value_text):
+        if selected_value_text in self.f_stk._values:
+            index = self.f_stk._values.index(selected_value_text)
+            self.eleana.set_selections('f_stk', index)
+        else:
+            return
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+    #@check_busy
+    def f_stk_up_clicked(self):
+        current_position = self.f_stk.get()
+        list_of_items = self.f_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in f_stk not found.')
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.f_stk.set(new_position)
+            self.eleana.set_selections('f_stk', index + 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def f_stk_down_clicked(self):
+        current_position = self.f_stk.get()
+        list_of_items = self.f_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in f_stk not found.')
+            return
+        if index == 0:
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.f_stk.set(new_position)
+            self.eleana.set_selections('f_stk', index - 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def modify_first(self):
+        self.modify('first')
+
+    #@check_busy
+    def modify_second(self):
+        self.modify('second')
+
+    #@check_busy
+    def modify(self, which=None):
+        if len(self.eleana.dataset) == 0:
+            info = CTkMessagebox(master = self.mainwindow, title='', message='Empty dataset')
+            return
+        if not which:
+            which = 'first'
+
+        modify_data = ModifyData(self, which)
+        response = modify_data.get()
+
+    #@check_busy
+    def second_show(self):
+        self.eleana.set_selections('s_dsp', bool(self.check_second_show.get()))
+        selection = self.sel_second.get()
+        if selection == 'None':
+            return
+        self.second_selected(selection)
+        #self.auxilary_axes()
+
+    #@check_busy
+    def second_selected(self, selected_value_text):
+        if selected_value_text == 'None':
+            self.eleana.set_selections('second', -1)
+            self.secondComplex.grid_remove()
+            self.secondStkFrame.grid_remove()
+            self.grapher.plot_graph()
+            return
+        i = 0
+        while i < len(self.eleana.dataset):
+            name = self.eleana.dataset[i].name_nr
+            if name == selected_value_text:
+                self.eleana.set_selections('second', i)
+                break
+            i += 1
+        self.update.list_in_combobox('sel_second')
+        self.update.list_in_combobox('s_stk')
+        if self.eleana.dataset[self.eleana.selections['second']].complex:
+            self.secondComplex.grid()
+        else:
+            self.secondComplex.grid_remove()
+        self.eleana.selections['s_stk'] = 0
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+
+    #@check_busy
+    def second_down_clicked(self):
+        current_position = self.sel_second.get()
+        list_of_items = self.sel_second._values
+        if current_position == 'None':
+            return
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in sel_second not found.')
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.sel_second.set(new_position)
+            self.second_selected(new_position)
+        except IndexError:
+            return
+
+    #@check_busy
+    def second_up_clicked(self):
+        current_position = self.sel_second.get()
+        list_of_items = self.sel_second._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in sel_second not found.')
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.sel_second.set(new_position)
+            self.second_selected(new_position)
+        except IndexError:
+            return
+
+    def s_stk_selected(self, selected_value_text):
+        if selected_value_text in self.s_stk._values:
+            index = self.s_stk._values.index(selected_value_text)
+            self.eleana.set_selections('s_stk', index)
+        else:
+            return
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+    #@check_busy
+    def s_stk_up_clicked(self):
+        current_position = self.s_stk.get()
+        list_of_items = self.s_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in s_stk not found.')
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.s_stk.set(new_position)
+            self.eleana.set_selections('s_stk', index + 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def s_stk_down_clicked(self):
+        current_position = self.s_stk.get()
+        list_of_items = self.s_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in s_stk not found.')
+            return
+        if index == 0:
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.s_stk.set(new_position)
+            self.eleana.set_selections('s_stk', index - 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def second_complex_clicked(self, value):
+        self.eleana.set_selections('s_cpl', value)
+        self.grapher.plot_graph()
+
+    def quick_subtraction(self):
+        ''' Prepare for quick subtraction First - Second'''
+        if self.eleana.selections['first'] < 0 or self.eleana.selections['second'] < 0:
+            Error.show(title="Subtraction", info = 'Both First and Second must be selected to compute First − Second')
+            return
+        self.perform_quick_calcs(operation = 'subtract')
+
+    def quick_addition(self):
+        ''' Prepare for quick addition First + Second'''
+        if self.eleana.selections['first'] < 0 or self.eleana.selections['second'] < 0:
+            Error.show(title="Subtraction", info='Both First and Second must be selected to compute First − Second')
+            return
+        self.perform_quick_calcs(operation='add')
+
+    def perform_quick_calcs(self, operation, first = None, second = None):
+        ''' Perform quick calculations'''
+
+        if first is None:
+            first = copy.deepcopy(self.eleana.dataset[self.eleana.selections['first']])
+        if second is None:
+            second = copy.deepcopy(self.eleana.dataset[self.eleana.selections['second']])
+
+        X1 = first.x
+        Y1 = first.y
+
+        X2 = second.x
+        Y2 = second.y
+
+        if second.type == "stack 2D":
+            Error.show(title = f"Quick {operation}", info = "The Second spectrum cannot be a stack of data.")
+            return
+
+        # Interpolate y2 to x1 axis
+        interpolator = CubicSpline(X2, Y2, extrapolate=False)
+        Y2_interp = interpolator(X1)
+
+        if first.type == "stack 2D":
+            for y_stack in Y1:
+                if operation == 'subtract':
+                    y2_in = Y1 - Y2_interp
+                elif operation == 'add':
+                    y2_in = Y1 + Y2_interp
+                else:
+                    return
+        elif first.type == "single 2D":
+            if operation == 'subtract':
+                y2_in = Y1 - Y2_interp
+            elif operation == 'add':
+                y2_in = Y1 + Y2_interp
+            else:
+                return
+
+        first.y = y2_in
+        op = ' <MINUS> ' if operation == 'subtract' else ' <PLUS> '
+        comment = ['\n',
+                   f'--- OPERATION: {operation} ---\n',
+                   f'{first.name} (ID:{first.id}) ',
+                   f'{op}',
+                   f'{second.name} (ID:{second.id})\n',]
+        first.comment = first.comment.join(comment)
+        self.eleana.results_dataset.append(first)
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+        # Set the position to the last added item
+        list_of_results = self.sel_result._values
+        position = list_of_results[-1]
+        self.sel_result.set(position)
+        self.result_selected(position)
+        self.eleana.selections['r_disp'] = True
+        self.check_result_show.select()
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+
+    #@check_busy
+    def swap_first_second(self):
+        first_pos = self.sel_first.get()
+        second_pos = self.sel_second.get()
+        first_stk = self.f_stk.get()
+        second_stk = self.s_stk.get()
+        if first_pos == 'None':
+            self.firstComplex.grid_remove()
+        if first_pos == 'None':
+            self.secondComplex.grid_remove()
+        self.sel_first.set(second_pos)
+        self.sel_second.set(first_pos)
+        self.first_selected(second_pos)
+        self.second_selected(first_pos)
+        self.f_stk.set(second_stk)
+        self.s_stk.set(first_stk)
+        self.f_stk_selected(second_stk)
+        self.s_stk_selected(first_stk)
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def second_to_result(self):
+        current = self.sel_second.get()
+        if current == 'None':
+            return
+        index = self.eleana.get_index_by_name(current)
+        spectrum = copy.deepcopy(self.eleana.dataset[index])
+        self.add_to_results(spectrum)
+        self.eleana.selections['r_show'] = True
+        self.check_result_show.select()
+
+    #@check_busy
+    def add_to_results(self, spectrum):
+        # Check the name if the same already exists in eleana.result_dataset
+        list_of_results = []
+        try:
+            for each in self.eleana.results_dataset:
+                new_id = each.create_new_id(data = each, operation_changing_id = None)
+                each.id = new_id
+                list_of_results.append(each.name)
+
+        except:
+            pass
+        name__ = self.generate_name_suffix(spectrum.name, list_of_results)
+        spectrum.name = name__
+        spectrum.name_nr = name__
+
+        # Send to result and update lists
+        self.eleana.results_dataset.append(spectrum)
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+
+        # Set the position to the last added item
+        list_of_results = self.sel_result._values
+        position = list_of_results[-1]
+        self.sel_result.set(position)
+        self.result_selected(position)
+
+    ''' ***************************************
+    *                RESULT                   *
+    ****************************************'''
+
+    def set_always_confirm(self):
+        mode = bool(self.btn_always_confirm.get())
+        self.eleana.gui_state.always_confirm = mode
+
+    #@check_busy
+    def result_show(self):
+        self.eleana.set_selections('r_dsp', bool(self.check_result_show.get()))
+        selection = self.sel_result.get()
+        if selection == 'None':
+            return
+        self.result_selected(selection)
+        #self.grapher.plot_graph(switch_cursors=False)
+        #self.grapher.plot_additional_curves()
+
+    #@check_busy
+    def result_selected(self, selected_value_text):
+        if selected_value_text == 'None':
+            self.eleana.set_selections('result', -1)
+            self.resultComplex.grid_remove()
+            self.resultStkFrame.grid_remove()
+            self.grapher.plot_graph()
+            return
+        i = 0
+        while i < len(self.eleana.results_dataset):
+            name = self.eleana.results_dataset[i].name
+            if name == selected_value_text:
+                self.eleana.set_selections('result', i)
+                break
+            i += 1
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+        if self.eleana.results_dataset[self.eleana.selections['result']].complex:
+            self.resultComplex.grid()
+        else:
+            self.resultComplex.grid_remove()
+        self.eleana.selections['r_stk'] = 0
+        self.grapher.plot_graph(switch_cursors=False)
+
+    #@check_busy
+    def result_up_clicked(self):
+        current_position = self.sel_result.get()
+        list_of_items = self.sel_result._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in sel_result not found.')
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.sel_result.set(new_position)
+            self.result_selected(new_position)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def result_down_clicked(self):
+        current_position = self.sel_result.get()
+        list_of_items = self.sel_result._values
+        if current_position == 'None':
+            return
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in sel_first not found')
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.sel_result.set(new_position)
+            self.result_selected(new_position)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def r_stk_selected(self, selected_value_text):
+        if selected_value_text in self.r_stk._values:
+            index = self.r_stk._values.index(selected_value_text)
+            self.eleana.set_selections('r_stk', index)
+        else:
+            return
+        self.grapher.plot_graph(switch_cursors=False)
+
+        if self.sel_cursor_mode.get() == "None":
+            return
+        self.grapher.clear_all_annotations()
+
+    #@check_busy
+    def r_stk_up_clicked(self):
+        current_position = self.r_stk.get()
+        list_of_items = self.r_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in r_stk not found.')
+            return
+        try:
+            new_position = list_of_items[index + 1]
+            self.r_stk.set(new_position)
+            self.eleana.set_selections('r_stk', index + 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def r_stk_down_clicked(self):
+        current_position = self.r_stk.get()
+        list_of_items = self.r_stk._values
+        if current_position in list_of_items:
+            index = list_of_items.index(current_position)
+        else:
+            print('Index in r_stk not found.')
+            return
+        if index == 0:
+            return
+        try:
+            new_position = list_of_items[index - 1]
+            self.r_stk.set(new_position)
+            self.eleana.set_selections('r_stk', index - 1)
+        except IndexError:
+            return
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def result_complex_clicked(self, value):
+        self.eleana.set_selections('r_cpl', value)
+        self.grapher.plot_graph()
+
+    #@check_busy
+    def all_results_to_current_group(self):
+        print("All to current group")
+        if len(self.eleana.results_dataset) == 0:
+            return
+        for each in self.eleana.results_dataset:
+            result = copy.deepcopy(each)
+            self.eleana.create_new_id(result, operation_changing_id=None)
+            result.groups = [self.sel_group.get()]
+            self.eleana.dataset.append(result)
+        self.update.dataset_list()
+        self.update.all_lists()
+        added_item = self.eleana.dataset[-1].name_nr
+        group = self.sel_group.get()
+        self.group_selected(group)
+        self.sel_first.set(added_item)
+        self.first_selected(added_item)
+
+    #@check_busy
+    def all_results_to_new_group(self):
+        ''' Add all results to dataset and assign to groups '''
+        if len(self.eleana.results_dataset) == 0:
+            return
+
+        groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+        if not groups:
+            Error.show(title = 'Error in groups', info = "def all_results_to_new_group: groups not found")
+
+        groups.remove('All')
+        dialog = TwoListSelection(left_label="Available groups",
+                                    master = self.mainwindow,
+                                    right_label="Assigned to groups",
+                                  items = groups,
+                                  disable_new = False
+                                  )
+        selected = dialog.get()
+        if not selected:
+            return
+
+        selected.insert(0, 'All')
+        groups.insert(0, "All")
+
+        for each in self.eleana.results_dataset:
+            result = copy.deepcopy(each)
+            result.groups = selected
+            self.eleana.create_new_id(result, operation_changing_id=None)
+            self.eleana.dataset.append(result)
+        self.update.group_list()
+        self.update.dataset_list()
+        self.update.all_lists()
+        added_item = self.eleana.dataset[-1].name_nr
+        group = self.sel_group.get()
+        self.group_selected(group)
+        self.sel_first.set(added_item)
+        self.first_selected(added_item)
+
+    #@check_busy
+    def replace_first(self, ask = True):
+        if self.eleana.selections['result'] < 0:
+            return
+        if ask and not self.eleana.gui_state.always_confirm:
+            msg = CTkMessagebox(title="Replace First", message="Do you want to replace First with Result data?",
+                        icon="question", option_1="No", option_2="Yes")
+            response = msg.get()
+            if response == 'No':
+                return
+
+        index = self.eleana.selections['result']
+        index_first = self.eleana.selections['first']
+        result = copy.deepcopy(self.eleana.results_dataset[index])
+        self.eleana.create_new_id(result, operation_changing_id=None)
+        result.groups = [self.sel_group.get()]
+        self.eleana.dataset.pop(index_first)
+        self.eleana.dataset.insert(index_first, result)
+        self.update.dataset_list()
+        self.update.all_lists()
+        group = self.sel_group.get()
+        self.group_selected(group)
+        name = self.eleana.dataset[index_first].name_nr
+        self.first_selected(name)
+        self.mainwindow.update_idletasks()
+        self.sel_first.set(name)
+
+    #@check_busy
+    def replace_group(self, ask = True):
+        group = self.eleana.selections['group']
+        if ask and not self.eleana.gui_state.always_confirm:
+            info = CTkMessagebox(master = self.mainwindow, title='Replace data in group', icon="warning", option_1="Cancel", option_2="Replace",
+                             message=f'Are you sure you want to replace the data in the group: "{group}" with the results?')
+            response = info.get()
+            if response == 'Cancel':
+                return
+
+        try:
+            self.delete_data_from_group(skip_questions=True)
+        except Exception as e:
+            print("Application.py: ", e)
+
+        self.all_results_to_current_group()
+
+    #@check_busy
+    def result_to_main(self):
+        if self.eleana.selections['result'] < 0:
+            return
+        index = self.eleana.selections['result']
+        result = copy.deepcopy(self.eleana.results_dataset[index])
+        self.eleana.create_new_id(result, operation_changing_id=None)
+        result.groups = [self.sel_group.get()]
+        self.eleana.dataset.append(result)
+        self.update.dataset_list()
+        self.update.all_lists()
+        added_item = self.eleana.dataset[-1].name_nr
+        group = self.sel_group.get()
+        self.group_selected(group)
+        self.sel_first.set(added_item)
+        self.first_selected(added_item)
+
+    def delete_sel_result(self):
+        index = self.eleana.selections['result']
+        if index < 0:
+            return
+        self.eleana.results_dataset.pop(index)
+        self.eleana.set_selections('result', -1)
+        self.update.all_lists()
+        self.update.gui_widgets()
+        self.sel_result.set('None')
+        self.grapher.plot_graph()
+
+    def first_to_result(self, name = None):
+        if name is not None:
+            current = name
+            skip_grapher = True
+        else:
+            current = self.sel_first.get()
+            skip_grapher = False
+        if current == 'None':
+            return
+        index = self.eleana.get_index_by_name(current)
+        spectrum = copy.deepcopy(self.eleana.dataset[index])
+        # Check the name if the same already exists in eleana.result_dataset
+
+        list_of_results = []
+        try:
+            for each in self.eleana.results_dataset:
+                list_of_results.append(each.name)
+        except:
+            pass
+        # Create numbered name if similar exists in the Result Dataset
+        name__ = self.generate_name_suffix(spectrum.name, list_of_results)
+        spectrum.name = name__
+        spectrum.name_nr = name__
+
+        # Send to result and update lists
+        self.eleana.results_dataset.append(spectrum)
+        self.update.list_in_combobox('sel_result')
+        self.update.list_in_combobox('r_stk')
+        # Set the position to the last added item
+        list_of_results = self.sel_result._values
+        position = list_of_results[-1]
+        self.sel_result.set(position)
+        self.result_selected(position)
+        self.eleana.selections['r_disp'] = True
+        self.check_result_show.select()
+
+        if skip_grapher:
+            return
+        self.grapher.plot_graph(switch_cursors=False)
+
+    def generate_name_suffix(self, name, list_of_results):
+        name_lists = []
+        i = 0
+        while i < len(list_of_results):
+            from_list = list_of_results[i]
+            from_list = re.split(r'(_#\d+$)', from_list)
+            head = from_list[0]
+            try:
+                number = int(from_list[1][2:])
+            except IndexError:
+                number = 0
+            name_lists.append({'name': head, 'nr': number})
+            i += 1
+        numbers = [-1]
+        for each in name_lists:
+            if each['name'] == name:
+                numbers.append(each['nr'])
+            else:
+                numbers.append(-1)
+        last_number = max(numbers)
+        if last_number == 0:
+            name = name + '_#1'
+        elif last_number == -1:
+            pass
+        else:
+            name = name + '_#' + str(last_number + 1)
+        return name
+
+    def get_indexes_by_name(self, names = None) -> list:
+        if not names:
+            return
+        if type(names) == str:
+            names = list(names)
+        indexes = []
+        for each in names:
+            index = self.eleana.get_index_by_name(each)
+            indexes.append(index)
+        return indexes
+
+    def delete_data(self, which, dialog=True):
+        if which == 'result':
+            self.delete_sel_result()
+            return
+        index = self.eleana.selections[which]
+        if index < 0:
+            return
+        dialog = CTkMessagebox(master = self.mainwindow, title="Delete",
+                                    message=f"Do you want to delete data selected in {which}?",
+                                    icon="warning", option_1="No", option_2="Yes")
+        response = dialog.get()
+        if response == 'No':
+            return
+        self.delete_selected_data(index_to_delete=index)
+
+    def duplicate_data(self, which):
+        index = self.eleana.selections[which]
+        if index < 0:
+            return
+        if which == 'result':
+            new_data = copy.deepcopy(self.eleana.results_dataset[index])
+        else:
+            new_data = copy.deepcopy(self.eleana.dataset[index])
+        dialog = SingleDialog(master = self.mainwindow, title = 'Enter', label = 'New name', text = new_data.name)
+        name = dialog.get()
+
+        if not name:
+            info = CTkMessagebox(master = self.mainwindow, title='', message='Name cannot be empty')
+            return
+        dataset = []
+        try:
+            if which == 'result':
+                for each in self.eleana.result_dataset:
+                    dataset.append(each.name)
+            else:
+                for each in self.eleana.result_dataset:
+                    dataset.append(each.name)
+        except:
+            pass
+        new_data.name = self.generate_name_suffix(name, dataset)
+        if which == 'result':
+            self.eleana.result_dataset.append(new_data)
+        else:
+            self.eleana.dataset.append(new_data)
+        self.update.dataset_list()
+        self.update.all_lists()
+
+    # def clear_results(self, skip_question = True):
+    #     if not skip_question:
+    #         quit_dialog = CTkMessagebox(master = self.mainwindow, title="Clear results",
+    #                                     message="Are you sure you want to clear the entire dataset in the results?",
+    #                                     icon="warning", option_1="No", option_2="Yes")
+    #         response = quit_dialog.get()
+    #     else:
+    #         response = 'Yes'
+    #
+    #     if response == "Yes":
+    #         self.eleana.results_dataset.clear()
+    #         self.eleana.selections['result'] = -1
+    #         self.sel_result.configure(values=['None'])
+    #         self.r_stk.configure(values=[])
+    #         self.resultFrame.grid_remove()
+    #         self.grapher.plot_graph(switch_cursors=False)
+
+    def clear_all_annotations(self):
+        self.grapher.clear_all_annotations()
+
+    def gui_to_selections(self):
+        ''' Get values from self.eleana.selections
+            and update gui buttons accordingly'''
+        select = self.eleana.selections
+        self.sel_group.set(select['group'])
+
+        # Set First, Second, Result visibility
+        if select['f_dsp']:
+            self.check_first_show.select()
+        else:
+            self.check_first_show.deselect()
+        if select['s_dsp']:
+            self.check_second_show.select()
+        else:
+            self.check_second_show.deselect()
+        if select['r_dsp']:
+            self.check_result_show.select()
+        else:
+            self.check_result_show.deselect()
+
+        # Set Values in comboboxes
+        # FIRST
+        if select['first'] >= 0:
+            f_name = self.eleana.dataset[select['first']].name_nr
+            self.sel_first.set(f_name)
+            if self.eleana.dataset[select['first']].type == 'stack 2D':
+                stk_names = self.eleana.dataset[select['first']].stk_names
+                stk_name = stk_names[select['f_stk']]
+                self.f_stk.set(stk_name)
+            else:
+                self.firstStkFrame.grid_remove()
+
+            if self.eleana.dataset[select['first']].complex:
+                self.firstComplex.grid()
+                self.firstComplex.set(select['f_cpl'])
+            else:
+                self.firstComplex.grid_remove()
+        else:
+            self.sel_first.set('None')
+
+        # SECOND
+        if select['second'] >= 0:
+            s_name = self.eleana.dataset[select['second']].name_nr
+            self.sel_second.set(s_name)
+            if self.eleana.dataset[select['second']].type == 'stack 2D':
+                stk_names = self.eleana.dataset[select['second']].stk_names
+                stk_name = stk_names[select['s_stk']]
+                self.s_stk.set(stk_name)
+            else:
+                self.secondStkFrame.grid_remove()
+
+            if self.eleana.dataset[select['second']].complex:
+                self.secondComplex.grid()
+                self.secondComplex.set(select['s_cpl'])
+            else:
+                self.secondComplex.grid_remove()
+        else:
+            self.sel_second.set('None')
+
+        # RESULT
+        if select['result'] >= 0:
+            r_name = self.eleana.results_dataset[select['result']].name
+            self.sel_result.set(r_name)
+            if self.eleana.results_dataset[select['result']].type == 'stack 2D':
+                stk_names = self.eleana.result_dataset[select['result']].stk_names
+                stk_name = stk_names[select['r_stk']]
+                self.r_stk.set(stk_name)
+            else:
+                self.resultStkFrame.grid_remove()
+
+            if self.eleana.results_dataset[select['result']].complex:
+                self.resultComplex.grid()
+                self.resultComplex.set(select['r_cpl'])
+            else:
+                self.resultComplex.grid_remove()
+        else:
+            self.sel_result.set('None')
+        self.grapher.plot_graph()
+
+    def extract_from_stack(self, which = None):
+        if which is None:
+            index = self.eleana.selections['first']
+            if index < 0:
+                index = self.eleana.selections['second']
+                if index < 0:
+                    return
+
+        data = self.eleana.dataset[index]
+        if data.type != "stack 2D":
+            return
+
+        av_data = data.stk_names
+        select_data = SelectItems(master=self.mainwindow, title='Select data',
+                                 items=av_data)
+        response = select_data.get()
+        if response:
+            dialog = CTkMessagebox(title ='', message = "Delete selected data or extract", option_1 = 'Extract', option_2 = "Delete")
+            oper = dialog.get()
+            idxs = []
+            for i in response:
+                if i in av_data:
+                    index = av_data.index(i)
+                    idxs.append(index)
+            idxs.sort(reverse=True)
+            extracted = copy.deepcopy(data)
+            if oper == 'Delete':
+                # Delete
+               for i in idxs:
+                    extracted.y = np.delete(extracted.y, i, axis = 0)
+                    extracted.stk_names.pop(i)
+
+            else:
+                # Extract
+                extracted.y = extracted.y[idxs]
+                stk_names = []
+                for i in idxs:
+                    stk_names.append(extracted.stk_names[i])
+                extracted.stk_names = stk_names
+                if len(extracted.stk_names) == 1:
+                    extracted.name = extracted.name + '/' + stk_names[0]
+                    extracted.stk_names = []
+                    extracted.type = 'single 2D'
+                    extracted.y = extracted.y.ravel()
+
+            self.eleana.results_dataset.append(extracted)
+            self.update.list_in_combobox('sel_result')
+            self.update.list_in_combobox('r_stk')
+            # Set the position to the last added item
+            list_of_results = self.sel_result._values
+            position = list_of_results[-1]
+            self.sel_result.set(position)
+            self.result_selected(position)
+
+
+    # def create_from_table(self):
+    #     length_of_data = len(self.eleana.dataset)
+    #     headers = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J']
+    #
+    #     value = ""
+    #     cols = 10
+    #     rows = 4096
+    #     # Generate empty table
+    #     data = [[value for _ in range(cols)] for _ in range(rows)]
+    #
+    #     df = pandas.DataFrame(columns=headers, data=data)
+    #     name = 'new'
+    #     spreadsheet = CreateFromTable(eleana = self.eleana,
+    #                                   master = self.mainwindow,
+    #                                   df = df,
+    #                                   name = name,
+    #                                   group = self.eleana.selections['group'])
+    #     response = spreadsheet.get()
+    #     self.update.group_list()
+    #     self.update.dataset_list()
+    #     self.update.all_lists()
+    #     after_addition = len(self.eleana.dataset)
+    #     if after_addition > length_of_data:
+    #         self.eleana.selections['first'] = after_addition -1
+    #         self.gui_to_selections()
+
+    # def first_to_group(self):
+    #     if self.eleana.selections['first'] < 0:
+    #         return
+    #     groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+    #     if not groups:
+    #         Error.show(title = 'Error in groups', info = "def first_to_groups: groups not found")
+    #
+    #     groups.remove('All')
+    #     dialog = TwoListSelection(left_label="Available groups",
+    #                                 master = self.mainwindow,
+    #                                 right_label="Assigned to groups",
+    #                               items = groups,
+    #                               disable_new = False
+    #                               )
+    #     selected = dialog.get()
+    #     if not selected:
+    #         return
+    #
+    #     selected.insert(0, 'All')
+    #     first = self.eleana.dataset[self.eleana.selections['first']]
+    #     #group_assign = Groupassign(master=self.mainwindow, eleana = self.eleana, which='first')
+    #     #response = group_assign.get()
+    #     first.groups = selected
+    #
+    #     self.update.group_list()
+    #     self.update.all_lists()
+
+    # def second_to_group(self):
+    #     if self.eleana.selections['second'] < 0:
+    #         return
+    #     #group_assign = Groupassign(master=app, which='second')
+    #     #response = group_assign.get()
+    #
+    #     groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+    #     if not groups:
+    #         Error.show(title='Error in groups', info="def first_to_groups: groups not found")
+    #
+    #     groups.remove('All')
+    #     dialog = TwoListSelection(left_label="Available groups",
+    #                               master=self.mainwindow,
+    #                               right_label="Assigned to groups",
+    #                               items=groups,
+    #                               disable_new=False
+    #                               )
+    #     selected = dialog.get()
+    #     if not selected:
+    #         return
+    #
+    #     selected.insert(0, 'All')
+    #     second = self.eleana.dataset[self.eleana.selections['second']]
+    #     second.groups = selected
+    #
+    #     self.update.group_list()
+    #     self.update.all_lists()
+
+    # def create_simple_static_plot(self):
+    #     '''
+    #     Get data from the current graph and create a new data for simple graph
+    #     that will be used to display independet matplotlib window
+    #     '''
+    #     if bool(self.switch_comparison.get()) == True:
+    #         info = CTkMessagebox(master = self.mainwindow, title="Info", message="This function is not yet available for comparison view.")
+    #         return
+    #     static_plot = self.grapher.get_static_plot_data()
+    #     if not static_plot:
+    #         info = CTkMessagebox(master = self.mainwindow, title="Info", message="An error occurred or there is no data for graph creation.")
+    #         return
+    #     dialog = SingleDialog(master=self.mainwindow, title='Enter a name for the graph', label='Enter the graph name', text='')
+    #     name = dialog.get()
+    #     if not name:
+    #         return
+    #     static_plot['name'] = name
+    #     self.eleana.storage.static_plots.append(static_plot)
+    #     self.main_menubar.create_showplots_menu()
+    #     self.show_static_graph_window(len(self.eleana.storage.static_plots)-1)
+
+    def show_static_graph_window(self, number_of_plot = None):
+        '''
+        Opens window containing a static plot stored in self.eleana.static_plots.
+        This function is activated by dynamically created menu in Plots --> Show plots
+        '''
+
+        if not self.eleana.storage.active_static_plot_windows:
+            window_nr = 0
+        elif number_of_plot is not None:
+            window_nr = number_of_plot
+        else:
+            last = self.eleana.storage.active_static_plot_windows[-1]
+            window_nr = last + 1
+        self.eleana.storage.active_static_plot_windows.append(window_nr)
+        command = "self.static_plot_" + str(window_nr) + " = Staticplotwindow(window_nr, number_of_plot, self.eleana.storage.static_plots, self.eleana.storage.active_static_plot_windows, self.mainwindow, self.main_menubar)"
+        exec(command)
+        self.main_menubar.create_showplots_menu()
+
+    def show_id(self, which):
+        ''' Display the ID of the selected data'''
+        selection = self.eleana.selections.get(which, None)
+        if selection is not None:
+            self.eleana.dataset[selection].show_id(master = self.mainwindow)
+
+    # def clear_selected_ranges(self):
+    #     self.grapher.clear_selected_ranges()
+    #     self.grapher.clear_all_annotations()
+
+    # def delete_simple_static_plot(self):
+    #     '''
+    #     Opens window to ask which plots
+    #     from created Static Plots will be removed
+    #     '''
+    #     plots = self.eleana.storage.static_plots
+    #     if not plots:
+    #         return
+    #     av_plots = []
+    #     for plot in plots:
+    #         av_plots.append(plot['name_nr'])
+    #     select_items = SelectItems(master=self.mainwindow, title='Select plots',
+    #                               items=av_plots)
+    #     names = select_items.get()
+    #     if not names:
+    #         return
+    #     to_delete = []
+    #     for name in names:
+    #         to_delete.append(names.index(name))
+    #     to_delete.sort(reverse=True)
+    #     for i in to_delete:
+    #         self.eleana.storage.static_plots.pop(i)
+    #     self.main_menubar.create_showplots_menu()
+
+    # def xy_distance(self):
+    #     xy_distance = DistanceRead(self, which='first')
+
+    # ---------------------------------------------------
+    # Menu: MODIFICATIONS
+    #-----------------------------------------------------
+
+    # def trim_data(self):
+    #     subprog_trim_data = TrimData(self, which="first")
+
+    # def set_zero_on_x_axis(self):
+    #     subprog_set_zero = SetZeroOnX(self, which='first')
+
+    # def offset_correction(self):
+    #     subprog_offset_corr = OffsetCorr(self, which='first')
+
+    # def polynomial_baseline(self):
+    #     subprog_polynomial_baseline = PolynomialBaseline(self, which='first')
+    #
+    # def spline_baseline(self):
+    #     subprog_spline_baseline = SplineBaseline(self, which='first')
+    #
+    # def filter_savitzky_golay(self):
+    #     subprog_sav_gol = SavGol(self, which = 'first')
+    #
+    # def filter_fft_lowpass(self):
+    #     subprog_fft_lowpass = FFTFilter(self, which = 'first')
+    #
+    # def pseudomodulation(self):
+    #     subprog_pseudomodulation = PseudoModulation(self, which = 'first')
+    #
+    # def fast_fourier_transform(self):
+    #     subprog_fft = FastFourierTransform(self, which = 'first')
+    #
+    # def spectra_subtraction(self):
+    #     subprog_spectra_subtraction = SpectraSubtraction(self, which = 'first')
+
+    # def simple_arithmetics(self, operation):
+    #     simarith = SimpleArithmetics(master = self.mainwindow,operation=operation, eleana=self.eleana)
+    #     self.update.list_in_combobox('sel_result')
+    #     self.update.list_in_combobox('r_stk')
+    #     # Set the position to the last added item
+    #     list_of_results = self.sel_result._values
+    #     position = list_of_results[-1]
+    #     self.sel_result.set(position)
+    #     self.result_selected(position)
+
+    # def complex_modifications(self, operation, which = None):
+    #     refresh_first = None
+    #     refresh_second = None
+    #     if which is None:
+    #         selected_data = self.select_data_from_group(title = operation)
+    #     elif which == 'first':
+    #         selected_data = [self.sel_first.get()]
+    #     elif which == 'second':
+    #         selected_data = [self.sel_second.get()]
+    #     else:
+    #         return
+    #
+    #     if not selected_data:
+    #         return
+    #     for name in selected_data:
+    #         index = self.eleana.get_index_by_name(name)
+    #         if index is not None:
+    #             data = self.eleana.dataset[index]
+    #             if data.complex:
+    #                 data.complex = False
+    #
+    #                 if operation == 'Drop imaginary part':
+    #                     data.y = np.asarray(data.y.real, dtype=float)
+    #                 elif operation == 'Drop real part':
+    #                     data.y = np.asarray(data.y.imag, dtype=float)
+    #                 elif operation == 'Magnitude':
+    #                     data.y = np.asarray(np.abs(data.y), dtype=float)
+    #                 elif operation == 'Swap Re/Im':
+    #                     data.y = data.y.imag + 1j * data.y.real
+    #                     data.complex = True
+    #
+    #             if data.name_nr == self.sel_first.get():
+    #                 refresh_first = data.name_nr
+    #             if data.name_nr == self.sel_second.get():
+    #                 refresh_second = data.name_nr
+    #
+    #         if refresh_first:
+    #             self.first_selected(refresh_first)
+    #         if refresh_second:
+    #             self.second_selected(refresh_second)
+    #
+
+    # --------------------------------------------
+    # MENU: EPR
+    # --------------------------------------------
+
+    # def epr_b_to_g(self):
+    #     subprog_epr_b_to_g = EPR_B_to_g(self)
+
+    def not_implemented_yet(self):
+        message = CTkMessagebox(master = self.mainwindow, message = 'This function is not implemented yet.', title='Application')
+
+    '''***********************************************
+    *           GRAPH SWITCHES AND BUTTONS           *
+    ***********************************************'''
+
+    def switch_autoscale(self):
+        self.eleana.gui_state.autoscale_x = bool(self.check_autoscale_x.get())
+        self.eleana.gui_state.autoscale_y = bool(self.check_autoscale_y.get())
+        self.grapher.plot_graph(switch_cursors=False)
+
+    def set_log_scale_x(self):
+        self.eleana.gui_state.log_x = bool(self.check_log_x.get())
+        self.grapher.plot_graph()
+
+    def set_log_scale_y(self):
+        self.eleana.gui_state.log_y = bool(self.check_log_y.get())
+        self.grapher.plot_graph()
+
+    def indexed_x(self):
+        self.eleana.gui_state.indexed_x = bool(self.check_indexed_x.get())
+        self.grapher.plot_graph()
+
+    def invert_x_axis(self):
+        self.eleana.gui_state.inverted_x_axis = bool(self.check_invert_x.get())
+        self.grapher.plot_graph()
+
+    '''***********************************************
+    *                    CURSORS                     *
+    ***********************************************'''
+    def sel_graph_cursor(self, value, clear_annotations=True):
+        if clear_annotations:
+            self.grapher.clear_all_annotations(skip = True)
+        self.grapher.current_cursor_mode['label'] = value
+        self.sel_cursor_mode.set(value)
+        self.eleana.gui_state.cursor_mode = copy.copy(value)
+        self.grapher.cursor_on_off()
+        #self.grapher.plot_graph()
+
+    def select_data_from_group(self, title):
+        av_data = self.sel_first._values
+        av_data.pop(0)
+        selected_data = SelectData(master = self.mainwindow,
+                                   title=title,
+                                   group=self.eleana.selections['group'],
+                                   items=av_data)
+        response = selected_data.get()
+        return response
+
+
+    def delete_single_stk_data(self, which):
+        ''' Remove single data from stk stack '''
+        if which == 'first':
+            data_index = self.eleana.selections['first']
+            stk_index = self.eleana.selections['f_stk']
+        elif which == 'second':
+            data_index = self.eleana.selections['second']
+            stk_index = self.eleana.selections['s_stk']
+        else:
+            return
+
+        data_stack: BaseDataModel = self.eleana.dataset[data_index]
+        data_stack.remove_from_stack_by_index(stk_index)
+
+        if which == 'first':
+            self.eleana.selections['f_stk'] = 0
+        elif which == 'second':
+            self.eleana.selections['s_stk'] = 0
+
+        # Update all GUI elements
+        self.update.dataset_list()
+        self.update.all_lists()
+        self.grapher.plot_graph()
+
+    def rename_data(self, which):
+        index = self.eleana.selections[which]
+        index_f = self.eleana.selections['first']
+        index_s = self.eleana.selections['second']
+        index_r = self.eleana.selections['result']
+        if index < 0:
+            return
+        name = self.eleana.dataset[index].name
+        if which == 'first':
+            title = 'Rename First'
+        elif which == 'second':
+            title = 'Rename Second'
+        elif which == 'result':
+            title = 'Rename Result'
+            name = self.eleana.results_dataset[index_r].name
+        #self.single_dialog = SingleDialog(master=app, title=title, label='Enter new name', text=name)
+        #response = self.single_dialog.get()
+
+        single_dialog = SingleDialog(master=self.mainwindow, title=title, label='Enter new name', text=name)
+        response = single_dialog.get()
+
+        if response == None:
+            return
+        if not which == 'result':
+            self.eleana.dataset[index].name = response
+            self.update.dataset_list()
+            self.update.group_list()
+            self.update.all_lists()
+            if index_f >= 0:
+                self.sel_first.set(self.eleana.dataset[index_f].name_nr)
+            if index_s >= 0:
+                self.sel_second.set(self.eleana.dataset[index_s].name_nr)
+        else:
+            self.eleana.results_dataset[index_r].name = response
+            self.eleana.results_dataset[index_r].name_nr = response
+            self.update.dataset_list()
+            self.update.all_lists()
+        if index_r >= 0:
+            self.sel_result.set(self.eleana.results_dataset[index_r].name_nr)
+
+    def edit_comment(self, which):
+        index = self.eleana.selections[which]
+        if index < 0:
+            return
+        comment = self.eleana.dataset[index].comment
+        name = 'Comment to: ' + str(self.eleana.dataset[index].name_nr)
+        text = Notepad(self.mainwindow, title=name, text=comment)
+        response = text.get()
+        self.eleana.dataset[index].comment = response
+
+    def execute_command(self, event):
+        if event.keysym == "Up":
+            try:
+                previous = self.command_history['index'] - 1
+                self.command_history['index'] = previous
+                previous_command = self.command_history['lines'][previous]
+                self.command_line.delete(0, "end")
+                self.command_line.insert(0, previous_command)
+            except:
+                pass
+            return
+        if event.keysym == "Down":
+            try:
+                previous = self.command_history['index'] + 1
+                self.command_history['index'] = previous
+                previous_command = self.command_history['lines'][previous]
+                self.command_line.delete(0, "end")
+                self.command_line.insert(0, previous_command)
+            except:
+                pass
+            return
+        if event.keysym == "Return":
+            command = self.command_line.get()
+            self.command_history['lines'].append(command)
+            self.command_history['index'] = len(self.command_history['lines']) - 1
+            new_log = '\n>>> ' + command
+            self.log_field.insert("end", new_log)
+            self.command_line.delete(0, "end")
+            error, executable_command = self.commandprocessor.process_script(command)
+            print(command)
+            print(executable_command)
+            stdout_backup = sys.stdout
+            sys.stdout = io.StringIO()
+            try:
+                eval(executable_command, globals(), locals())
+                output = sys.stdout.getvalue()
+            except Exception as e:
+                output = f"Error: {e}"
+            finally:
+                sys.stdout = stdout_backup
+            new_log = '\n' + output
+            self.log_field.insert("end", new_log)
+            return output

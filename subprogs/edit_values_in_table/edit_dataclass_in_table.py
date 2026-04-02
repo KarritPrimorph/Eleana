@@ -4,11 +4,11 @@ import customtkinter as ctk
 import numpy as np
 import pygubu
 import string
-from modules.tksheet import Sheet
-from assets.Error import Error
-from assets.Observer import Observer
+from lib.tksheet import Sheet
+from core.Error import Error
+from core.Observer import Observer
 import copy
-from modules.CTkMessagebox import CTkMessagebox
+from lib.CTkMessagebox import CTkMessagebox
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "edit_dataset_in_table.ui"

@@ -5,13 +5,13 @@ import numpy as np
 import pygubu
 import pandas
 from pathlib import Path
-from modules.CTkMessagebox import CTkMessagebox
-from assets.DataClasses import BaseDataModel
+from lib.CTkMessagebox import CTkMessagebox
+from core.DataClasses import BaseDataModel
 from tkinter import filedialog
-from modules.tksheet import Sheet
+from lib.tksheet import Sheet
 import copy
 from subprogs.edit_parameters.edit_parameters import EditParameters
-from modules.pandastable import MultipleValDialog
+from lib.pandastable import MultipleValDialog
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "table.ui"

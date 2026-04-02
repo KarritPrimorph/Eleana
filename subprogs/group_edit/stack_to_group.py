@@ -3,7 +3,7 @@ import pathlib
 import pygubu
 import copy
 from subprogs.group_edit.add_group import Groupcreate
-from assets.DataClasses import BaseDataModel
+from core.DataClasses import BaseDataModel
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "stack_to_group.ui"
 import numpy as np

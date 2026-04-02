@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="20"
+   height="20"
+   viewBox="0 0 24 24"
+   fill="none"
+   stroke="#aaaaaa"
+   stroke-width="1.5"
+   stroke-linecap="round"
+   stroke-linejoin="round"
+   class="feather feather-arrow-down"
+   version="1.1"
+   id="svg1452"
+   sodipodi:docname="average.svg"
+   inkscape:version="1.2.2 (b0a8486541, 2022-12-01)"
+   inkscape:export-filename="../average_stack.png"
+   inkscape:export-xdpi="124"
+   inkscape:export-ydpi="124"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <metadata
+     id="metadata1458">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs1456" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1920"
+     inkscape:window-height="1008"
+     id="namedview1454"
+     showgrid="false"
+     inkscape:zoom="31.4"
+     inkscape:cx="10.015924"
+     inkscape:cy="9.9840764"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg1452"
+     inkscape:showpageshadow="2"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1" />
+  <line
+     x1="5.4878969"
+     y1="1.8592347"
+     x2="5.4878969"
+     y2="15.160417"
+     id="line1448"
+     style="stroke-width:1.5" />
+  <polyline
+     points="19 12 12 19 5 12"
+     id="polyline1450"
+     transform="matrix(0.46496815,0,0,0.49499545,-0.09172068,6.6251277)"
+     style="stroke-width:3.12665" />
+  <polyline
+     points="19 12 12 19 5 12"
+     id="polyline1450-5"
+     transform="matrix(0,0.46496815,-0.30030935,0,15.939889,12.905931)"
+     style="stroke-width:4.01417" />
+  <polyline
+     points="19 12 12 19 5 12"
+     id="polyline1450-5-3"
+     transform="matrix(0,0.46496815,0.30030935,0,16.058594,12.905931)"
+     style="stroke-width:4.01417" />
+  <line
+     x1="8.6846933"
+     y1="4.5324836"
+     x2="21.426332"
+     y2="4.5324836"
+     id="line1448-6-2-1"
+     style="stroke-width:1.5" />
+  <line
+     x1="8.6846924"
+     y1="7.3735657"
+     x2="21.426332"
+     y2="7.3735657"
+     id="line1448-6-2-1-6"
+     style="stroke-width:1.5" />
+  <line
+     x1="8.6846914"
+     y1="10.214647"
+     x2="21.426332"
+     y2="10.214647"
+     id="line1448-6-2-1-6-7"
+     style="stroke-width:1.5" />
+  <g
+     id="g1649"
+     transform="matrix(0.53345292,0,0,0.62699034,1.4023389,15.331959)"
+     style="stroke-width:2.59365">
+    <polyline
+       points="19 12 12 19 5 12"
+       id="polyline1450-0-3"
+       transform="matrix(0.46496815,0,0,-0.49499545,21.783439,14.959888)"
+       style="stroke-width:5.4063" />
+    <polyline
+       points="19 12 12 19 5 12"
+       id="polyline1450-0-3-6"
+       transform="matrix(0.46496815,0,0,0.49499545,21.783439,-3.8499391)"
+       style="stroke-width:5.4063" />
+  </g>
+</svg>

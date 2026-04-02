@@ -60,28 +60,28 @@ y = screen_y + (screen_h - h) // 2
 splash.geometry(f"{w}x{h}+{x}+{y}")
 splash.update()
 
-# Import basic modules and add ./modules to sys.path
+# Import basic lib and add ./lib to sys.path
 from pathlib import Path
 import ctypes
 
-# Set paths for assets, modules, subprogs and widgets
+# Set paths for core, lib, subprogs and widgets
 PROJECT_PATH = Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "Eleana_interface.ui"
-MODULES = PROJECT_PATH / "modules"
-ASSETS = PROJECT_PATH / "assets"
+MODULES = PROJECT_PATH / "lib"
+ASSETS = PROJECT_PATH / "core"
 SUBPROGS = PROJECT_PATH / "subprogs"
 WIDGETS = PROJECT_PATH / "widgets"
 PIXMAPS = PROJECT_PATH / "pixmaps"
 
-from assets.Eleana import Eleana
-from assets.CommandProcessor import CommandProcessor
+from core.Eleana import Eleana
+from core.CommandProcessor import CommandProcessor
 
-# Import External modules required
+# Import External lib required
 import numpy as np
 
-# Import modules from ./modules folder
-from assets.Application import Application
-from modules.CTkMessagebox import CTkMessagebox
+# Import lib from ./lib folder
+from core.Application import Application
+from lib.CTkMessagebox import CTkMessagebox
 
 # Import Eleana specific classes
 # Widgets used by main application

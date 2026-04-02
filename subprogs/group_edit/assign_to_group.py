@@ -3,7 +3,7 @@ import pathlib
 import copy
 import pygubu
 from tkinter import Event
-from modules.CTkMessagebox import CTkMessagebox
+from lib.CTkMessagebox import CTkMessagebox
 from subprogs.group_edit.add_group import Groupcreate
 PROJECT_PATH = pathlib.Path(__file__).parent
 

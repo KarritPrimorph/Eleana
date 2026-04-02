@@ -319,7 +319,7 @@ l calculations are finished and main window
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+        from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
         self.cutoffFrame = self.builder.get_object('cutoffFrame', self.mainwindow)
         self.remove = self.builder.get_object('remove', self.mainwindow)
         self.remove.grid_remove()

@@ -4,7 +4,7 @@
 import numpy as np
 import weakref
 from subprogs.integrate_region.IntegrateRegion import RESULT_CREATE
-from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
 # General setting of the application. Here is an example
 # File/Path/Class settings

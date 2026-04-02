@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from modules.CTkListbox import CTkListbox
+from lib.CTkListbox import CTkListbox
 from subprogs.user_input.TwoListSelectionui import TwoListSelectionUI
 from subprogs.user_input.single_dialog import SingleDialog
 

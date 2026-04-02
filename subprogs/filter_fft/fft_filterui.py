@@ -4,7 +4,7 @@ import tkinter as tk
 import pygubu
 
 
-from assets.ResourcePath import resource_path
+from core.ResourcePath import resource_path
 from pathlib import Path
 
 # PROJECT_UI zawsze w tym samym katalogu co fft_filterUI.py#

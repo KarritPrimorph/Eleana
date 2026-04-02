@@ -3,11 +3,11 @@ from scipy import constants as spc
 import sympy
 import numpy as np
 import json
-from modules.CTkMessagebox import CTkMessagebox
+from lib.CTkMessagebox import CTkMessagebox
 from pathlib import Path
 from customtkinter import filedialog
 from lmfit.models import ExpressionModel
-from assets.Error import Error
+from core.Error import Error
 from subprogs.edit_values_in_table.edit_values_in_table import EditValuesInTable
 
 class Function:

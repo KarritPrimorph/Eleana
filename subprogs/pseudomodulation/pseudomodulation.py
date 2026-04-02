@@ -287,7 +287,7 @@ class PseudoModulation(Methods, WindowGUI):                                     
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+        from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
         self.harmFrame = self.builder.get_object('harmFrame', self.mainwindow)
         self.modFrame = self.builder.get_object('modFrame', self.mainwindow)
         self.entry1 = self.builder.get_object('ctkentry1', self.mainwindow)

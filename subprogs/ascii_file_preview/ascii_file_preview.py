@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 import pathlib
 import pygubu
-from modules.CTkMessagebox import CTkMessagebox
+from lib.CTkMessagebox import CTkMessagebox
 from pathlib import Path
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "ascii_file_preview.ui"

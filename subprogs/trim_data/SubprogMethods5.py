@@ -1,9 +1,9 @@
 from os import close
 
-from assets.Observer import Observer
+from core.Observer import Observer
 import copy
 import numpy as np
-from assets.Error import Error
+from core.Error import Error
 from subprogs.table.table import CreateFromTable
 import pandas
 import matplotlib.pyplot as plt

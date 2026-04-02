@@ -2,8 +2,8 @@
 import pathlib
 import pygubu
 import pandas
-from assets.Parameter_dictionary import parameter_dictionary
-from modules.tksheet import Sheet
+from core.Parameter_dictionary import parameter_dictionary
+from lib.tksheet import Sheet
 
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "edit_parameters.ui"

@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 # IMPORT MODULES NEEDED
-from assets.Error import Error
+from core.Error import Error
 import importlib
 from scipy.signal import savgol_filter
 import weakref
@@ -320,7 +320,7 @@ l calculations are finished and main window
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+        from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
         self.windowFrame = self.builder.get_object('windowFrame', self.mainwindow)
         self.polynomFrame = self.builder.get_object('polynomFrame', self.mainwindow)
 

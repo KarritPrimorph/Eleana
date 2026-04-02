@@ -5,7 +5,7 @@ from copy import copy
 import weakref
 import numpy as np
 import importlib
-from modules.tkdial.tkdial import Dial
+from lib.tkdial.tkdial import Dial
 from scipy.interpolate import CubicSpline, PchipInterpolator
 
 ''' GENERAL SETTINGS '''
@@ -283,7 +283,7 @@ class SpectraSubtraction(Methods, WindowGUI):
         #self.mainwindow =
 
         # HERE DEFINE YOUR REFERENCES TO WIDGETS
-        from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+        from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
         self.second_on_copy = copy(self.eleana.selections['s_dsp'])
         #

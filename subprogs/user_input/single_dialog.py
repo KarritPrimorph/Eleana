@@ -5,7 +5,7 @@ from faulthandler import enable
 import pygubu
 import tkinter as tk
 import re
-from modules.CTkMessagebox import CTkMessagebox
+from lib.CTkMessagebox import CTkMessagebox
 from tkinter import ttk
 PROJECT_PATH = pathlib.Path(__file__).parent
 PROJECT_UI = PROJECT_PATH / "single_dialog.ui"

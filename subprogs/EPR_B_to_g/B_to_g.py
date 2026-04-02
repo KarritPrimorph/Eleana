@@ -4,7 +4,7 @@
 #from asyncio import set_event_loop_policy
 
 import weakref
-from assets.Error import Error
+from core.Error import Error
 import importlib
 
 ''' GENERAL SETTINGS '''
@@ -202,7 +202,7 @@ CURSOR_OUTSIDE_TEXT: str = 'One or more selected points are outside the (x, y) r
 if __name__ == "__main__":
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS
-    from assets.Eleana import Eleana
+    from core.Eleana import Eleana
 else:
     module_path = f"subprogs.{SUBPROG_FOLDER}.{GUI_FILE[:-3]}"
     class_name = GUI_CLASS

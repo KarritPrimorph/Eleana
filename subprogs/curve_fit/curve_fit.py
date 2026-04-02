@@ -2,18 +2,18 @@
 # IMPORT MODULES NEEDED
 import customtkinter as ctk
 
-from modules.CTkMessagebox import CTkMessagebox
-from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+from lib.CTkMessagebox import CTkMessagebox
+from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
 import numpy as np
 import importlib
 import weakref
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg)
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-from modules.CTkListbox.ctk_listbox import CTkListbox
+from lib.CTkListbox.ctk_listbox import CTkListbox
 from subprogs.curve_fit.built_in_functions import BuiltInFunctions, Function, UserDefinedFunctions
 import copy
-from assets.Error import Error
+from core.Error import Error
 from subprogs.user_input.single_dialog import SingleDialog
 from subprogs.notepad.notepad import Notepad
 

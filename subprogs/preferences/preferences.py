@@ -4,8 +4,8 @@ import pygubu
 import customtkinter
 import copy
 
-from modules.CTkColorPicker import AskColor
-from modules.CTkSpinbox.CTkSpinbox import CTkSpinbox
+from lib.CTkColorPicker import AskColor
+from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
 
 
 PROJECT_PATH = pathlib.Path(__file__).parent
