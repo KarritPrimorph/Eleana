@@ -254,7 +254,7 @@ class MainMenu:
                                    image=self.icon_magnifier, compound="left")
 
         # ----- Find Name on disk
-        self.menu_find.add_command(label="Name of data name on disk",
+        self.menu_find.add_command(label="Spectrum name on disk",
                                    command=lambda x='nameondisk': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 

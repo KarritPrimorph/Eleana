@@ -1,0 +1,28 @@
+For testing the file "data_types_for_test.ele" is used.
+The file contains:
+
+        --- Not complex, single xy data ---
+        1. Single 2D-a
+        2. Single 2D-b
+
+        --- Stack of complex data x, [Rey], [Imy] ---
+        3. Stack of complex
+
+        --- Single x, Rey Imy complex ---
+        4. Single complex
+
+        --- Stack of not complex x[y] data ---
+        5. Stack of 2D
+
+FILE:
+    Load project:                               OK
+    Recent projects:                            OK
+    Save As:                                    OK
+    Save:                                       OK
+    Import:                                     OK
+    Export:     (Stack of complex not implemented)
+                (Group to folder not working)
+                 Export First | Export group - implement export when stack complex is present
+
+
+    Next ---> Edit, Find
