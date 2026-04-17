@@ -519,12 +519,59 @@ class Export:
                             j += 1
                         exported_csv.write(row)
                         i += 1
-            except:
-                return {'error': True, 'desc': f'Could not save {filename.name} file.'}
-            pass
+            except Exception as e:
+                Error.show(title="Error", info="Error while saving the file.", details=e)
+                return
+            
         elif data.type == 'stack 2D' and data.complex:
-            info = CTkMessagebox(title="Info ", message=f'Stack of complex data is not supported yet.')
+            question = CTkMessagebox(title="Complex data export", message=f'Include complex magnitude?', option_1 = "Yes", option_2 = "No")
+            response = question.get()
+            if response == 'Yes':
+                include_magn = True
+            else:
+                include_magn = False
+
+            x = data.x
+            y = data.y
+            name = data.name
+            stk_names = data.stk_names
+
+            # Create first row header: name of x, table = [x]
+            name_x = name + ": " + data.parameters.get('name_x', 'X') + " [" + data.parameters.get('unit_x', 'a.u.') + "]"
+            headers = [name_x]
+            table_of_data = [x]
+
+            for i,stk in enumerate(stk_names):
+                re_y = np.real(y[i])
+                im_y = np.imag(y[i])
+                name_rey = name + "/" + stk + ": " + data.parameters.get('name_y', 'Y') + " [" + data.parameters.get(
+                    'unit_y', 'a.u') + "]:REAL"
+                name_imy = name + "/" + stk + ": " + data.parameters.get('name_y', 'Y') + " [" + data.parameters.get(
+                    'unit_y', 'a.u') + "]:IMAGINARY"
+                headers.append(name_rey)
+                headers.append(name_imy)
+                table_of_data.append(re_y)
+                table_of_data.append(im_y)
+
+                if include_magn:
+                    name_magn = name + "/" + stk + ": " + data.parameters.get('name_y', 'Y') + " [" + data.parameters.get(
+                        'unit_y', 'a.u') + "]:MAGNITUDE"
+                    headers.append(name_magn)
+                    table_of_data.append(np.absolute(y[i]))
+            table_of_data = np.transpose(table_of_data)
+
+            try:
+                headers = np.array(headers)
+                merged = np.vstack([headers, table_of_data])
+                with open(filename, 'a') as exported_csv:
+                    np.savetxt(filename, merged, delimiter=",", fmt="%s")
+
+
+            except Exception as e:
+                Error.show(title="Error", info=f'Could not export {filename.name} file.', details=e)
             return
+
+
         elif data.type != 'stack 2D' and data.complex:
                 x = data.x
                 y = data.y
@@ -544,9 +591,9 @@ class Export:
                             row = "\n" + str(x[i]) + ", " + str(re_y[i]) + ", " + str(im_y[i]) + ", " + str(magn[i])
                             exported_csv.write(row)
                             i += 1
-                except:
-                    return {'error': True, 'desc': f'Could not save {filename.name} file.'}
-
+                except Exception as e:
+                    Error.show(title = "Error", info = f'Could not export {filename.name} file.', details = e)
+                return
         else:
             # Single Data not complex
             x = data.x

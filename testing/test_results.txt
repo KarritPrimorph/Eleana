@@ -20,7 +20,7 @@ FILE:
     Save As:                                    OK
     Save:                                       OK
     Import:                                     OK
-    Export:     (Stack of complex not implemented)
+    Export:
                 (Group to folder not working)
                  Export First | Export group - implement export when stack complex is present
 
