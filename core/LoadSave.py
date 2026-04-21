@@ -473,7 +473,7 @@ class Save:
 class Export:
     def __init__(self, eleana):
         self.eleana = eleana
-    def csv(self, which = 'first', filename=None):
+    def csv(self, which = 'first', filename=None, include_magn=None):
         if filename == None:
             if which == 'first' and self.eleana.selections['first'] < 0:
                 info = CTkMessagebox(title="Info ", message=f'Please select data in {which}')
@@ -489,11 +489,12 @@ class Export:
                 self.eleana.paths['last_export_dir'] = str(Path(filename.name).parent)
                 filename = Path(filename.name)
 
-            except:
-                return {'error': True, 'desc': f'Could not save {filename} file.'}
+            except Exception as e:
+                Error.show(info="Cannot save the file", details=e)
+                return
             index = self.eleana.selections[which]
         else:
-            index = which
+            index = self.eleana.selections[which]
         # Prepare data from First or second
 
         data = self.eleana.dataset[index]
@@ -524,12 +525,13 @@ class Export:
                 return
             
         elif data.type == 'stack 2D' and data.complex:
-            question = CTkMessagebox(title="Complex data export", message=f'Include complex magnitude?', option_1 = "Yes", option_2 = "No")
-            response = question.get()
-            if response == 'Yes':
-                include_magn = True
-            else:
-                include_magn = False
+            if include_magn is None:
+                question = CTkMessagebox(title="Complex data export", message=f'Include complex magnitude?', option_1 = "Yes", option_2 = "No")
+                response = question.get()
+                if response == 'Yes':
+                    include_magn = True
+                else:
+                    include_magn = False
 
             x = data.x
             y = data.y
@@ -565,7 +567,7 @@ class Export:
                 merged = np.vstack([headers, table_of_data])
                 with open(filename, 'a') as exported_csv:
                     np.savetxt(filename, merged, delimiter=",", fmt="%s")
-
+                return include_magn
 
             except Exception as e:
                 Error.show(title="Error", info=f'Could not export {filename.name} file.', details=e)
@@ -610,56 +612,64 @@ class Export:
                     i += 1
 
     def group_csv(self, group):
-
-        directory = filedialog.askdirectory(title = "Enter for save directory name")
-
-        try:
-            if directory:
-                directory_path = Path(directory)
-
-                if not directory_path.exists():
-                    directory_path.mkdir(parents=True, exist_ok=True)
-        except Exception as e:
-            info = CTkMessagebox(title='Error', message='Could not open the directory for saving data. Check permissions.', details = e)
+        init_dir = self.eleana.paths.get('last_export_dir', Path("~").expanduser())
+        group = self.eleana.selections['group']
+        directory = filedialog.askdirectory(
+            initialdir=init_dir,
+            title = "Enter for save directory name")
+        if not directory:
             return
-        list_of_data = self.eleana.assignmentToGroups.get(group, [])
-        if not list_of_data:
-            info = CTkMessagebox(title='Empty group', message=f'In the selected group: {group} there is nothing to export.')
+
+        directory_path = Path(directory)
+        if not directory_path.exists():
+            Error.show(title="Directory for export", info=f'Directory {directory} does not exist.')
             return
-        if len(list_of_data) > 9 and len(list_of_data) < 100:
-            change = 'two'
+
+        directory_path = directory_path / f"EleanaGroup_{group}"
+        if directory_path.exists():
+            question = CTkMessagebox(title = "Directory exists", message = "Do you want to overwrite it?", option_1 = "Overwrite", option_2 = "Cancel")
+            response = question.get()
+            if response == "Overwrite":
+                for item in directory_path.iterdir():
+                    if item.is_dir():
+                        shutil.rmtree(item)
+                    else:
+                        item.unlink()
         else:
-           change = 'no'
-        list_of_filenames = []
-        for each in list_of_data:
-            name = self.eleana.dataset[each].name_nr
-            entry = name.split('. ')
-            name = entry[1]
-            number = int(entry[0])
-            if change == 'two' and number < 10:
-                number = '0' + str(number)
-            else:
-                number = str(number)
-            name = '' + number + '_' + name
-            name = (name.replace('. ', '-').replace(' ', '_').replace('*', '_').replace('\\', '_').replace('/','_').replace(':', '_').replace('?', '_').replace('"', '_'))+'.csv'
-            filename = Path(directory_path, name)
-            list_of_filenames.append(filename)
+            directory_path.mkdir(parents=True)
 
+
+        selections_copy = copy.deepcopy(self.eleana.selections)
+        if group == "All":
+            items_in_group = len(self.eleana.dataset)
+        else:
+            items_in_group = len(self.eleana.assignmentToGroups[group])
         i = 0
-        for each in list_of_filenames:
-            which = list_of_data[i]
-            self.csv(which = which, filename = each)
+        include_magn = None
+        while i < items_in_group:
+            self.eleana.selections['first'] = i
+            dataset_index = self.eleana.assignmentToGroups[group][i]
+            name_orig = self.eleana.dataset[dataset_index].name_nr
+            name = name_orig.replace(".", "_")
+            name = name.replace(" ", "_")
+            filename = directory_path / f"{name}.csv"
+            try:
+                response = self.csv(filename = filename, include_magn=include_magn)
+                if response is True:
+                    include_magn = True
+                elif response is False:
+                    include_magn = False
+            except Exception as e:
+                qu_er = CTkMessagebox(title="Error", message = f"An error occured while exporting {name_orig}",
+                                      option_1 = "Continue", option_2 = "Stop exporting now")
+                response = qu_er.get()
+                if response == "Stop exporting now":
+                    break
             i += 1
+        CTkMessagebox(title = "Export finished", message = f"Exported files can be found in\n\n {directory_path}",
+                      icon = "info")
+        self.eleana.selections['first'] = selections_copy
 
-# class Project_1:
-#     ''' Create object used to save/load Eleana projects ver. 1'''
-#     def __init__(self, eleana):
-#         self.dataset = eleana.dataset
-#         self.results_dataset = eleana.results_dataset
-#         self.groupsHierarchy = eleana.groupsHierarchy
-#         self.notes = eleana.notes
-#         self.selections = eleana.selections
-#        self.static_plots = eleana.static_plots
 class Preferences:
     ''' This class is used to create preferences'''
     def __init__(self, app, grapher):
