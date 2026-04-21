@@ -610,14 +610,17 @@ class Export:
                     i += 1
 
     def group_csv(self, group):
-        directory = filedialog.askdirectory()
+
+        directory = filedialog.askdirectory(title = "Enter for save directory name")
+
         try:
             if directory:
                 directory_path = Path(directory)
+
                 if not directory_path.exists():
                     directory_path.mkdir(parents=True, exist_ok=True)
-        except:
-            info = CTkMessagebox(title='Error', message='Could not open the directory for saving data. Check permissions.')
+        except Exception as e:
+            info = CTkMessagebox(title='Error', message='Could not open the directory for saving data. Check permissions.', details = e)
             return
         list_of_data = self.eleana.assignmentToGroups.get(group, [])
         if not list_of_data:
