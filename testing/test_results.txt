@@ -26,3 +26,6 @@ FILE:
 
 
     Next ---> Edit, Find
+
+EDIT:
+    Data in table - not working for 2D stack

@@ -192,19 +192,19 @@ class MainMenu:
         self.menu_export.add_command(label="Export First", command=self.callbacks.get('export_first'), image=self.icon_export_first,
                                     compound="left")
         # - SEPARATOR -
-        self.menu_export.add_separator()
+        #self.menu_export.add_separator()
 
         # - Export group
         self.menu_export.add_command(label="Export Group to folder", command=self.callbacks.get('export_group'), image=self.icon_export_group,
                                    compound="left")
         # - Export to folder
-        self.menu_export.add_command(label="Export Group to spreadsheet",
-                                     command=self.callbacks.get('export_spreadsheet'),
-                                     image=self.icon_export_group,
-                                     compound="left")
+        # self.menu_export.add_command(label="Export Group to spreadsheet",
+        #                              command=self.callbacks.get('export_spreadsheet'),
+        #                              image=self.icon_export_group,
+        #                              compound="left")
 
         # - SEPARATOR -
-        self.menu_export.add_separator()
+        #self.menu_export.add_separator()
 
         # - Export selected to spreadsheet
         self.menu_export.add_command(label="Export Selected to spreadsheet", command=lambda: self.callbacks.get('export_spreadsheet')(group = False),
@@ -244,7 +244,7 @@ class MainMenu:
 
         self.menu_find.add_separator()
 
-        # ----- Find Projectname on disk
+        # ----- Find Project name on disk
         self.menu_find.add_command(label="Project name on disk", command=lambda x='projectname': self.callbacks.get('find')(x),
                                    image=self.icon_magnifier, compound="left")
 
