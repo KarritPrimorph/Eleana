@@ -10,6 +10,7 @@ import os
 import sys
 import time
 from typing import Literal
+from screeninfo import get_monitors
 
 class CTkMessagebox(customtkinter.CTkToplevel):
     ICONS = {
@@ -57,8 +58,6 @@ class CTkMessagebox(customtkinter.CTkToplevel):
                  ):
         
         super().__init__()
-        
-        
         self.master_window = master
      
         self.width = 250 if width<250 else width
@@ -344,18 +343,46 @@ class CTkMessagebox(customtkinter.CTkToplevel):
 
         self.after(50, self.center_window)
 
+    # def center_window(self):
+    #     self.update_idletasks()
+    #     if self.master_window is None:
+    #         spawn_x = int((self.winfo_screenwidth() - self.winfo_width()) / 2)
+    #         spawn_y = int((self.winfo_screenheight() - self.winfo_height()) / 2)
+    #     else:
+    #         spawn_x = int(self.master_window.winfo_width() * 0.5 +
+    #                       self.master_window.winfo_rootx() -
+    #                       0.5 * self.winfo_width())
+    #         spawn_y = int(self.master_window.winfo_height() * 0.5 +
+    #                       self.master_window.winfo_rooty() -
+    #                       0.5 * self.winfo_height())
+    #     self.geometry(f"+{spawn_x}+{spawn_y}")
+
     def center_window(self):
         self.update_idletasks()
-        if self.master_window is None:
-            spawn_x = int((self.winfo_screenwidth() - self.winfo_width()) / 2)
-            spawn_y = int((self.winfo_screenheight() - self.winfo_height()) / 2)
+
+        monitors = get_monitors()
+
+        if self.master_window is not None:
+            master_x = self.master_window.winfo_rootx()
+            master_y = self.master_window.winfo_rooty()
+
+            # znajdź monitor, na którym jest master
+            for m in monitors:
+                if (m.x <= master_x <= m.x + m.width and
+                        m.y <= master_y <= m.y + m.height):
+                    monitor = m
+                    break
+            else:
+                monitor = monitors[0]
         else:
-            spawn_x = int(self.master_window.winfo_width() * 0.5 +
-                          self.master_window.winfo_rootx() -
-                          0.5 * self.winfo_width())
-            spawn_y = int(self.master_window.winfo_height() * 0.5 +
-                          self.master_window.winfo_rooty() -
-                          0.5 * self.winfo_height())
+            monitor = monitors[0]
+
+        w = self.winfo_width()
+        h = self.winfo_height()
+
+        spawn_x = monitor.x + (monitor.width - w) // 2
+        spawn_y = monitor.y + (monitor.height - h) // 2
+
         self.geometry(f"+{spawn_x}+{spawn_y}")
 
     def focus_button(self, option_focus):

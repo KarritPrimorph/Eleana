@@ -474,6 +474,7 @@ class Export:
     def __init__(self, eleana):
         self.eleana = eleana
     def csv(self, which = 'first', filename=None, include_magn=None):
+        group = self.eleana.selections['group']
         if filename == None:
             if which == 'first' and self.eleana.selections['first'] < 0:
                 info = CTkMessagebox(title="Info ", message=f'Please select data in {which}')
@@ -492,9 +493,11 @@ class Export:
             except Exception as e:
                 Error.show(info="Cannot save the file", details=e)
                 return
-            index = self.eleana.selections[which]
+            ind = self.eleana.selections[which]
+            index = self.eleana.assignmentToGroups[group][ind]
         else:
-            index = self.eleana.selections[which]
+            ind = self.eleana.selections[which]
+            index = self.eleana.assignmentToGroups[group][ind]
         # Prepare data from First or second
 
         data = self.eleana.dataset[index]
@@ -625,7 +628,7 @@ class Export:
             Error.show(title="Directory for export", info=f'Directory {directory} does not exist.')
             return
 
-        directory_path = directory_path / f"EleanaGroup_{group}"
+        directory_path = directory_path / f"EXPORTED_GROUP__{group}"
         if directory_path.exists():
             question = CTkMessagebox(title = "Directory exists", message = "Do you want to overwrite it?", option_1 = "Overwrite", option_2 = "Cancel")
             response = question.get()
@@ -637,7 +640,6 @@ class Export:
                         item.unlink()
         else:
             directory_path.mkdir(parents=True)
-
 
         selections_copy = copy.deepcopy(self.eleana.selections)
         if group == "All":
