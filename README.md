@@ -75,8 +75,10 @@ The software is freely available for scientific and educational use, while comme
 3. Install project dependencies using `pipenv`:
 
     ```bash
-    pipenv install
+    pipenv install --ignore-pipfile
     ```
+
+    This installs exact versions from `Pipfile.lock`, ensuring a reproducible environment.
 
 4. Activate the virtual environment:
 
@@ -87,7 +89,7 @@ The software is freely available for scientific and educational use, while comme
 5. Start the **Eleana** by running the main script:
 
     ```bash
-    python main.py
+    python3 main.py
     ```
 
 ### Without pipenv
@@ -98,5 +100,5 @@ If you prefer using `pip` directly clone the repo, enter **Eleana** directory, t
 python3 -m venv venv
 source venv/bin/activate  # or venv\Scripts\activate on Windows
 pip install -r requirements.txt
-python main.py
+python3 main.py
 ```

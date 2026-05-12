@@ -13,6 +13,12 @@ matplotlib = "*"
 scipy = "*"
 pyperclip = "*"
 colour = "*"
+tkinterdnd2 = "*"
+requests = "*"
+mplcursors = "*"
+rapidfuzz = "*"
+sympy = "*"
+lmfit = "*"
 
 [dev-packages]
 pygubu-designer = "*"
