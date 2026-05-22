@@ -2303,7 +2303,7 @@ class Application(MenuFileMixin,
         self.grapher.plot_graph()
 
     def invert_x_axis(self):
-        self.eleana.gui_state.inverted_x_axis = bool(self.check_invert_x.get())
+        self.eleana.gui_state.inverted_x = bool(self.check_invert_x.get())
         self.grapher.plot_graph()
 
     '''***********************************************
