@@ -4,6 +4,8 @@ import customtkinter as ctk
 import numpy as np
 import pygubu
 import string
+
+from core.Eleana import Eleana
 from lib.tksheet import Sheet
 from core.Error import Error
 from core.Observer import Observer
@@ -69,23 +71,49 @@ class EditDataclassInTable:
         return self.response
 
     def cancel(self, event = None):
+        if self.table is not None:
+            try:
+                self.table.extra_bindings("sheetmodified", None)
+            except Exception:
+                pass
+
+            try:
+                self.table.destroy()
+            except Exception:
+                pass
+
+            self.table = None
+
         self.eleana.dataset[self.original_index] = copy.deepcopy(self.original_copy)
         self.grapher.plot_graph(switch_cursors=False)
-
-
         self.response = None
 
         # Unregister observer
         self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
         self.eleana.detach(self.observer)
         self.observer = None
-
         self.mainwindow.destroy()
+        self.eleana.notify_on = False
 
     def run(self):
         self.mainwindow.mainloop()
 
     def ok(self):
+
+        if self.table is not None:
+            try:
+                self.table.extra_bindings("sheetmodified", None)
+            except Exception:
+                pass
+
+            try:
+                self.table.destroy()
+            except Exception:
+                pass
+
+            self.table = None
+
+
         # self.response = self.prepare_results()
         # if self.response is None:
         #     return
@@ -93,6 +121,7 @@ class EditDataclassInTable:
         self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
         self.eleana.detach(self.observer)
         self.observer = None
+
 
         self.mainwindow.destroy()
 
@@ -124,7 +153,9 @@ class EditDataclassInTable:
 
     def generate_table(self, headers, list2D):
         if self.table is not None:
+
             self.table.destroy()
+
         self.table = Sheet(self.tableFrame)
         self.table.set_sheet_data(list2D)
         self.table.headers(headers)
@@ -132,6 +163,18 @@ class EditDataclassInTable:
         self.table.change_theme(ctk.get_appearance_mode())
         self.table.enable_bindings("ctrl_select", "all", "right_click_popup_menu")
         self.table.extra_bindings("sheetmodified", self.on_cell_change)
+        self.table.dehighlight_all()
+
+
+        first = self.eleana.selections['first']
+        stk = self.eleana.selections['f_stk']
+        if self.eleana.dataset[first].type == "single 2D":
+            return
+        else:
+            col = 1 + stk
+            self.table.deselect('all')
+            self.table.highlight_columns(columns = [col], bg = "#6A6A6A", fg = None, highlight_header=True, redraw = True, overwrite=True)
+            self.table.see(column = col)
 
     def get_data_from_column(self, column_name):
         index = self.sel_x_axis._values.index(column_name)
@@ -148,6 +191,11 @@ class EditDataclassInTable:
         self.table.set_sheet_data([[None] * ncols] * nrows)
 
     def data_changed(self, variable, value):
+        if self.mainwindow is None or not self.mainwindow.winfo_exists():
+            return
+        if self.table is None:
+            return
+
         if variable != "grapher_action":
             if self.modifications:
                 dialog = CTkMessagebox(message = "The data has been modified. Do you want to accept the changes?", option_1 = "Decline", option_2 = "Accept")
@@ -159,8 +207,22 @@ class EditDataclassInTable:
         if variable == "first":
             self.get_dataset_for_table(which = 'first')
             self.modifications = False
-        else:
-            return
+        elif  variable == "f_stk":
+            first = self.eleana.selections['first']
+            stk = self.eleana.selections['f_stk']
+            if self.eleana.dataset[first].type == "single 2D":
+                return
+            else:
+                col = 1 + stk
+            self.table.dehighlight_all()
+            self.table.highlight_columns(columns=[col], bg="#6A6A6A", fg=None, highlight_header=True, redraw=True,
+                                     overwrite=True)
+            if self.table is not None:
+                try:
+                    self.table.see(column=col)
+                except Exception:
+                    return
+
 
     def get_dataset_for_table(self, which):
         ''' Get current data for table'''
@@ -225,10 +287,16 @@ class EditDataclassInTable:
 
         if col == 0:
             data = self.eleana.dataset[self.original_index].x
-        elif col == 1:
+        else:
             data = self.eleana.dataset[self.original_index].y
 
-        data[row] = value
+        if data.ndim == 1:
+            data[row] = value
+        elif data.ndim == 2:
+            data[row, col] = value
+        else:
+            Error.show(title = 'Array size error', info = "Array must be 1D or 2D.")
+            return
 
         self.modifications = True
 
