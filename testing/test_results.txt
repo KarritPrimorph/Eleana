@@ -28,4 +28,6 @@ FILE:
     Next ---> Edit, Find
 
 EDIT:
-    Data in table - not working for 2D stack
+    Edit data in table                          Nadal nie działa zmiana 2D
+    Create data from table                      OK
+    Edit parameters                             OK

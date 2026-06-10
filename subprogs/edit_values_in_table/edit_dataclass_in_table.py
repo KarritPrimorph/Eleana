@@ -65,6 +65,23 @@ class EditDataclassInTable:
 
         self.modifications = False
 
+        self.mainwindow.protocol('WM_DELETE_WINDOW', self.on_close_window)
+
+
+    def on_close_window(self):
+        if self.modifications:
+            dialog = CTkMessagebox(message="The data has been modified. Do you want to accept the changes?",
+                                   option_1="Decline", option_2="Accept")
+            response = dialog.get()
+            if response == 'Decline':
+                self.eleana.dataset[self.original_index] = self.original_copy
+                self.modifications = False
+                self.cancel(event = None)
+            else:
+                self.ok()
+        else:
+            self.cancel(event = None)
+
     def get(self):
         if self.mainwindow.winfo_exists():
            self.master.wait_window(self.mainwindow)
@@ -90,6 +107,7 @@ class EditDataclassInTable:
 
         # Unregister observer
         self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
+
         self.eleana.detach(self.observer)
         self.observer = None
         self.mainwindow.destroy()
@@ -118,11 +136,9 @@ class EditDataclassInTable:
         # if self.response is None:
         #     return
         # Unregister observer
-        self.mainwindow.protocol('WM_DELETE_WINDOW', lambda: None)
+
         self.eleana.detach(self.observer)
         self.observer = None
-
-
         self.mainwindow.destroy()
 
     def prepare_results(self):
@@ -196,7 +212,7 @@ class EditDataclassInTable:
         if self.table is None:
             return
 
-        if variable != "grapher_action":
+        if variable != "grapher_action" and variable != "f_stk":
             if self.modifications:
                 dialog = CTkMessagebox(message = "The data has been modified. Do you want to accept the changes?", option_1 = "Decline", option_2 = "Accept")
                 response = dialog.get()
@@ -293,7 +309,7 @@ class EditDataclassInTable:
         if data.ndim == 1:
             data[row] = value
         elif data.ndim == 2:
-            data[row, col] = value
+            data[col-1, row] = value
         else:
             Error.show(title = 'Array size error', info = "Array must be 1D or 2D.")
             return
