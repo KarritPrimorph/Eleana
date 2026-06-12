@@ -403,8 +403,9 @@ class MenuEditMixin:
         # Swap names and units
         name_x = data.parameters.get('name_z', '')
         name_z = data.parameters.get('name_x', '')
+        unit_z = data.parameters.get('unit_x', '')
         unit_x = data.parameters.get('unit_z', '')
-        unit_z = data.parameters.get('unit_z', '')
+
 
         stk_names = []
         for i in z_axis:

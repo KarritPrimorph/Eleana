@@ -20,14 +20,14 @@ FILE:
     Save As:                                    OK
     Save:                                       OK
     Import:                                     OK
-    Export:
-                (Group to folder not working)
-                 Export First | Export group - implement export when stack complex is present
+    Export:                                     OK
+
 
 
     Next ---> Edit, Find
 
 EDIT:
-    Edit data in table                          Nadal nie działa zmiana 2D
+    Edit data in table                          OK
     Create data from table                      OK
     Edit parameters                             OK
+    Transpose stack                             Unit in X axis is wrong after 2 transpositions
