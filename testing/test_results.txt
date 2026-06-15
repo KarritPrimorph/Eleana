@@ -30,4 +30,9 @@ EDIT:
     Edit data in table                          OK
     Create data from table                      OK
     Edit parameters                             OK
-    Transpose stack                             Unit in X axis is wrong after 2 transpositions
+    Stack 2D                                    OK
+    Copy                                        OK
+    Copy selected                               OK
+    Paste                                       OK
+    Delete selected data                        OK
+    CZy 

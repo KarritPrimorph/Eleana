@@ -59,7 +59,7 @@ class CTkListbox(customtkinter.CTkFrame):
         self.select_color = default_select if select_color == "default" else select_color
         self.font = ("Segoe UI", 10) if font == "default" else font
 
-        selectmode = tk.MULTIPLE if self.multiple else tk.SINGLE
+        selectmode = tk.EXTENDED if self.multiple else tk.SINGLE
 
         # -------------------------------------------------
         # INNER FRAME (margines wokół listy)
