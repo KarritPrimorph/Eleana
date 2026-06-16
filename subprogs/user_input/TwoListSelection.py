@@ -3,6 +3,7 @@
 from lib.CTkListbox import CTkListbox
 from subprogs.user_input.TwoListSelectionui import TwoListSelectionUI
 from subprogs.user_input.single_dialog import SingleDialog
+import tkinter as tk
 
 class TwoListSelection(TwoListSelectionUI):
     def __init__(self, master=None, title = "",
@@ -88,11 +89,8 @@ class TwoListSelection(TwoListSelectionUI):
 
     def get_all_elements(self, listbox):
         ''' Get all elements from listbox '''
-        elements = []
-        for i, button in enumerate(listbox.buttons):
-            elements.append(listbox.buttons[i]._text)
+        elements = list(listbox.get(index="all"))
         return elements
-
 
     def remove_from_list(self):
         all_elements = self.get_all_elements(self.list_of_selected)

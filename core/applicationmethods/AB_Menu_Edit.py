@@ -720,8 +720,6 @@ class MenuEditMixin:
 
         selected.insert(0, 'All')
         first = self.eleana.dataset[self.eleana.selections['first']]
-        #group_assign = Groupassign(master=self.mainwindow, eleana = self.eleana, which='first')
-        #response = group_assign.get()
         first.groups = selected
 
         self.update.group_list()
@@ -764,6 +762,7 @@ class MenuEditMixin:
 
         preferences = PreferencesApp(master = self.mainwindow, eleana = self.eleana, grapher = self.grapher)
         response = preferences.get()
+
 
     def rescan_dataset(self, show_errors = True):
 

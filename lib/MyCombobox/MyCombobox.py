@@ -14,6 +14,7 @@ class MyCombobox(customtkinter.CTkFrame):
         dropdown_width=None,
         dropdown_height=400,
         border_color=None,
+        text_color="#dddddd",
         command=None,
         fg_color="#505050",
         height=32
@@ -65,7 +66,8 @@ class MyCombobox(customtkinter.CTkFrame):
             textvariable=self.var,
             border_width=0,
             fg_color=fg_color,
-            corner_radius=0
+            corner_radius=0,
+            text_color=text_color
         )
 
         self.entry.pack(side="left", fill="both", expand=True, padx=(6,2))

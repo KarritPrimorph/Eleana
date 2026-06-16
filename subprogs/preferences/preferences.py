@@ -135,7 +135,6 @@ class PreferencesApp:
         self.mainwindow.destroy()
 
     def ok(self):
-        #self.response = {'gui_appearance':self.gui_appearence, 'color_theme':self.color_mode}
         self.eleana.settings.grapher['style_first'] = copy.deepcopy(self.style_first)
         self.eleana.settings.grapher['style_second'] = copy.deepcopy(self.style_second)
         self.eleana.settings.grapher['style_result'] = copy.deepcopy(self.style_result)
@@ -314,29 +313,13 @@ class PreferencesApp:
         self.style_result['color_im'] = color
         self.grapher.plot_graph()
 
-    # def select_color(self):
-    #     """
-    #     Opens the dialog window of color picker
-    #     """
-    #     print("master:", self.master)
-    #     print("winfo_viewable:", self.master.winfo_viewable())
-    #     self.mainwindow.attributes('-topmost', False)
-    #     ask_color = AskColor(master=self.master)
-    #     selected_color = ask_color.get()
-    #     self.mainwindow.attributes('-topmost', True)
-    #     return selected_color
-
     def select_color(self):
         """
         Opens the dialog window of color picker
         """
-        # Tworzymy AskColor jako Toplevel
         ask_color = AskColor(master=self.mainwindow)
         selected_color = ask_color.get()
-
-
         return selected_color
-
 
     def appearence(self, value):
         style = self.matplotlib_styles[value]
