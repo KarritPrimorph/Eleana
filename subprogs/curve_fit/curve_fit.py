@@ -92,7 +92,7 @@ STACK_SEP: bool = True
 # This is useful, if 'Group' is set to 'All' and summary data from table
 # are added to the dataset. THis prevents taking summary for further calculations.
 # self.subprog_settings['result_ignore']
-RESULT_IGNORE: bool = True
+RESULT_IGNORE: bool = False
 
 ''' RESULT DATA CONFIGURATION '''
 # Define if processed data should be created, added or replaced
@@ -259,9 +259,13 @@ class CurveFit(Methods, WindowGUI):
         ''' This method is called immediately when results
             for graph are ready but grapher canva has not been refreshed yet. '''
 
-    def after_ok_clicked(self):
+    def after_ok_clicked(self, **kwargs):
         ''' This method is called when all functions are
             finished after clicking 'Calculate' button. '''
+        for key, value in kwargs.items():
+            if key == 'status' and value == False:
+                Error.show(title = "Message", info = 'Fitting was unsuccessful. Change the initial parameters and try again')
+
 
     def after_process_group_clicked(self):
         ''' This method is called when all functions are
@@ -955,7 +959,6 @@ class CurveFit(Methods, WindowGUI):
         id_of_data = self.eleana.dataset[first].id
         name = self.eleana.dataset[first].name
         self.function_definition.fit_results['id_of_data'] = id_of_data
-        origin1 = "@result"
         parameters1['Target Curve ID'] = id_of_data
         parameters1['Target Curve Name'] = name
         parameters1['Fit Results'] = result.fit_report()

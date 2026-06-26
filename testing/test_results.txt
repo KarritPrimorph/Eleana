@@ -35,3 +35,4 @@ EDIT:
     Copy selected                               OK
     Paste                                       OK
     Delete selected data                        OK
+

@@ -704,6 +704,8 @@ class MenuEditMixin:
         if self.eleana.selections['first'] < 0:
             return
         groups = copy.copy(self.eleana.assignmentToGroups.get('<group-list/>', None))
+        idx = self.eleana.selections['first']
+        name = self.eleana.dataset[idx].name_nr
         if not groups:
             Error.show(title = 'Error in groups', info = "def first_to_groups: groups not found")
 
@@ -712,7 +714,8 @@ class MenuEditMixin:
                                     master = self.mainwindow,
                                     right_label="Assigned to groups",
                                   items = groups,
-                                  disable_new = False
+                                  disable_new = False,
+                                  title = name
                                   )
         selected = dialog.get()
         if not selected:
@@ -738,12 +741,15 @@ class MenuEditMixin:
         if not groups:
             Error.show(title='Error in groups', info="def first_to_groups: groups not found")
 
+        idx = self.eleana.selections['second']
+        name = self.eleana.dataset[idx].name_nr
         groups.remove('All')
         dialog = TwoListSelection(left_label="Available groups",
                                   master=self.mainwindow,
                                   right_label="Assigned to groups",
                                   items=groups,
-                                  disable_new=False
+                                  disable_new=False,
+                                  title = name
                                   )
         selected = dialog.get()
         if not selected:

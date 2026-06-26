@@ -420,28 +420,40 @@ class SubMethods_07:
         self.set_mouse_state(state='watch')
 
         try:
-            self.start_single_calculations(calculate=calculate)
-            self.after_ok_clicked()
+            status = self.start_single_calculations(calculate=calculate)
+            if status is False:
+                return False
 
             if calculate:
                 self.show_results_matching_first()
+        except:
+            status = False
 
-        finally:
-            self.eleana.busy = False
-            self.set_mouse_state(state='')
+        self.after_ok_clicked(status=status)
+        self.eleana.busy = False
+        self.set_mouse_state(state='')
 
-            # --- SAFE CLEANUP ---
+        # --- SAFE CLEANUP ---
+
+        try:
             if self.original_data1 is not None:
                 self.original_data1.clear()
                 self.original_data1 = None
+        except:
+            pass
 
+        try:
             if self.original_data2 is not None:
                 self.original_data2.clear()
                 self.original_data2 = None
+        except:
+            pass
 
-            if isinstance(self.data_for_calculations, list) and calculate:
-                self.data_for_calculations.clear()
-                self.data_for_calculations = None
+        if isinstance(self.data_for_calculations, list) and calculate:
+            self.data_for_calculations.clear()
+            self.data_for_calculations = None
+
+        return status
 
     def process_group_clicked(self, calculate = True):
         ''' [-Process Group-] button
@@ -509,7 +521,8 @@ class SubMethods_07:
         self.skip_next_error = False
         status = self.get_data()
         if status:
-            self.perform_single_calculations(group_processing=False, calculate = calculate)
+            result = self.perform_single_calculations(group_processing=False, calculate = calculate)
+            return result
 
     def perform_single_calculations(self, calculate, group_processing=False):
         ''' Prepares for calculations of single data selected in First or Second
@@ -586,7 +599,7 @@ class SubMethods_07:
                         self.data_label.configure(text=name)
                         if group_processing == False:
                             self.app.mainwindow.update()
-                    status = self.do_calc_stk_data()
+                    status = self.do_calc_stk_data(calculate = True)
                     if status:
                         self.consecutive_number += 1
                         self.stk_index += 1
@@ -1644,7 +1657,7 @@ class SubMethods_07:
     def after_result_show_on_graph(self):
         return
 
-    def after_ok_clicked(self):
+    def after_ok_clicked(self, **kwargs):
         return
 
     def after_process_group_clicked(self):
