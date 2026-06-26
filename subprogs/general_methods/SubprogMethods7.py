@@ -421,7 +421,7 @@ class SubMethods_07:
 
         try:
             status = self.start_single_calculations(calculate=calculate)
-            if status is False:
+            if not status:
                 return False
 
             if calculate:

@@ -189,7 +189,7 @@ class Function:
         """
 
         if not self.validated:
-            if non_negativeself.eleana.devel_mode:
+            if self.eleana.devel_mode:
                 print("Please, validate function first.")
             return None
 
@@ -338,6 +338,11 @@ class Function:
             return float(value)
 
         # Build model and parameters object
+        try:
+            self.prepare_equation()
+        except Exception as e:
+            print(e)
+
         model = ExpressionModel(self.equation, independent_vars=[self.variable])
         params = model.make_params()
 

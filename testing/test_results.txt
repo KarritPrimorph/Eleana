@@ -36,3 +36,6 @@ EDIT:
     Paste                                       OK
     Delete selected data                        OK
 
+ANALYSIS:
+    Curve Fit   - Przy próbie fitowania np. Gaussa pojawia się błąd w def calculate: model, params = self.function_definition.build_lmfit_model()
+                    Problem pojawia się przy próbie przygotowanie self.equation do Expression model. Raz działa a ale w większości nie. Cos losowo
