@@ -39,3 +39,11 @@ EDIT:
 ANALYSIS:
     Curve Fit   - Przy próbie fitowania np. Gaussa pojawia się błąd w def calculate: model, params = self.function_definition.build_lmfit_model()
                     Problem pojawia się przy próbie przygotowanie self.equation do Expression model. Raz działa a ale w większości nie. Cos losowo
+
+                    W procedurze: def validate_function w pliku curve_fit.py jest linijka
+
+                    # Create the table for initail guesses
+                    self.create_initial_guesses_list()
+
+                    Po niej w tabeli initial_guesses wartosci max robią się -Inf i stąd ten bląd
+                    Dzieje sie tak wtedy gdy ręcznie wybierzemy Validate

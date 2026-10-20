@@ -643,7 +643,7 @@ class CurveFit(Methods, WindowGUI):
             entry_min.grid(row=i, column=0, padx=2, pady=2, sticky="we")
             self.table_widgets['min'].append(entry_min)
 
-            value_max = self.function_definition.minimum.get(param, float(np.inf))
+            value_max = self.function_definition.maximum.get(param, float(np.inf))
             entry_max.delete(0, "end")
             entry_max.insert(0, value_max)
             entry_max.grid(row=i, column=0, padx=2, pady=2, sticky="we")

@@ -202,6 +202,8 @@ class Function:
         variable = sympy.Symbol(variable or self.variable)
         param_symbols = [sympy.Symbol(name) for name in self.parameters]
 
+        self.prepare_equation()
+
         # Create symbolic expression
         expr = sympy.sympify(self.equation)
 
@@ -292,7 +294,7 @@ class Function:
             self.nonnegative_parameters = function_json.get('Non-negative', []),
             self.validated=function_json.get('Validated', False)
             return self
-        except:
+        except Exception as e:
             Error.show(title='Load user functions', info='The file is not compatible with Eleana function format.', details=e)
             return False
 
@@ -307,7 +309,7 @@ class Function:
                                   master = master,
                                   column_names=headers,
                                   complex=False,
-                                    spreadsheet = rows
+                                  spreadsheet = rows
                                   )
         response = table.get()
     # ------------------
@@ -342,6 +344,8 @@ class Function:
             self.prepare_equation()
         except Exception as e:
             print(e)
+
+        #self.prepare_equation()
 
         model = ExpressionModel(self.equation, independent_vars=[self.variable])
         params = model.make_params()

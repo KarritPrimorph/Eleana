@@ -426,7 +426,8 @@ class SubMethods_07:
 
             if calculate:
                 self.show_results_matching_first()
-        except:
+        except Exception as e:
+            print(e)
             status = False
 
         self.after_ok_clicked(status=status)
