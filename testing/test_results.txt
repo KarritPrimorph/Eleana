@@ -47,3 +47,6 @@ ANALYSIS:
 
                     Po niej w tabeli initial_guesses wartosci max robią się -Inf i stąd ten bląd
                     Dzieje sie tak wtedy gdy ręcznie wybierzemy Validate
+
+                    NAPRAWIONE
+

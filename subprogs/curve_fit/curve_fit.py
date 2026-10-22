@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # IMPORT MODULES NEEDED
 import customtkinter as ctk
-
+import tkinter as tk
 from lib.CTkMessagebox import CTkMessagebox
 from lib.CTkSpinbox.CTkSpinbox import CTkSpinbox
 import numpy as np
@@ -1074,15 +1074,21 @@ class CurveFit(Methods, WindowGUI):
         if category:
             if category == 'User defined':
                 self.list_category.activate(0)
+                self.list_category.deactivate(1)
             elif category == 'Built-in functions':
                 self.list_category.activate(1)
+                self.list_category.deactivate(0)
             self.category_selected(category)
+
 
         val = self.restore('list_function')
         if val:
-            function_list = [btn.cget("text") for btn in self.list_function.buttons.values()]
+            #function_list = [btn.cget("text") for btn in self.list_function.buttons.values()]
+            function_list = self.list_function.get("all")
             if val in function_list:
-                self.list_function.activate(val)
+                index = function_list.index(val)
+                self.list_function.activate(index)
+                self.function_selected(val)
 
         val = self.restore('preview')
         if val is True or val is None:
