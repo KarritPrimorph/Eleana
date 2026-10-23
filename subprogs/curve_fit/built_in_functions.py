@@ -525,7 +525,7 @@ class BuiltInFunctions:
          },
 
         {'Name': "Gauss Derivative",
-         'Equation_text': 'a*(2*center-2*x)/(2*width^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*width^2))',
+         'Equation_text': 'a*(2*center-2*x)/(2*width^3*sqrt(2*@PI))*exp(-((x-center)^2)/(2*width^2))',
          'Variable': 'x',
          'Parameters': ['a', 'center', 'width'],
          'InitVals': {'a': 1, 'center': 0, 'width': 1},
@@ -535,10 +535,20 @@ class BuiltInFunctions:
          },
 
         {'Name': "Pseudo Voigt Derivative",
-         'Equation_text': 'ag*(2*center-2*x)/(2*wg^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*wg^2))+al*(2*center-2*x)/(2*wl^3*sqrt(2*$pi))*exp(-((x-center)^2)/(2*wl^2))',
+         'Equation_text': 'ag*(2*center-2*x)/(2*wg^3*sqrt(2*@PI))*exp(-((x-center)^2)/(2*wg^2))+al*(2*center-2*x)/(2*wl^3*sqrt(2*@PI))*exp(-((x-center)^2)/(2*wl^2))',
          'Variable': 'x',
          'Parameters': ['ag', 'al', 'wg', 'wl', 'center'],
          'InitVals': {'ag': 1, 'al' : 1, 'wg': 1, 'wl': 1, 'center': 0},
+         'Min': {},
+         'Max': {},
+         'Validated': True
+         },
+
+        {'Name': "Michaelis-Menten Kinetics",
+         'Equation_text': 'Vmax*x/(Km+x)',
+         'Variable': 'x',
+         'Parameters': ['Vmax', 'Km'],
+         'InitVals': {'Vmax': 10, 'Km': 1},
          'Min': {},
          'Max': {},
          'Validated': True
