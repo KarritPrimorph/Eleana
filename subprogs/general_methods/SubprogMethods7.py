@@ -422,17 +422,18 @@ class SubMethods_07:
         try:
             status = self.start_single_calculations(calculate=calculate)
             if not status:
-                return False
+                self.set_mouse_state()
+                return status
 
             if calculate:
                 self.show_results_matching_first()
         except Exception as e:
             print(e)
-            status = False
+            status = None
 
         self.after_ok_clicked(status=status)
         self.eleana.busy = False
-        self.set_mouse_state(state='')
+        self.set_mouse_state()
 
         # --- SAFE CLEANUP ---
 

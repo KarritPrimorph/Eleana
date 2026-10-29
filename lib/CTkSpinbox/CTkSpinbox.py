@@ -242,11 +242,14 @@ class CTkSpinbox(ctk.CTkFrame):
             self.scroll_value = float(self.counter_var.get()) * self.fractional_change
         if self.update_timer:
             self.update_timer.cancel()
+
         self.update_timer = threading.Timer(self.wait_for, self.update_counter, [None])
         self.update_timer.start()
 
-        if self.command is not None:
-            self.command()
+        # Fixing double execution upon triggering scroll
+
+        # if self.command is not None:
+        #     self.command()
 
 
     def get(self):

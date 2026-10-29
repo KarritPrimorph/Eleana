@@ -17,6 +17,7 @@ from core.Error import Error
 from subprogs.user_input.single_dialog import SingleDialog
 from subprogs.notepad.notepad import Notepad
 
+
 ''' GENERAL SETTINGS '''
 # If True all active subprog windows will be closed on start this subprog
 CLOSE_SUBPROGS: bool = False
@@ -678,6 +679,7 @@ class CurveFit(Methods, WindowGUI):
         ''' Called when function values, parameters or anything in GUI changes'''
 
         if self._rebuilding_table:
+
             return
 
         if self.eleana.selections['first'] < 0:
@@ -698,11 +700,15 @@ class CurveFit(Methods, WindowGUI):
     def create_preview(self, x_vals):
         ''' Create temporary plot showing function defined in self.function_definition '''
 
+        if self.eleana.devel_mode:
+            print("ENTER create_preview")
 
         self.collect_values_from_table()
         x = np.asarray(x_vals)
-        y = self.function_definition.evaluate(x_vals=x)
+        if self.eleana.devel_mode:
+            print("ENTER evaluate")
 
+        y = self.function_definition.evaluate(x_vals=x)
         self.add_to_additional_plots(x=x, y=y, clear=True)
         self.grapher.plot_graph()
 
@@ -1083,7 +1089,6 @@ class CurveFit(Methods, WindowGUI):
 
         val = self.restore('list_function')
         if val:
-            #function_list = [btn.cget("text") for btn in self.list_function.buttons.values()]
             function_list = self.list_function.get("all")
             if val in function_list:
                 index = function_list.index(val)

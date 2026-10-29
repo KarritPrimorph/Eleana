@@ -31,3 +31,4 @@ sympy==1.14.0; python_version >= '3.9'
 tkinterdnd2==0.4.3; python_version >= '3.6'
 uncertainties==3.2.3; python_version >= '3.8'
 urllib3==2.7.0; python_version >= '3.10'
+numexpr >= 2.14;
