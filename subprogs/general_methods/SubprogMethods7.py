@@ -430,6 +430,9 @@ class SubMethods_07:
         except Exception as e:
             print(e)
             status = None
+            self.eleana.busy = False
+            self.set_mouse_state()
+            return status
 
         self.after_ok_clicked(status=status)
         self.eleana.busy = False

@@ -197,7 +197,7 @@ class MenuFileMixin:
         ''' Shimadzu '''
 
         try:
-            self.load.loadShimadzuSPC(filenames = [filename])
+            self.load.loadShimadzuSPC(filenames = filename)
             self.update.dataset_list()
             self.update.all_lists()
             self.eleana.save_paths()

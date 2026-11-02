@@ -83,7 +83,7 @@ USE_SECOND: bool = False
 IGNORE_DIMENSIONS: bool = True
 
 # If each subspectrum in a Stack 2D can be processed separately set this to True
-# When the calculations requires all data fro the stack in x and y set this  to False
+# When the calculations requires all data from the stack in x and y set this  to False
 # If False then the method 'calculate_stack must contain appropriate method
 # self.stack_sep
 STACK_SEP: bool = True
@@ -700,13 +700,13 @@ class CurveFit(Methods, WindowGUI):
     def create_preview(self, x_vals):
         ''' Create temporary plot showing function defined in self.function_definition '''
 
-        if self.eleana.devel_mode:
-            print("ENTER create_preview")
+        # if self.eleana.devel_mode:
+        #     print("ENTER create_preview")
 
         self.collect_values_from_table()
         x = np.asarray(x_vals)
-        if self.eleana.devel_mode:
-            print("ENTER evaluate")
+        # if self.eleana.devel_mode:
+        #     print("ENTER evaluate")
 
         y = self.function_definition.evaluate(x_vals=x)
         self.add_to_additional_plots(x=x, y=y, clear=True)
