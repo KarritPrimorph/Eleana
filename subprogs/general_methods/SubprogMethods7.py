@@ -539,11 +539,14 @@ class SubMethods_07:
         skip_report_show = True
         extract_from_2D = False
         #self.set_mouse_state("watch")
+
         # Create result_dataset if add or replace is set
         mode = self.subprog_settings.get('result')
         if mode == 'add' or mode == 'dataset' and calculate:
-            # Simply add the result to the eleana.results_dataset
-            self.result_data = copy.deepcopy(self.original_data1)
+            if self.stack_sep is None and self.original_data1.y.ndim == 2:
+                self.result_data = self.original_data1.extract(self.eleana.selections['first'])
+            else:
+                self.result_data = copy.deepcopy(self.original_data1)
 
             # Extract data from selections:
             # Only if ORIG_IN_ODD_IDX is False.
@@ -559,12 +562,20 @@ class SubMethods_07:
 
         elif mode == 'replace' and calculate:
             # The replace mode was set
-            self.result_data = copy.deepcopy(self.original_data1)
+            if self.stack_sep is None and self.original_data1.y.ndim == 2:
+                self.result_data = self.original_data1.extract(self.eleana.selections['f_stk'])
+            else:
+                self.result_data = copy.deepcopy(self.original_data1)
+
+
             self.result_data.name = self.result_data.name + self.subprog_settings.get('name_suffix', '')
 
             if len(self.eleana.results_dataset) == 0:
                 # Results_dataset is empty so new_result must be added
-                self.result_data = copy.deepcopy(self.original_data1)
+                # if self.stack_sep is None and self.original_data1.y.ndim == 2:
+                #     self.result_data = self.original_data1.extract(self.eleana.selections['f_stk'])
+                # else:
+                #     self.result_data = copy.deepcopy(self.original_data1)
 
                 # Extract data from selections:
                 if not self.regions.get('orig_in_odd_idx'):
@@ -622,6 +633,8 @@ class SubMethods_07:
                     self.data_label.configure(text=self.original_data1.name_nr)
                     if group_processing == False:
                         self.app.mainwindow.update()
+
+
                 status = self.do_calc_single2D(calculate=calculate, extract_from_2D=True)
                 if status:
                     self.consecutive_number += 1
@@ -1023,7 +1036,6 @@ class SubMethods_07:
                 Error.show(title=name1, info=self.subprog_cursor.get('cursor_outside_text'))
             return False
 
-
         if isinstance(row_to_report, list):
             if self.report['create']:
                 self.add_to_report(row=row_to_report)
@@ -1343,7 +1355,7 @@ class SubMethods_07:
         # Calculate index where spectrum must be inserted:
         results_dataset = self.eleana.results_dataset
         list_of_results = [obj.name for obj in results_dataset]
-        new_result = copy.deepcopy(self.original_data1)
+        new_result = copy.deepcopy(self.result_data)
         new_result.x = copy.copy(self.data_for_calculations[0]['x'])
         new_result.y = copy.copy(self.data_for_calculations[0]['y'])
         new_result.z = copy.copy(self.data_for_calculations[0]['z'])
@@ -1354,7 +1366,18 @@ class SubMethods_07:
         new_result.comment = copy.copy(self.data_for_calculations[0]['comment'])
         new_result.parameters = copy.copy(self.data_for_calculations[0]['parameters'])
 
-        if self.stk_index == -1 and results_dataset:
+        # new_result = copy.deepcopy(self.original_data1)
+        # new_result.x = copy.copy(self.data_for_calculations[0]['x'])
+        # new_result.y = copy.copy(self.data_for_calculations[0]['y'])
+        # new_result.z = copy.copy(self.data_for_calculations[0]['z'])
+        # new_result.name = copy.copy(self.data_for_calculations[0]['name'])
+        # new_result.complex = copy.copy(self.data_for_calculations[0]['complex'])
+        # new_result.type = copy.copy(self.data_for_calculations[0]['type'])
+        # new_result.origin = copy.copy(self.data_for_calculations[0]['origin'])
+        # new_result.comment = copy.copy(self.data_for_calculations[0]['comment'])
+        # new_result.parameters = copy.copy(self.data_for_calculations[0]['parameters'])
+
+        if (self.stk_index == -1 or self.stack_sep is None) and results_dataset:
             results_dataset[-1].x = new_result.x
             results_dataset[-1].y = new_result.y
             results_dataset[-1].z = new_result.z
@@ -1366,10 +1389,11 @@ class SubMethods_07:
             results_dataset[-1].parameters = new_result.parameters
             results_dataset[-1].comment = new_result.comment
 
-        elif self.stk_index == -1 and not results_dataset:
+        elif (self.stk_index == -1 or self.stack_sep is None) and not results_dataset:
             results_dataset.append(new_result)
 
-        elif self.stk_index >= 0:
+
+        elif self.stk_index >= 0 and self.stack_sep is not None:
             index_in_result = len(results_dataset) - 1
             if self.stk_index <= len(results_dataset[index_in_result].y) - 1:
                 results_dataset[index_in_result].y[self.stk_index] = copy.deepcopy(new_result.y)

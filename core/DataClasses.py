@@ -159,6 +159,25 @@ class BaseDataModel:
         else:
             return []
 
+    def extract(self, stk_index):
+        if not self.is_stack():
+            return None
+
+        new_data = None
+        if self.stk_names is not None:
+            stk_name = self.stk_names[stk_index]
+            new_name = f"{self.name}'/'{stk_name}"
+            new_data = BaseDataModel(
+                name=new_name,
+                x=self.x.copy(),
+                y=self.y[stk_index].copy(),
+                parameters=self.parameters.copy(),
+                type='single 2D',
+                complex=self.complex,
+                groups=self.groups.copy(),
+            )
+        return new_data
+
     def remove_from_stack_by_index(self, index: int):
         if self.is_stack():
             self.y = np.delete(self.y, index, axis=0)
