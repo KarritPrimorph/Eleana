@@ -429,7 +429,7 @@ class SubMethods_07:
                 self.show_results_matching_first()
         except Exception as e:
             print(e)
-            status = None
+            status = False
             self.eleana.busy = False
             self.set_mouse_state()
             return status
@@ -537,6 +537,7 @@ class SubMethods_07:
         '''
 
         skip_report_show = True
+        extract_from_2D = False
         #self.set_mouse_state("watch")
         # Create result_dataset if add or replace is set
         mode = self.subprog_settings.get('result')
@@ -590,11 +591,11 @@ class SubMethods_07:
         if self.original_data1.type.lower() == 'stack 2D' or is_2D:
             # This is stack 2D then check if stack is calculated as separate data
             self.stk_index = 0
-            if not self.stack_sep:
+            if self.stack_sep is False:
                 status = self.stack_calc(calculate = calculate)  # Prepare the whole stack for calculations
                 if not status:
                     return status
-            else:
+            elif self.stack_sep is True:
                 # Single data but it is a stack that use separate calculations
                 # Iterate over stk
                 name_nr = self.original_data1.name_nr + self.subprog_settings.get('name_suffix', '')
@@ -604,7 +605,7 @@ class SubMethods_07:
                         self.data_label.configure(text=name)
                         if group_processing == False:
                             self.app.mainwindow.update()
-                    status = self.do_calc_stk_data(calculate = True)
+                    status = self.do_calc_stk_data(calculate = calculate)
                     if status:
                         self.consecutive_number += 1
                         self.stk_index += 1
@@ -614,6 +615,22 @@ class SubMethods_07:
                 self.stk_index = -1
                 #self.set_mouse_state("")
                 skip_report_show = self.report.get('report_skip_for_stk', False)
+
+            else:
+                # STACK_SEP is None - take only the selected subset
+                if self.data_label is not None:
+                    self.data_label.configure(text=self.original_data1.name_nr)
+                    if group_processing == False:
+                        self.app.mainwindow.update()
+                status = self.do_calc_single2D(calculate=calculate, extract_from_2D=True)
+                if status:
+                    self.consecutive_number += 1
+                else:
+                    return status
+                skip_report_show = True
+                if group_processing == False:
+                    self.show_results_matching_first()
+
 
         # Single data that is not a stack
         elif self.original_data1.type.lower() == 'single 2D' or not is_2D:
@@ -850,24 +867,40 @@ class SubMethods_07:
         self.create_result()
         return True
 
-    def do_calc_single2D(self, calculate):
+    def do_calc_single2D(self, calculate, extract_from_2D = False):
         ''' Gets data from original_data1 and original_data2 and send
             to calculate
         '''
         # Clear current working data and prepare result if needed:
         self.data_for_calculations = []
 
-        # Get data from self.original_data1
-        x_data1 = copy.copy(self.original_data1.x)
-        y_data1 = copy.copy(self.original_data1.y)
-        z_data1 = copy.copy(self.original_data1.z)
-        name1 = copy.copy(self.original_data1.name)
-        complex1 = copy.copy(self.original_data1.complex)
-        datatype1 = copy.copy(self.original_data1.type)
-        origin1 = copy.copy(self.original_data1.origin)
-        comment1 = copy.copy(self.original_data1.comment)
-        parameters1 = copy.deepcopy(self.original_data1.parameters)
-        id1 = copy.copy(self.original_data1.id)
+        if extract_from_2D:
+            # Get data from self.original_data1 2D
+            x_data1 = copy.copy(self.original_data1.x)
+            y_data1 = copy.copy(self.original_data1.y[self.stk_index])
+            z_data1 = copy.copy(self.original_data1.z)
+            name1 = copy.copy(self.original_data1.name)
+            stk_name = copy.copy(self.original_data1.stk_names[self.stk_index])
+            name1 = name1 + "/" + stk_name
+            complex1 = copy.copy(self.original_data1.complex)
+            datatype1 = copy.copy("single2D")
+            origin1 = copy.copy(self.original_data1.origin)
+            comment1 = copy.copy(self.original_data1.comment)
+            parameters1 = copy.deepcopy(self.original_data1.parameters)
+            id1 = copy.copy(self.original_data1.id)
+
+        else:
+            # Get data from self.original_data1
+            x_data1 = copy.copy(self.original_data1.x)
+            y_data1 = copy.copy(self.original_data1.y)
+            z_data1 = copy.copy(self.original_data1.z)
+            name1 = copy.copy(self.original_data1.name)
+            complex1 = copy.copy(self.original_data1.complex)
+            datatype1 = copy.copy(self.original_data1.type)
+            origin1 = copy.copy(self.original_data1.origin)
+            comment1 = copy.copy(self.original_data1.comment)
+            parameters1 = copy.deepcopy(self.original_data1.parameters)
+            id1 = copy.copy(self.original_data1.id)
 
         # Extract the data in x and y if needed
         x_data1, y_data1 = self.extract_region_xy(x=x_data1, y=y_data1)
@@ -893,9 +926,17 @@ class SubMethods_07:
 
         # Add non extracted data if ORIG_IN_ODD_IDX is True
         if self.regions.get('orig_in_odd_idx'):
-            x_data1_orig = copy.copy(self.original_data1.x)
-            y_data1_orig = copy.copy(self.original_data1.y)
-            z_data1_orig = copy.copy(self.original_data1.z)
+            if extract_from_2D:
+                x_data1_orig = copy.copy(self.original_data1.x)
+                y_data1_orig = copy.copy(self.original_data1.y[self.stk_index])
+                z_data1_orig = copy.copy(self.original_data1.z)
+
+            else:
+                x_data1_orig = copy.copy(self.original_data1.x)
+                y_data1_orig = copy.copy(self.original_data1.y)
+                z_data1_orig = copy.copy(self.original_data1.z)
+
+
             data_1_orig = {'x': x_data1_orig,
                            'y': y_data1_orig,
                            'z': z_data1_orig,
@@ -912,6 +953,7 @@ class SubMethods_07:
             del data_1_orig
 
         if self.use_second:
+
             # Check if the second selected data is single 2D
             is_2D = self.original_data2.y.ndim == 2
             if self.original_data2.type.lower() != 'single 2D' or is_2D != 2:
@@ -972,7 +1014,7 @@ class SubMethods_07:
         # Go to calculate function
 
         if calculate is False:
-            return
+            return None
         row_to_report = self.calculate()
         # Check if cursors are within (x,y) of x_data1 and y_data1
         status = self.check_cursor_bounds(x=x_data1, y=y_data1)

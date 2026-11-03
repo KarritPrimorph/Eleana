@@ -85,13 +85,14 @@ IGNORE_DIMENSIONS: bool = True
 # If each subspectrum in a Stack 2D can be processed separately set this to True
 # When the calculations requires all data from the stack in x and y set this  to False
 # If False then the method 'calculate_stack must contain appropriate method
+# If None then only the currently selected subset of data is taken for calculations and only this one will have results
 # self.stack_sep
-STACK_SEP: bool = True
+STACK_SEP: bool = None
 
 # If this is True, data containing the parameter 'origin':@result
 # will be ignored for calculations.
 # This is useful, if 'Group' is set to 'All' and summary data from table
-# are added to the dataset. THis prevents taking summary for further calculations.
+# are added to the dataset. This prevents taking summary for further calculations.
 # self.subprog_settings['result_ignore']
 RESULT_IGNORE: bool = False
 
@@ -693,9 +694,10 @@ class CurveFit(Methods, WindowGUI):
 
         preview = self.preview_checkbox.get()
         if preview and self.function_definition.validated:
-            self.ok_clicked(calculate=False)
-            x1 = self.data_for_calculations[0]['x']
-            self.create_preview(x_vals=x1)
+            status = self.ok_clicked(calculate=False)
+            if status is not False:
+                x1 = self.data_for_calculations[0]['x']
+                self.create_preview(x_vals=x1)
 
     def create_preview(self, x_vals):
         ''' Create temporary plot showing function defined in self.function_definition '''
