@@ -295,7 +295,7 @@ class TrimData(Methods, WindowGUI):
         else:
             self.switch.configure(text="Delete selection")
 
-    def calculate_stack(self, commandline = False):
+    def calculate_stack(self, commandline = False, **kwargs):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
 
@@ -347,7 +347,7 @@ class TrimData(Methods, WindowGUI):
             self.data_for_calculations[0]['x'] = x1_orig[indexes]
             self.data_for_calculations[0]['y'] = y1_calc
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:

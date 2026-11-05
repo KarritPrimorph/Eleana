@@ -537,7 +537,7 @@ class SubMethods_07:
         '''
 
         skip_report_show = True
-        extract_from_2D = False
+
         #self.set_mouse_state("watch")
 
         # Create result_dataset if add or replace is set
@@ -872,7 +872,7 @@ class SubMethods_07:
             self.data_for_calculations.append(None)
         # Go to calculate function
         if calculate:
-            row_to_report = self.calculate()
+            row_to_report = self.calculate(calculate = calculate)
         # Update data and report
         if isinstance(row_to_report, list):
             if self.report['create']:

@@ -300,7 +300,7 @@ class EPR_B_to_g(Methods, WindowGUI):                                           
         elif not selection:
             self.switch_Btog.configure(text='magnetic field to g value')
 
-    def calculate_stack(self, commandline = False):
+    def calculate_stack(self, commandline = False, **kwargs):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
 
@@ -349,7 +349,7 @@ class EPR_B_to_g(Methods, WindowGUI):                                           
 
 
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:

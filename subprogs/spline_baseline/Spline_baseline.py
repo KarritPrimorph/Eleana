@@ -312,7 +312,7 @@ class SplineBaseline(Methods, WindowGUI):                                       
             self.interpolate_method = "barycentric"
 
 
-    def calculate_stack(self, commandline = False):
+    def calculate_stack(self, commandline = False, **kwargs):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
 
@@ -347,7 +347,7 @@ class SplineBaseline(Methods, WindowGUI):                                       
             parameters2 = self.data_for_calculations[1]['parameters']
         # ------------------------------------------
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:

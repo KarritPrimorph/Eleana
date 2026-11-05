@@ -144,7 +144,7 @@ class IntegrateRegion(Methods, WindowGUI):
     def set_double_integration(self):
         pass
 
-    def calculate_stack(self, commandline = False):
+    def calculate_stack(self, commandline = False, **kwargs):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
             '''
@@ -179,7 +179,7 @@ class IntegrateRegion(Methods, WindowGUI):
         row_to_report = [self.consecutive_number, name1, '', '', '', '']
         return row_to_report
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:

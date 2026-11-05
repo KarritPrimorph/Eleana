@@ -303,7 +303,7 @@ class SetZeroOnX(Methods, WindowGUI):
         else:
             self.subprog_settings['result'] = 'replace'
 
-    def calculate_stack(self, commandline = False):
+    def calculate_stack(self, commandline = False, **kwargs):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
 
@@ -353,7 +353,7 @@ class SetZeroOnX(Methods, WindowGUI):
 
         return row_to_report
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:

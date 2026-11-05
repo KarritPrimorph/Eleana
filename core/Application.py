@@ -250,7 +250,7 @@ class Application(MenuFileMixin,
         )
         self.sel_result.set(value='None')
         # RESULT STK
-        self.r_stk = MyCombobox(master=self.resultStkFrame, values=['None'], command=self.result_selected, width=200,
+        self.r_stk = MyCombobox(master=self.resultStkFrame, values=['None'], command=self.r_stk_selected, width=200,
                                      border_color="#3c9b59")
         self.r_stk.grid(
             row=1,
@@ -676,7 +676,6 @@ class Application(MenuFileMixin,
             self.group_selected(selection)
             self.sel_group.set(selection)
         self.mainwindow.focus_set()
-
 
     def set_pane_height(self):
         self.mainwindow.update_idletasks()

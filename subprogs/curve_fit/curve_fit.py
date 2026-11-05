@@ -87,7 +87,7 @@ IGNORE_DIMENSIONS: bool = True
 # If False then the method 'calculate_stack must contain appropriate method
 # If None then only the currently selected subset of data is taken for calculations and only this one will have results
 # self.stack_sep
-STACK_SEP: bool = None
+STACK_SEP: bool = True
 
 # If this is True, data containing the parameter 'origin':@result
 # will be ignored for calculations.
@@ -106,7 +106,7 @@ RESULT_CREATE: str = 'replace'  # Replace the data in result with new results
 ''' REPORT SETTINGS '''
 # Define if a report should be created. Reports contain summary of calculations, values etc.
 # self.report['create']
-REPORT_CREATE: bool = False
+REPORT_CREATE: bool = True
 
 # Results of Stack data usually requires separate calculations for each data in the stack.
 # Hence this often requires summary of calculation as a Table.
@@ -118,33 +118,29 @@ REPORT_SKIP_FOR_STK: bool = False
 # self.report['report_window_title']
 REPORT_WINDOW_TITLE: str = 'Results of distance measurements'
 
-# Report headers is the list of srtings that contains HEADERS of the table
+# Report headers is the list of strings that contains HEADERS of the table
 # in which the results of calculations are shown.
 # self.report['headers']
 # Here is an example:
 REPORT_HEADERS: list = ['Nr',
-                  'Name',
-                  'X1',
-                  'X2',
-                  'dX',
-                  'Y1',
-                  'Y2',
-                  'dY']
+                  'Stack subset',
+                  'Fit Results',
+                  ]
 
 # Index in REPORT_HEADERS that defines a column to create default X axis.
 # This can be manually changed when the report is displayed.
 # self.report['default_x']
 # Example: 2 means that column 'X1' is taken as default X
-REPORT_DEFAULT_X: int = 2
+REPORT_DEFAULT_X: int = 0
 
 # The same as X but for Y axis.
 # self.report['default_y']
 # Example: 7 - dY column is set as default Y
-REPORT_DEFAULT_Y: int = 7
+REPORT_DEFAULT_Y: int = 2
 
 # The default name of data, that will be used after Add to dataset.
 # self.report['report_name']
-REPORT_NAME: str = "Distance measurements"
+REPORT_NAME: str = "Fitting Results"
 
 # Default name of X axis for report data
 # self.report['x_name']
@@ -293,7 +289,7 @@ class CurveFit(Methods, WindowGUI):
         #self.mainwindow =
 
         # Function definition:
-        self.show_errors = {'complex_error_show' : True}
+        self.show_errors = {'complex_error_show' : True, 'CI failure': True}
 
         self.built_in_functions = BuiltInFunctions()
         self.user_defined_functions = UserDefinedFunctions(store_file=self.eleana.paths['storage_dir'])
@@ -337,6 +333,8 @@ class CurveFit(Methods, WindowGUI):
         self.show_resid_checkbox = self.builder.get_object('show_resid_checkbox', self.mainwindow)
 
         self.use_default_check = self.builder.get_object('use_default_check', self.mainwindow)
+        self.process_whole_stack_checkbox = self.builder.get_object('process_whole_stack', self.mainwindow)
+
         # TAB: FIT
         #
         self.widget_function_to_fit = self.builder.get_object('widget_function_to_fit', self.mainwindow)
@@ -692,12 +690,19 @@ class CurveFit(Methods, WindowGUI):
             self.validate_function()
             self.collect_values_from_table()
 
+        stack_sep = copy.copy(self.stack_sep)
         preview = self.preview_checkbox.get()
         if preview and self.function_definition.validated:
+            self.stack_sep = None           # Temporarily disable 2D stack handling
             status = self.ok_clicked(calculate=False)
             if status is not False:
                 x1 = self.data_for_calculations[0]['x']
                 self.create_preview(x_vals=x1)
+
+        self.stack_sep = stack_sep  # Restore original 2D stac handling
+
+
+
 
     def create_preview(self, x_vals):
         ''' Create temporary plot showing function defined in self.function_definition '''
@@ -831,7 +836,16 @@ class CurveFit(Methods, WindowGUI):
         ''' Switch to Define Function Tab'''
         self.tab_window.set("Define Function")
 
-    def calculate_stack(self, commandline = False):
+
+    def process_stack_switch_clicked(self):
+        ''' Changed the way in which 2D data is treated '''
+        if bool(self.process_whole_stack_checkbox.get()) is False:
+            self.stack_sep = None
+        else:
+            self.stack_sep = False
+
+
+    def calculate_stack(self, calculate = True, commandline = False):
         ''' If STACK_SEP is False it means that data in stack should
             not be treated as separate data but are calculated as whole
 
@@ -867,7 +881,7 @@ class CurveFit(Methods, WindowGUI):
             parameters2 = self.data_for_calculations[1]['parameters']
         # ------------------------------------------
 
-    def calculate(self, commandline = False):
+    def calculate(self, commandline = False, **kwargs):
         ''' The algorithm for calculations on single x,y,z data.
 
         Usage:
@@ -937,7 +951,8 @@ class CurveFit(Methods, WindowGUI):
                         raise ValueError
                     probabilities_for_ci.append(prob)
             except ValueError:
-                Error.show(title = 'CI intervals', info = "For calculating CI please provide probabilities separated by ;. For example: 0.6827; 0.9545; 0.9973"                )
+                if type1 != "stck 2D":
+                    Error.show(title = 'CI intervals', info = "For calculating CI please provide probabilities separated by ;. For example: 0.6827; 0.9545; 0.9973"                )
                 probabilities_for_ci = None
 
         else:
@@ -947,7 +962,8 @@ class CurveFit(Methods, WindowGUI):
             try:
                 ci = result.conf_interval(sigmas=probabilities_for_ci)
             except Exception as e:
-                Error.show(title = 'CI calculations', info = 'Cannot calculate confidence intervals. The fit is underdetermined or poorly constrained', details = e)
+                if type1 != "stack 2D":
+                    Error.show(title = 'CI calculations', info = 'Cannot calculate confidence intervals. The fit is underdetermined or poorly constrained', details = e)
                 ci = None
         else:
             ci = None
@@ -996,7 +1012,7 @@ class CurveFit(Methods, WindowGUI):
         result = None # <--- HERE IS THE RESULT TO SEND TO COMMAND LINE
 
         # Create summary row to add to the report. The values must match the column names in REPORT_HEADERS
-        row_to_report = None
+        row_to_report = [self.consecutive_number, name1, parameters1['Fit Results']]
         if success:
             self.tab_window.set('Result')
 
@@ -1058,6 +1074,7 @@ class CurveFit(Methods, WindowGUI):
              'show_resid': bool(self.show_resid_checkbox.get()),
              'use_default_check': bool(self.use_default_check.get()),
              'ci_entry': self.ci_entry.get(),
+             'process_whole_stack_checkbox': bool(self.process_whole_stack_checkbox.get()),
              }]
 
     def restore_settings(self):
@@ -1108,6 +1125,13 @@ class CurveFit(Methods, WindowGUI):
             self.extrapolate_checkbox.select()
         else:
             self.extrapolate_checkbox.deselect()
+
+        val = self.restore('process_whole_stack_checkbox')
+        if val is True or val is None:
+            self.process_whole_stack_checkbox.select()
+        else:
+            self.process_whole_stack_checkbox.deselect()
+
 
         val = self.restore('replace_table_check')
         if val is True or val is None:
