@@ -883,6 +883,7 @@ class SubMethods_07:
         ''' Gets data from original_data1 and original_data2 and send
             to calculate
         '''
+
         # Clear current working data and prepare result if needed:
         self.data_for_calculations = []
 

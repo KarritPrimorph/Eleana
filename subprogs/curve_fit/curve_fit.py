@@ -990,6 +990,12 @@ class CurveFit(Methods, WindowGUI):
 
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
+
+
+        print("w linii 995 trzeba dodać opcje że przy fitowaniu całego stacku musi być wyłączona opcja wpisywania najlepszych rezulatató do tabeli")
+
+
+
         for name, param in result.params.items():
             if name in parameter_names:
                 idx = parameter_names.index(name)
