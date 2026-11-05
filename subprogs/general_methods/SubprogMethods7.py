@@ -428,7 +428,6 @@ class SubMethods_07:
             if calculate:
                 self.show_results_matching_first()
         except Exception as e:
-            print(e)
             status = False
             self.eleana.busy = False
             self.set_mouse_state()
@@ -888,12 +887,14 @@ class SubMethods_07:
         self.data_for_calculations = []
 
         if extract_from_2D:
-            # Get data from self.original_data1 2D
+            # Get current stk index from eleana.selections
+            stk_idx = self.eleana.selections['f_stk']
+                        # Get data from self.original_data1 2D
             x_data1 = copy.copy(self.original_data1.x)
-            y_data1 = copy.copy(self.original_data1.y[self.stk_index])
+            y_data1 = copy.copy(self.original_data1.y[stk_idx])
             z_data1 = copy.copy(self.original_data1.z)
             name1 = copy.copy(self.original_data1.name)
-            stk_name = copy.copy(self.original_data1.stk_names[self.stk_index])
+            stk_name = copy.copy(self.original_data1.stk_names[stk_idx])
             name1 = name1 + "/" + stk_name
             complex1 = copy.copy(self.original_data1.complex)
             datatype1 = copy.copy("single2D")
