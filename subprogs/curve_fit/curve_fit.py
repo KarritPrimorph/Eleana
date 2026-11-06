@@ -280,7 +280,7 @@ class CurveFit(Methods, WindowGUI):
             awaits for action. This is useful if you need to put annotations to the graph etc.
             by_method - the name of a method that triggered the action.
         '''
-
+        self.show_errors['stack_2d_warning'] = True
 
     # DEFINE YOUR CUSTOM METHODS FOR THIS ROUTINE
     # ----------------------------------------------
@@ -289,7 +289,7 @@ class CurveFit(Methods, WindowGUI):
         #self.mainwindow =
 
         # Function definition:
-        self.show_errors = {'complex_error_show' : True, 'CI failure': True}
+        self.show_errors = {'complex_error_show' : True, 'CI failure': True, 'stack_2d_warning': True}
 
         self.built_in_functions = BuiltInFunctions()
         self.user_defined_functions = UserDefinedFunctions(store_file=self.eleana.paths['storage_dir'])
@@ -852,7 +852,6 @@ class CurveFit(Methods, WindowGUI):
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
             '''
 
-
         # AVAILABLE DATA. REMOVE UNNECESSARY
         # EACH X,Y,Z IS NP.ARRAY
         # X, Z is 1D, Y is 2D
@@ -893,6 +892,13 @@ class CurveFit(Methods, WindowGUI):
 
             DO NOT USE FUNCTION REQUIRED GUI UPDATE HERE
         '''
+
+        if self.stack_sep and bool(self.replace_table_chceck.get()) and self.show_errors['stack_2d_warning']:
+            ask = CTkMessagebox(title = "Fitting the stack of data", message = 'If a 2D stack is selected and "Process whole stack" is enabled, fitting will be performed independently for each subset of the stack. \n\n If "Update with best fit" is enabled, the fitted parameters will be copied to the Initial Guesses table and used as the starting values for the next fitting operation. \n\nHowever, if the fitting result is poor and the parameters being copied differ significantly from the expected values for the next subset, using them as initial guesses may prevent the fitting procedure from converging. \n\nIt is therefore recommended to disable "Update with best fit" when "Process whole stack" is enabled.', option_1="Cancel", option_2="Continue")
+            response = ask.get()
+            if response == "Cancel":
+                raise Exception("Canceled")
+            self.show_errors['stack_2d_warning'] = False
 
         self.function_definition.fit_results = {}
         self.collect_values_from_table()
@@ -991,16 +997,12 @@ class CurveFit(Methods, WindowGUI):
         # Write parameters to the table
         parameter_names = [entry.get() for entry in self.table_widgets['parameter']]
 
-
-        print("w linii 995 trzeba dodać opcje że przy fitowaniu całego stacku musi być wyłączona opcja wpisywania najlepszych rezulatató do tabeli")
-
-
-
-        for name, param in result.params.items():
-            if name in parameter_names:
-                idx = parameter_names.index(name)
-                value_spinbox = self.table_widgets['value'][idx]
-                value_spinbox.set(param.value)
+        if bool(self.replace_table_chceck.get()):       # Replace parameters with best fit if checkbox is selected
+            for name, param in result.params.items():
+                if name in parameter_names:
+                    idx = parameter_names.index(name)
+                    value_spinbox = self.table_widgets['value'][idx]
+                    value_spinbox.set(param.value)
 
         # Prepare result report
         log_report = result.fit_report()

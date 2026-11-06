@@ -817,7 +817,7 @@
                       <object class="customtkinter.CTkFrame" id="ctkframe28">
                         <layout manager="grid">
                           <property name="column">0</property>
-                          <property name="columnspan">3</property>
+                          <property name="columnspan">4</property>
                           <property name="row">1</property>
                           <property name="sticky">ew</property>
                         </layout>

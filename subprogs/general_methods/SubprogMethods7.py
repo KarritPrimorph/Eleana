@@ -416,6 +416,7 @@ class SubMethods_07:
     def ok_clicked(self, calculate=True):
         """Main method for calculations executed after GUI idle"""
 
+        self.general_error_skip = False
         self.eleana.busy = True
         self.set_mouse_state(state='watch')
 
