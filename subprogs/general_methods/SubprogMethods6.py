@@ -1607,7 +1607,7 @@ class SubMethods_06:
     def after_result_show_on_graph(self):
         return
 
-    def after_ok_clicked(self):
+    def after_ok_clicked(self, **kwargs):
         return
 
     def after_process_group_clicked(self):

@@ -144,13 +144,13 @@ class DistanceRead(Methods, WindowGUI):
         ''' This method is called immediately when results
             for graph are ready but grapher canva has not been refreshed yet. '''
 
-    def after_ok_clicked(self):
+    def after_ok_clicked(self, **kwargs):
         ''' This method is called when all functions are
             finished after clicking 'Calculate' button. '''
 
     def after_process_group_clicked(self):
-        ''' This method is called when all functions are
-             finished after clicking 'Process group' button. '''
+        """ This method is called when all functions are
+             finished after clicking 'Process group' button. """
 
 
     def after_graph_plot(self):

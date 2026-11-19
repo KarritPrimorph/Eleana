@@ -260,7 +260,7 @@ class EPR_B_to_g(Methods, WindowGUI):                                           
         ''' This method is called immediately when results
             for graph are ready but grapher canva has not been refreshed yet. '''
 
-    def after_ok_clicked(self):
+    def after_ok_clicked(self, **kwargs):
         ''' This method is called when all functions are
             finished after clicking 'Calculate' button. '''
         self.show_errors = True
