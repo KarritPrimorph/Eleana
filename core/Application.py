@@ -1087,8 +1087,6 @@ class Application(MenuFileMixin,
         selection = self.sel_first.get()
         if selection == 'None':
             return
-        #self.first_selected(selection)
-
         self.grapher.plot_graph(switch_cursors=False)
         self.grapher.plot_additional_curves()
 
@@ -1631,6 +1629,7 @@ class Application(MenuFileMixin,
             self.eleana.dataset.append(result)
         self.update.dataset_list()
         self.update.all_lists()
+        self.update.group_list()
         added_item = self.eleana.dataset[-1].name_nr
         group = self.sel_group.get()
         self.group_selected(group)
@@ -1669,6 +1668,7 @@ class Application(MenuFileMixin,
         self.update.group_list()
         self.update.dataset_list()
         self.update.all_lists()
+        self.update.group_list()
         added_item = self.eleana.dataset[-1].name_nr
         group = self.sel_group.get()
         self.group_selected(group)
@@ -1695,6 +1695,7 @@ class Application(MenuFileMixin,
         self.eleana.dataset.insert(index_first, result)
         self.update.dataset_list()
         self.update.all_lists()
+        self.update.group_list()
         group = self.sel_group.get()
         self.group_selected(group)
         name = self.eleana.dataset[index_first].name_nr
@@ -1730,6 +1731,7 @@ class Application(MenuFileMixin,
         self.eleana.dataset.append(result)
         self.update.dataset_list()
         self.update.all_lists()
+        self.update.group_list()
         added_item = self.eleana.dataset[-1].name_nr
         group = self.sel_group.get()
         self.group_selected(group)
@@ -1954,54 +1956,6 @@ class Application(MenuFileMixin,
         else:
             self.sel_result.set('None')
         self.grapher.plot_graph()
-
-    def extract_from_stack(self, which = None):
-        if which is None:
-            index = self.eleana.selections['first']
-            if index is None:
-                return
-            if index < 0:
-                index = self.eleana.selections['second']
-                if index < 0:
-                    return
-
-        data = self.eleana.dataset[index]
-        if data.type != "stack 2D":
-            return
-
-        av_data = data.stk_names
-        select_data = SelectItems(master=self.mainwindow, title='Select data',
-                                 items=av_data)
-        response = select_data.get()
-        if response:
-            dialog = CTkMessagebox(title ='', message = "Delete selected data or extract", option_1 = 'Extract', option_2 = "Delete")
-            oper = dialog.get()
-            idxs = []
-            for i in response:
-                if i in av_data:
-                    index = av_data.index(i)
-                    idxs.append(index)
-            idxs.sort(reverse=True)
-            extracted = copy.deepcopy(data)
-            if oper == 'Delete':
-                # Delete
-               for i in idxs:
-                    extracted.y = np.delete(extracted.y, i, axis = 0)
-                    extracted.stk_names.pop(i)
-
-            else:
-                # Extract
-                for i in idxs:
-                    extracted = data.extract(i)
-                    self.eleana.results_dataset.append(extracted)
-
-            self.update.list_in_combobox('sel_result')
-            self.update.list_in_combobox('r_stk')
-            # Set the position to the last added item
-            list_of_results = self.sel_result._values
-            position = list_of_results[-1]
-            self.sel_result.set(position)
-            self.result_selected(position)
 
 
     def show_static_graph_window(self, number_of_plot = None):

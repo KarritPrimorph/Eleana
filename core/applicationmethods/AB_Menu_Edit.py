@@ -490,53 +490,48 @@ class MenuEditMixin:
             self.update.group_list()
             self.update.all_lists()
 
-
-    def extract_from_stack(self, which = None):
+    def extract_from_stack(self, which=None):
         if which is None:
             index = self.eleana.selections['first']
+            if index is None:
+                return
             if index < 0:
                 index = self.eleana.selections['second']
                 if index < 0:
                     return
 
-        data = self.eleana.dataset[index]
+        data = copy.deepcopy(self.eleana.dataset[index])
         if data.type != "stack 2D":
             return
 
         av_data = data.stk_names
         select_data = SelectItems(master=self.mainwindow, title='Select data',
-                                 items=av_data)
+                                  items=av_data)
         response = select_data.get()
         if response:
-            dialog = CTkMessagebox(title ='', message = "Delete selected data or extract", option_1 = 'Extract', option_2 = "Delete")
+            dialog = CTkMessagebox(title='', message="Delete selected data or extract", option_1='Extract',
+                                   option_2="Delete")
             oper = dialog.get()
             idxs = []
             for i in response:
                 if i in av_data:
                     index = av_data.index(i)
                     idxs.append(index)
-            idxs.sort(reverse=True)
             extracted = copy.deepcopy(data)
             if oper == 'Delete':
                 # Delete
-               for i in idxs:
-                    extracted.y = np.delete(extracted.y, i, axis = 0)
-                    extracted.stk_names.pop(i)
+                idxs.sort(reverse=True)
+                for i in idxs:
+                    data.remove_from_stack_by_index(i)
+                self.eleana.results_dataset.append(data)
+
 
             else:
                 # Extract
-                extracted.y = extracted.y[idxs]
-                stk_names = []
                 for i in idxs:
-                    stk_names.append(extracted.stk_names[i])
-                extracted.stk_names = stk_names
-                if len(extracted.stk_names) == 1:
-                    extracted.name = extracted.name + '/' + stk_names[0]
-                    extracted.stk_names = []
-                    extracted.type = 'single 2D'
-                    extracted.y = extracted.y.ravel()
+                    extracted = data.extract(i)
+                    self.eleana.results_dataset.append(extracted)
 
-            self.eleana.results_dataset.append(extracted)
             self.update.list_in_combobox('sel_result')
             self.update.list_in_combobox('r_stk')
             # Set the position to the last added item
