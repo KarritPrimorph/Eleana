@@ -1,0 +1,18 @@
+1. Przy eksportowaniu plików do CSV widma First wyszystko poszło dobrze, ale w pewnym momencie
+ nie wiem czy za drugim razem czy kolejnym, wyeksportowało się widmo 0B bo pojawił się jakiś bład
+ w Loadsave.py zwiazany z index out of range przy eleana.assignmentsTogroups. Nie mam komunikatu
+ ale trzeba przetestować: 1 i drugi raze eksport do csv. Aha Widm było uciete przez CROP Spectrum
+
+ Ewidentnie dzieje się to po przycięciu danych
+ Po zapisaniu projektu, zrestartowaniu eksportuje poprawnie
+
+ File "/home/marcin/PycharmProjects/Eleana/core/applicationmethods/AA_Menu_File.py", line 280, in export_first
+    self.export.csv('first')
+    ~~~~~~~~~~~~~~~^^^^^^^^^
+  File "/home/marcin/PycharmProjects/Eleana/core/LoadSave.py", line 497, in csv
+    index = self.eleana.assignmentToGroups[group][ind]
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^
+IndexError: list index out of range
+
+
+2. Nie działa Extract Stack dla widm zestakowanych

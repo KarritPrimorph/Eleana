@@ -35,6 +35,7 @@ class StackToGroup:
 
         asToGr = self.eleana.assignmentToGroups
         groups = list(asToGr.keys())
+        del groups[0]
         self.sel_group.configure(values=groups)
         self.sel_group.set('All')
         self.mainwindow.bind("<Escape>", self.quit)

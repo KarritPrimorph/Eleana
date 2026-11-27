@@ -1958,6 +1958,8 @@ class Application(MenuFileMixin,
     def extract_from_stack(self, which = None):
         if which is None:
             index = self.eleana.selections['first']
+            if index is None:
+                return
             if index < 0:
                 index = self.eleana.selections['second']
                 if index < 0:
@@ -1989,18 +1991,10 @@ class Application(MenuFileMixin,
 
             else:
                 # Extract
-                extracted.y = extracted.y[idxs]
-                stk_names = []
                 for i in idxs:
-                    stk_names.append(extracted.stk_names[i])
-                extracted.stk_names = stk_names
-                if len(extracted.stk_names) == 1:
-                    extracted.name = extracted.name + '/' + stk_names[0]
-                    extracted.stk_names = []
-                    extracted.type = 'single 2D'
-                    extracted.y = extracted.y.ravel()
+                    extracted = data.extract(i)
+                    self.eleana.results_dataset.append(extracted)
 
-            self.eleana.results_dataset.append(extracted)
             self.update.list_in_combobox('sel_result')
             self.update.list_in_combobox('r_stk')
             # Set the position to the last added item
@@ -2073,7 +2067,7 @@ class Application(MenuFileMixin,
         self.sel_cursor_mode.set(value)
         self.eleana.gui_state.cursor_mode = copy.copy(value)
         self.grapher.cursor_on_off()
-        #self.grapher.plot_graph()
+
 
     def select_data_from_group(self, title):
         av_data = self.sel_first._values
