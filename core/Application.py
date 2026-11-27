@@ -1372,15 +1372,14 @@ class Application(MenuFileMixin,
         if second is None:
             second = copy.deepcopy(self.eleana.dataset[self.eleana.selections['second']])
 
+        if second.type == "stack 2D":
+            second = second.extract(self.eleana.selections['s_stk'])
+
         X1 = first.x
         Y1 = first.y
 
         X2 = second.x
         Y2 = second.y
-
-        if second.type == "stack 2D":
-            Error.show(title = f"Quick {operation}", info = "The Second spectrum cannot be a stack of data.")
-            return
 
         # Interpolate y2 to x1 axis
         interpolator = CubicSpline(X2, Y2, extrapolate=False)
